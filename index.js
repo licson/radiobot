@@ -186,7 +186,7 @@ bot.on('message', function (data) {
 		}
 
 		if (songList[index].isURL) {
-			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (from Song List) ${songList[index].file}`);
+			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (from Song List) ${songList[index].file}`));
 			queue.push(doTTS(ttsText));
 			queue.push(doBroadcast(songList[index].file, chat_id, msg_id));
 			queue.start();
