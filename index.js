@@ -2,15 +2,24 @@ var Telegram = require('telegram-bot-api');
 var Queue = require('queue');
 var spawn = require('child_process').spawn;
 var urlRegex = require('url-regex');
+const fs = required('fs'),
+    config = require('config.json');
 
 var TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
+
+function saveConfig() {
+    fs.writeFile('config.json', JSON.stringify(config), function (err) {
+        if (err) console.log(err);
+    };
+}
 
 function doBroadcast(url, chat_id, msg_id) {
 	return function (cb) {
 		var ffmpeg = spawn('ffmpeg', ['-re', '-i', url, '-ac', '2', '-ar', '44100', '-acodec', 'pcm_u16le', '-t', '900', '-f', 'u16le', 'tcp://127.0.0.1:5000']);
 
 		ffmpeg.stdout.resume();
-		ffmpeg.stderr.pipe(process.stderr);
+		ffmpeg.stderr.resume();
+		//ffmpeg.stderr.pipe(process.stderr);
 
 		ffmpeg.on('error', function (e) {
 			cb(e);
