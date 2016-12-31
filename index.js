@@ -15,7 +15,7 @@ function saveConfig() {
 }
 
 function log(text) {
-	fs.appendFile('log.txt', text, function(err) {
+	fs.appendFile('radiobot.log', text + '\n', function(err) {
 		if (err) console.log(err);
 	})
 }
