@@ -210,9 +210,10 @@ bot.on('message', function (data) {
 		if (artist && title) {
 			ttsText = "Next is " + title + " performed by " + artist + " from " + name + " on Telegram.";
 			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): [${artist} - ${title}] (${data.audio.file_id})`));
+		}else{
+			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (${data.audio.file_id})`));
 		}
 
-		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (${data.audio.file_id})`));
 		doQueueSong(data.audio.file_id, ttsText, chat_id, msg_id);
 		addToSongList(data.audio.file_id, name, title, artist);
 	} else if (data.document) {
