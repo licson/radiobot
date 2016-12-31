@@ -22,10 +22,16 @@ function log(text) {
 
 function doBroadcast(url, chat_id, msg_id) {
 	return function (cb) {
-		var ffmpeg = spawn('ffmpeg', ['-re', '-i', url, '-ac', '2', '-ar', '44100', '-acodec', 'pcm_u16le', '-t', '900', '-f', 'u16le', 'tcp://127.0.0.1:5000']);
+		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-acodec', 'pcm_u16le', '-t', '900', '-f', 'u16le', 'tcp://127.0.0.1:5000']);
 		ffmpeg.stdout.resume();
 		ffmpeg.stderr.resume();
 		//ffmpeg.stderr.pipe(process.stderr);
+
+		//Show audio info
+		if (chat_id && msg_id) {
+			var ffprobe = spawn('ffprobe', ['-hide_banner', url]);
+			ffprobe.stderr.pipe(process.stdout);
+		}
 
 		ffmpeg.on('error', function (e) {
 			cb(e);
