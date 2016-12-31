@@ -2,9 +2,9 @@ var Telegram = require('telegram-bot-api');
 var Queue = require('queue');
 var spawn = require('child_process').spawn;
 var urlRegex = require('url-regex');
-const fs = required('fs'),
+const fs = require('fs'),
 	util = require('util'),
-	config = require('config.json');
+	config = require('./config.json');
 
 var TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
 
@@ -221,7 +221,7 @@ bot.on('message', function (data) {
 		doQueueSong(data.document.file_id, ttsText, chat_id, msg_id);
 		addToSongList(data.document.file_id, name);
 	} else if (urlRegex({ exact: true }).test(text)) {
-		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): ${text}`);
+		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): ${text}`));
 		var ttsText = "Next song is from " + name + " on Telegram.";
 		queue.push(doTTS(ttsText));
 		queue.push(doBroadcast(text, chat_id, msg_id));
