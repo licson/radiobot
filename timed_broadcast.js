@@ -13,12 +13,4 @@ module.exports = function (queue, doTTS, doBroadcast) {
 		queue.unshift(doTTS("Licson's Radio, the first interactive internet radio, ever. Please enjoy!"));
 		queue.start();
 	});
-
-	// New year greetings
-	cron.schedule('0 0 1 1 *', function () {
-		queue.stop();
-		queue.unshift(doTTS("Licson's Radio, the first interactive internet radio, ever. Please enjoy!"));
-		queue.unshift(doTTS("Happy New Year and make your wish come true!"));
-		queue.start();
-	});
 };
