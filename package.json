@@ -1,0 +1,21 @@
+{
+  "name": "radiobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird-retry": "^0.10.1",
+    "moment": "^2.17.1",
+    "node-cron": "^1.1.2",
+    "queue": "^4.0.0",
+    "request": "^2.79.0",
+    "telegram-bot-api": "^1.2.0",
+    "tmp": "0.0.31",
+    "url-regex": "^4.0.0"
+  }
+}
