@@ -3,7 +3,7 @@ var Queue = require('queue');
 var spawn = require('child_process').spawn;
 var urlRegex = require('url-regex');
 const fs = require('fs'),
-	util = require('util'),
+	utils = require('util'),
 	config = require('./config.json');
 
 var TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
