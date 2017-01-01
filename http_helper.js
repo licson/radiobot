@@ -1,15 +1,8 @@
 const http = require('http');
-const net = require('net');
 const icy = require('icy');
-const Passthrough = require('stream').PassThrough;
 const config = require('./config.json');
 
 function createHTTPHelper(distrib) {
-	var injector = new icy.Writer(config.icy.meta_int);
-	injector.meta_int = config.icy.meta_int;
-
-	distrib.pipe(injector);
-
 	var server = http.createServer(function (req, res) {
 		if (req.url == '/live.mp3') {
 			res.writeHead(200, {
@@ -21,7 +14,20 @@ function createHTTPHelper(distrib) {
 				"icy-metaint": config.icy.meta_int
 			});
 
-			injector.pipe(res);
+			var injector = new icy.Writer(config.icy.meta_int);
+			injector.meta_int = config.icy.meta_int;
+			
+			distrib.pipe(injector).pipe(res);
+			
+			server.on('metadata', function (title) {
+				injector.queue(title);
+			});
+			
+			res.on('close', function () {
+				injector.unpipe();
+				distrib.unpipe(injector);
+				distrib.resume();
+			});
 		} else if (req.url == '/') {
 			res.writeHead(302, {
 				"Content-Type": "text/html",
@@ -31,12 +37,13 @@ function createHTTPHelper(distrib) {
 
 			res.end(`Your browser should redirect you shortly. If not, please click <a href="${config.station.url}">here</a>.`);
 		} else {
+			res.writeHead(204, {});
 			res.end();
 		}
 	});
 
 	server.listen(config.ports.http);
-	return injector;
+	return server;
 };
 
 module.exports = createHTTPHelper;

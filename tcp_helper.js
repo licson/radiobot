@@ -3,7 +3,7 @@ const spawn = require('child_process').spawn;
 const config = require('./config.json');
 
 var ffmpeg = spawn('ffmpeg', [
-	'-re', '-f', 's16le', // Input is signed 16-bit raw PCM
+	'-f', 's16le', // Input is signed 16-bit raw PCM
 	'-ac', '2', // Input has two channels
 	'-ar', '44100', // Input sample rate is 44.1kHz
 	'-i', '-', // Get from stdin
@@ -16,9 +16,8 @@ var ffmpeg = spawn('ffmpeg', [
 	'-' // Output to handler through TCP
 ]);
 
-ffmpeg.stdout.resume();
-ffmpeg.stderr.resume();
 ffmpeg.stderr.pipe(process.stderr);
+ffmpeg.stdout.on('data', function () {});
 
 var EMPTY_CHUNK = Buffer.alloc(44100);
 
@@ -51,7 +50,7 @@ function createTCPHelper() {
 			}); */
 
 			socket.on('error', function (e) {
-				cconsole.error(e);
+				console.error(e);
 			});
 
 			socket.on('close', function () {
