@@ -90,8 +90,8 @@ Queue.prototype._next = function start() {
 	try {
 		task(function (err, data) {
 			if (err) {
-				this.remove(task, task);
-				self.emit(err);
+				this.remove(task);
+				self.emit(err, task);
 			}
 			self.emit('success', data, task);
 			self._next();
