@@ -13,7 +13,7 @@ var emptyTimer = 0;
 function writeEmpty () {
 	emptyTimer = setInterval(function () {
 		ffmpeg.stdin.write(EMPTY_CHUNK);
-	}, 230);
+	}, 150);
 };
 
 
