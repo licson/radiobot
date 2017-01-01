@@ -13,7 +13,7 @@ var ffmpeg = spawn('ffmpeg', [
 	'-ab', config.output.bitrate + 'k',  // Bitrate
 	'-af', config.output.normalize ? 'dynaudnorm' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio)
 	'-f', 'mp3', // MP3 container, clean output
-	'tcp://127.0.0.1:5001?listen=1' // Output to handler through TCP
+	'-' // Output to handler through TCP
 ]);
 
 ffmpeg.stdout.resume();
@@ -60,6 +60,7 @@ function createTCPHelper() {
 
 	writeEmpty();
 	server.listen(config.ports.helper);
+	return ffmpeg.stdout;
 }
 
 module.exports = createTCPHelper;

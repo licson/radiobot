@@ -8,6 +8,8 @@ function createHTTPHelper(distrib) {
 	var injector = new icy.Writer(config.icy.meta_int);
 	injector.meta_int = config.icy.meta_int;
 
+	distrib.pipe(injector);
+
 	var server = http.createServer(function (req, res) {
 		if (req.url == '/live.mp3') {
 			res.writeHead(200, {
@@ -19,7 +21,7 @@ function createHTTPHelper(distrib) {
 				"icy-metaint": config.icy.meta_int
 			});
 
-			net.connect(5001).pipe(injector).pipe(res);
+			injector.pipe(res);
 		} else if (req.url == '/') {
 			res.writeHead(302, {
 				"Content-Type": "text/html",

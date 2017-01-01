@@ -3,5 +3,4 @@ const HTTPHelper = require('./http_helper');
 const TCPHelper = require('./tcp_helper');
 const config = require('./config.json');
 
-TCPHelper();
-module.exports = HTTPHelper();
+module.exports = HTTPHelper(TCPHelper());
