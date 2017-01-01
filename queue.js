@@ -56,6 +56,7 @@ Queue.prototype.shift = function shift() {
 // these task only run once
 Queue.prototype.unshift = function unshift(item) {
 	this.prependList.unshift(item);
+	this._updateLength();
 }
 Queue.prototype.remove = function remove(item) {
 	var i, isOld;
@@ -76,6 +77,8 @@ Queue.prototype.remove = function remove(item) {
 			this.items.splice(i, 1)
 		}
 	}
+	this._updateQueue();
+	this._updateLength();
 }
 Queue.prototype.toString = function toString() {
 	return `[${this.exceedItems.join(',')}][${this.items.join(',')}] ${this.length}`;
