@@ -1,48 +1,65 @@
-var net = require('net');
-var spawn = require('child_process').spawn;
-var ffmpeg = spawn('ffmpeg', ['-re', '-f', 's16le','-c:a', 'pcm_s16le', '-ac', '2', '-ar', '44100', '-i', '-', '-af', 'dynaudnorm', '-f', 'ffm', 'http://radio.licson.net:8080/input/audio']);
+const net = require('net');
+const spawn = require('child_process').spawn;
+const config = require('./config.json');
+
+var ffmpeg = spawn('ffmpeg', [
+	'-re', '-f', 's16le', // Input is signed 16-bit raw PCM
+	'-ac', '2', // Input has two channels
+	'-ar', '44100', // Input sample rate is 44.1kHz
+	'-i', '-', // Get from stdin
+	'-c:a', 'libmp3lame', // Specify LAME MP3 encoder
+	'-ac', config.output.channels, // Output channels
+	'-ar', config.output.samplerate, // Output sample rate
+	'-ab', config.output.bitrate + 'k',  // Bitrate
+	'-af', config.output.normalize ? 'dynaudnorm' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio)
+	'-f', 'mp3', // MP3 container, clean output
+	'tcp://127.0.0.1:5001?listen=1' // Output to handler through TCP
+]);
 
 ffmpeg.stdout.resume();
 ffmpeg.stderr.resume();
-// ffmpeg.stderr.pipe(process.stderr);
+ffmpeg.stderr.pipe(process.stderr);
 
 var EMPTY_CHUNK = Buffer.alloc(44100);
 
 var emptyTimer = 0;
 
-function writeEmpty () {
+function writeEmpty() {
 	emptyTimer = setInterval(function () {
 		ffmpeg.stdin.write(EMPTY_CHUNK);
 	}, 250);
 };
 
+function createTCPHelper() {
+	var server = net.createServer(function (socket) {
+		server.getConnections(function (e, count) {
+			if (e || count > 1) {
+				socket.end();
+				socket.destroy();
+				return;
+			}
 
-var server = net.createServer(function (socket) {
-	server.getConnections(function (e, count) {
-		if(e || count > 1) {
-			socket.end();
-			socket.destroy();
-			return;
-		}
+			clearInterval(emptyTimer);
 
-		clearInterval(emptyTimer);
+			socket.pipe(ffmpeg.stdin, { end: false });
 
-		socket.pipe(ffmpeg.stdin, { end: false });
+			/* socket.setTimeout(30000, function () {
+				socket.end();
+				socket.destroy();
+			}); */
 
-		/* socket.setTimeout(30000, function () {
-			socket.end();
-			socket.destroy();
-		}); */
+			socket.on('error', function (e) {
+				cconsole.error(e);
+			});
 
-		socket.on('error', function (e) {
-			cconsole.error(e);
-		});
-
-		socket.on('close', function () {
-			writeEmpty();
+			socket.on('close', function () {
+				writeEmpty();
+			});
 		});
 	});
-});
 
-writeEmpty();
-server.listen(5000);
+	writeEmpty();
+	server.listen(config.ports.helper);
+}
+
+module.exports = createTCPHelper;

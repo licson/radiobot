@@ -1,1 +1,22 @@
-{}
+{
+    "ports": {
+        "http": 8080,
+        "helper": 5000
+    },
+    "station": {
+        "name": "Licson's Radio",
+        "url": "https://licson.net/radio/"
+    },
+    "icy": {
+        "meta_int": 512
+    },
+    "output": {
+        "samplerate": 44100,
+        "channels": 2,
+        "bitrate": 320,
+        "normalize": true
+    },
+    "telegram": {
+        "token": "310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs"
+    }
+}

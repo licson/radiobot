@@ -22,10 +22,10 @@ function log(text) {
 
 function doBroadcast(url, chat_id, msg_id) {
 	return function (cb) {
-		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
+		var ffmpeg = spawn('ffmpeg', ['-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
 		ffmpeg.stdout.resume();
 		ffmpeg.stderr.resume();
-		//ffmpeg.stderr.pipe(process.stderr);
+		ffmpeg.stderr.pipe(process.stderr);
 
 		//Show audio info
 		if (chat_id && msg_id) {
@@ -109,13 +109,13 @@ function addToSongList(file, name, title, artist) {
 };
 
 // Activate the TCP helper
-require('./tcp_helper');
+require('./streaming');
 
 // Timed shows
 require('./timed_broadcast')(queue, doTTS, doBroadcast);
 
 var bot = new Telegram({
-	token: TOKEN,
+	token: config.telegram.token,
 	updates: { enabled: true }
 });
 
