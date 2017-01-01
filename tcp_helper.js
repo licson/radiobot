@@ -1,6 +1,6 @@
 var net = require('net');
 var spawn = require('child_process').spawn;
-var ffmpeg = spawn('ffmpeg', ['-re', '-f', 's32le','-c:a', 'pcm_s32le', '-ac', '2', '-ar', '48000', '-i', '-', '-af', 'dynaudnorm', '-f', 'ffm', 'http://radio.licson.net:8080/input/audio']);
+var ffmpeg = spawn('ffmpeg', ['-re', '-f', 's16le','-c:a', 'pcm_s16le', '-ac', '2', '-ar', '44100', '-i', '-', '-af', 'dynaudnorm', '-f', 'ffm', 'http://radio.licson.net:8080/input/audio']);
 
 ffmpeg.stdout.resume();
 ffmpeg.stderr.resume();
