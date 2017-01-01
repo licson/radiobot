@@ -57,6 +57,26 @@ Queue.prototype.shift = function shift() {
 Queue.prototype.unshift = function unshift(item) {
 	this.prependList.unshift(item);
 }
+Queue.prototype.remove = function remove(item) {
+	var i, isOld;
+	for (i = this.exceedItems.length - 1; i >= 0; i--) {
+		if (item === this.exceedItems[i]) {
+			this.exceedItems.splice(i, 1)
+		}
+	}
+	for (i = this.prependList.length - 1; i >= 0; i--) {
+		if (item === this.prependList[i]) {
+			this.prependList.splice(i, 1)
+		}
+	}
+	for (i = this.items.length - 1; i >= 0; i--) {
+		isOld = this.items.length - this.old <= i;
+		if (item === this.items[i]) {
+			if (isOld) this.old--;
+			this.items.splice(i, 1)
+		}
+	}
+}
 Queue.prototype.toString = function toString() {
 	return `[${this.exceedItems.join(',')}][${this.items.join(',')}] ${this.length}`;
 }
@@ -67,13 +87,20 @@ Queue.prototype._next = function start() {
 		this.running = false;
 		return;
 	}
-	task(function (err, data) {
-		if (err) {
-			self.emit(err);
-		}
-		self.emit('success', data, task);
+	try {
+		task(function (err, data) {
+			if (err) {
+				this.remove(task, task);
+				self.emit(err);
+			}
+			self.emit('success', data, task);
+			self._next();
+		})
+	} catch (err) {
+		this.remove(task);
+		self.emit(err, task);
 		self._next();
-	})
+	}
 }
 Queue.prototype.start = function start() {
 	if (this.running) return false;
