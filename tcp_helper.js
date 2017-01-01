@@ -6,14 +6,14 @@ ffmpeg.stdout.resume();
 ffmpeg.stderr.resume();
 // ffmpeg.stderr.pipe(process.stderr);
 
-var EMPTY_CHUNK = Buffer.alloc(48000);
+var EMPTY_CHUNK = Buffer.alloc(44100);
 
 var emptyTimer = 0;
 
 function writeEmpty () {
 	emptyTimer = setInterval(function () {
 		ffmpeg.stdin.write(EMPTY_CHUNK);
-	}, 150);
+	}, 250);
 };
 
 
