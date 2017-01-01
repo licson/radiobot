@@ -1,12 +1,12 @@
 var net = require('net');
 var spawn = require('child_process').spawn;
-var ffmpeg = spawn('ffmpeg', ['-re', '-f', 's16le','-c:a', 'pcm_s16le', '-ac', '2', '-ar', '44100', '-i', '-', '-f', 'ffm', 'http://radio.licson.net:8080/input/audio']);
+var ffmpeg = spawn('ffmpeg', ['-re', '-f', 's32le','-c:a', 'pcm_s32le', '-ac', '2', '-ar', '48000', '-i', '-', '-f', 'ffm', 'http://radio.licson.net:8080/input/audio']);
 
 ffmpeg.stdout.resume();
 ffmpeg.stderr.resume();
 // ffmpeg.stderr.pipe(process.stderr);
 
-var EMPTY_CHUNK = Buffer.alloc(44100);
+var EMPTY_CHUNK = Buffer.alloc(48000);
 
 var emptyTimer = 0;
 
