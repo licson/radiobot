@@ -30,6 +30,8 @@ function writeEmpty() {
 	}, 250);
 };
 
+writeEmpty();
+
 function createTCPHelper() {
 	var server = net.createServer(function (socket) {
 		server.getConnections(function (e, count) {
@@ -58,7 +60,6 @@ function createTCPHelper() {
 		});
 	});
 
-	writeEmpty();
 	server.listen(config.ports.helper);
 	return ffmpeg.stdout;
 }
