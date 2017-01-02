@@ -6,7 +6,10 @@ const fs = require('fs');
 const utils = require('util');
 const config = require('./config.json');
 
-const TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
+// Activate the streaming server
+const streamingServer = require('./streaming');
+
+// const TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
 
 function saveConfig() {
 	fs.writeFile('config.json', JSON.stringify(config), function (err) {
@@ -20,7 +23,7 @@ function log(text) {
 	})
 }
 
-function doBroadcast(url, chat_id, msg_id) {
+function doBroadcast(url, chat_id, msg_id, title) {
 	return function (cb) {
 		var ffmpeg = spawn('ffmpeg', ['-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
 		ffmpeg.stdout.resume();
@@ -31,6 +34,10 @@ function doBroadcast(url, chat_id, msg_id) {
 		if (chat_id && msg_id) {
 			var ffprobe = spawn('ffprobe', ['-hide_banner', url]);
 			ffprobe.stderr.pipe(process.stdout);
+		}
+		
+		if (title) {
+			streamingServer.emit("metadata", title);
 		}
 
 		ffmpeg.on('error', function (e) {
@@ -68,11 +75,11 @@ function doTTS(text) {
 	return doBroadcast(url);
 };
 
-function doQueueSong(file, ttsText, chat_id, msg_id) {
+function doQueueSong(file, title, ttsText, chat_id, msg_id) {
 	bot.getFile({ file_id: file }).then(function (data) {
 		var url = 'https://api.telegram.org/file/bot' + TOKEN + '/' + data.file_path;
 		queue.push(doTTS(ttsText));
-		queue.push(doBroadcast(url, chat_id, msg_id));
+		queue.push(doBroadcast(url, chat_id, msg_id, title));
 		queue.start();
 
 		bot.sendMessage({
@@ -107,9 +114,6 @@ function addToSongList(file, name, title, artist) {
 		artist: artist || null
 	});
 };
-
-// Activate the TCP helper
-require('./streaming');
 
 // Timed shows
 require('./timed_broadcast')(queue, doTTS, doBroadcast);
@@ -178,11 +182,13 @@ bot.on('message', function (data) {
 
 		if (!songList[index]) return;
 
-		var ttsText = "Next song is from " + songList[index].name + ", picked up by " + name + " on Telegram.";
+		var ttsText = `Next song is from ${songList[index].name}, picked up by ${name} on Telegram.`;
+		var title = `Song picked up by ${name}.`;
 
 		if (songList[index].title && songList[index].artist) {
 			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (from Song List) [${songList[index].artist} - ${songList[index].title}] (${songList[index].file})`));
-			ttsText = "Next song is " + songList[index].title + " performed by " + songList[index].artist + " from " + songList[index].name + ", picked up by " + name + " on Telegram.";
+			ttsText = `Next song is ${songList[index].title} performed by ${songList[index].artist} from {songList[index].name}, picked up by ${name} on Telegram.`;
+			title = `${songList[index].title} - ${songList[index].artist}`;
 		}
 
 		if (songList[index].isURL) {
@@ -205,27 +211,33 @@ bot.on('message', function (data) {
 	if (data.audio) {
 		var title = data.audio.title || null;
 		var artist = data.audio.performer || null;
-		var ttsText = "Next song is from " + name + " on Telegram.";
+		var ttsText = `Next song is from ${name} on Telegram.`;
+		var titleText = `Song from ${name}.`
 
 		if (artist && title) {
-			ttsText = "Next is " + title + " performed by " + artist + " from " + name + " on Telegram.";
+			ttsText = `Next is ${title} performed by ${artist} from ${name} on Telegram.`;
+			titleText = `${title} - ${artist}`;
 			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): [${artist} - ${title}] (${data.audio.file_id})`));
-		}else{
+		} else {
 			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (${data.audio.file_id})`));
 		}
 
-		doQueueSong(data.audio.file_id, ttsText, chat_id, msg_id);
+		doQueueSong(data.audio.file_id, titleText, ttsText, chat_id, msg_id);
 		addToSongList(data.audio.file_id, name, title, artist);
 	} else if (data.document) {
-		var ttsText = "Next song is from " + name + " on Telegram.";
+		var ttsText = `Next song is from ${name} on Telegram.`;
+		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): [${data.document.file_name}](${data.document.file_id})`));
-		doQueueSong(data.document.file_id, ttsText, chat_id, msg_id);
+		
+		doQueueSong(data.document.file_id, titleText, ttsText, chat_id, msg_id);
 		addToSongList(data.document.file_id, name);
 	} else if (urlRegex({ exact: true }).test(text)) {
+		var ttsText = `Next song is from ${name} on Telegram.`;
+		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): ${text}`));
-		var ttsText = "Next song is from " + name + " on Telegram.";
+		
 		queue.push(doTTS(ttsText));
-		queue.push(doBroadcast(text, chat_id, msg_id));
+		queue.push(doBroadcast(text, chat_id, msg_id, titleText));
 		queue.start();
 
 		bot.sendMessage({

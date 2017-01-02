@@ -13,11 +13,11 @@ var ffmpeg = spawn('ffmpeg', [
 	'-ab', config.output.bitrate + 'k',  // Bitrate
 	'-af', config.output.normalize ? 'dynaudnorm' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio)
 	'-f', 'mp3', // MP3 container, clean output
-	'-' // Output to handler through TCP
+	'-' // Output to stdout
 ]);
 
-ffmpeg.stderr.pipe(process.stderr);
-ffmpeg.stdout.on('data', function () {});
+ffmpeg.stderr.resume();
+ffmpeg.stdout.resume();
 
 var EMPTY_CHUNK = Buffer.alloc(44100);
 
