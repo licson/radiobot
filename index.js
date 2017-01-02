@@ -54,6 +54,7 @@ function doBroadcast(url, chat_id, msg_id, title) {
 		ffmpeg.on('exit', function (code) {
 			if (code == 0) {
 				setTimeout(function () {
+					metadataInjector.emit("metadata", config.station.name);
 					cb();
 				}, 1000);
 			} else {

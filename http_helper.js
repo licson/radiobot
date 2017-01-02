@@ -6,6 +6,10 @@ const EventEmitter = require('events');
 const metadata = new EventEmitter();
 var listenersCount = 0;
 
+metadata.on("metadata", function (title) {
+	console.log("[Injector] New title: %s", title);
+});
+
 function createHTTPHelper(distrib) {
 	var server = http.createServer(function (req, res) {
 		if (req.url == '/live.mp3') {
@@ -47,7 +51,6 @@ function createHTTPHelper(distrib) {
 
 			// Queue the title at the next metaint interval
 			var waitforMetadata = function (title) {
-				console.log("[Injector] New title: %s", title);
 				clearInterval(titleTimer);
 
 				titleTimer = setInterval(function () {
