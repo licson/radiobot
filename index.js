@@ -77,7 +77,7 @@ function doTTS(text) {
 
 function doQueueSong(file, title, ttsText, chat_id, msg_id) {
 	bot.getFile({ file_id: file }).then(function (data) {
-		var url = 'https://api.telegram.org/file/bot' + TOKEN + '/' + data.file_path;
+		var url = 'https://api.telegram.org/file/bot' + config.telegram.token + '/' + data.file_path;
 		queue.push(doTTS(ttsText));
 		queue.push(doBroadcast(url, chat_id, msg_id, title));
 		queue.start();
