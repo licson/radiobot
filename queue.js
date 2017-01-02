@@ -8,6 +8,7 @@ function Queue(loopSize) {
 	this.exceedItems = [];
 	this.running = false;
 	this.prependList = [];
+	this.length = 0;
 }
 util.inherits(Queue, EventEmitter);
 Queue.prototype._updateLength = function _updateLength() {
