@@ -66,6 +66,10 @@ function createHTTPHelper(distrib) {
 				distrib.unpipe(injector); // Remove the injector from the source if present
 				distrib.unpipe(res); // Remove current connection
 				distrib.resume(); // Continue to consume input
+
+				injector = null;
+
+				clearInterval(titleTimer); // Remove timer
 				metadata.removeListener('metadata', waitforMetadata); // Remove our metadata listener
 
 				listenersCount--;
