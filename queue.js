@@ -104,7 +104,7 @@ Queue.prototype._next = function start() {
 			self._next();
 		})
 	} catch (err) {
-		self.taskHandle = null;
+		this.taskHandle = null;
 		this.remove(task);
 		this.emit('error', err, task);
 		this._next();
@@ -117,20 +117,38 @@ Queue.prototype.start = function start() {
 	this._next();
 	return true;
 }
+Queue.prototype.signal = function signal(data) {
+	if ('function' === typeof this.taskHandle) {
+		this.taskHandle(data)
+	}
+}
 Queue.helpers = {
-	mergeTask: function(a, b) {
+	mergeTask: function(task1, task2) {
 		return function merged(cb) {
-			a(function (err, data) {
+			var handle, stopped = false;
+			handle = task1(function (err, data) {
 				if (err) {
 					return cb(err);
 				}
-				b(function (err, data2) {
+				if (stopped) {
+					cb(null, data);
+				}
+				handle = task2(function (err, data2) {
 					if (err) {
 						return cb(err);
 					}
 					cb(null, [data, data2])
 				})
 			})
+			return function wrapHandle(data) {
+				if (data !== 'stop') {
+					throw new Error('not implement yet');
+				}
+				stopped = true;
+				if ('function' === typeof handle) {
+					handle(data)
+				}
+			}
 		}
 	}
 }

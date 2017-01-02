@@ -94,6 +94,15 @@ function createHTTPHelper(distrib) {
 			});
 
 			res.end(`Your browser should redirect you shortly. If not, please click <a href="${config.station.url}">here</a>.`);
+		} else if (obj.pathname == '/status') {
+			res.writeHead(200, {
+				"Content-Type": "text/plain",
+				"Server": "licson-cast"
+			});
+			
+			res.end(`active_conn=${listenersCount}
+ rss=${process.memoryUsage().rss}
+ uptime=${process.uptime()}`);
 		} else {
 			// We don't recognize the URL
 			res.writeHead(204, {

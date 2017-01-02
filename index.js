@@ -24,7 +24,7 @@ function log(text) {
 
 function doBroadcast(url, chat_id, msg_id, title) {
 	return function (cb) {
-		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
+		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', `tcp://127.0.0.1:${config.ports.helper}`]);
 		ffmpeg.stdout.resume();
 		ffmpeg.stderr.pipe(process.stderr);
 
@@ -176,6 +176,15 @@ bot.on('message', function (data) {
 			text: output
 		});
 		return;
+	}
+	
+	if (isCmd(text, 'skip') && data.chat.username && config.admin.indexOf(data.chat.username) > -1) {
+		queue.signal('stop');
+		bot.sendMessage({
+			chat_id: chat_id,
+			reply_to_message_id: msg_id,
+			text: "The current song will stop shortly."
+		});
 	}
 
 	if (queue.length >= config.queueSize) {
