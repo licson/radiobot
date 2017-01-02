@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird-retry": "^0.10.1",
+    "icy": "^2.1.0",
     "moment": "^2.17.1",
     "node-cron": "^1.1.2",
     "queue": "^4.0.0",
