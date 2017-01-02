@@ -33,6 +33,9 @@ function createHTTPHelper(distrib) {
 
 			// Timer for sending streaming title continuously
 			var titleTimer = 0;
+			
+			// Holds last title message
+			var lastTitle = null;
 
 			// Client can handle ICY streaming titles, sending metaint
 			if (req.headers['icy-metadata'] == '1') {
@@ -54,12 +57,14 @@ function createHTTPHelper(distrib) {
 
 			// Queue the title at the next metaint interval
 			var waitforMetadata = function (title) {
-				if (req.headers['icy-metadata'] == '1') {
+				if (req.headers['icy-metadata'] == '1' && title != lastTitle) {
 					clearInterval(titleTimer);
 	
 					titleTimer = setInterval(function () {
 						injector.queue(title);
 					}, config.icy.meta_int / (config.output.bitrate / 8 * 1024) * 2000);
+					
+					lastTitle = title;
 				}
 			};
 

@@ -147,7 +147,7 @@ bot.on('message', function (data) {
 		bot.sendMessage({
 			chat_id: chat_id,
 			reply_to_message_id: msg_id,
-			text: "Welcome! I'm the DJ of Licson's Internet Radio. Just send me a song or a direct link to get your song played on https://licson.net/radio/ !"
+			text: "Welcome! I'm the DJ of Licson's Internet Radio. Just send me a song or a direct link to get your song played on " + config.station.url + " !"
 		});
 		return;
 	}

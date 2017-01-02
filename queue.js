@@ -9,6 +9,7 @@ function Queue(loopSize) {
 	this.running = false;
 	this.prependList = [];
 	this.length = 0;
+	this.taskHandle = null;
 }
 util.inherits(Queue, EventEmitter);
 Queue.prototype._updateLength = function _updateLength() {
@@ -92,7 +93,8 @@ Queue.prototype._next = function start() {
 		return;
 	}
 	try {
-		task(function (err, data) {
+		this.taskHandle = task(function (err, data) {
+			self.taskHandle = null;
 			if (err) {
 				self.remove(task);
 				self.emit('error', err, task);
@@ -102,6 +104,7 @@ Queue.prototype._next = function start() {
 			self._next();
 		})
 	} catch (err) {
+		self.taskHandle = null;
 		this.remove(task);
 		this.emit('error', err, task);
 		this._next();
