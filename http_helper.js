@@ -1,10 +1,18 @@
 const http = require('http');
 const icy = require('icy');
 const config = require('./config.json');
+const EventEmitter = require('events');
+
+const metadata = new EventEmitter();
+var listenersCount = 0;
 
 function createHTTPHelper(distrib) {
 	var server = http.createServer(function (req, res) {
 		if (req.url == '/live.mp3') {
+			listenersCount++;
+			console.log("[Server] New listener, current count: %d", listenersCount);
+			
+			// HTTP and ICY headers
 			var headers = {
 				"Accept-Ranges": "none",
 				"Content-Type": "audio/mpeg",
@@ -16,8 +24,12 @@ function createHTTPHelper(distrib) {
 				"icy-br": config.output.bitrate
 			};
 			
+			// Timer for sending streaming title continuously
+			var titleTimer = 0;
+			
 			// Client can handle ICY streaming titles, sending metaint
 			if (req.headers['icy-metadata'] == '1') {
+				console.log("[Server] Client supports ICY streaming title. Sending metaint.");
 				headers['icy-metaint'] = config.icy.meta_int;
 			}
 			
@@ -27,6 +39,7 @@ function createHTTPHelper(distrib) {
 			
 			// Pipe through the metadata injector if client supports streaming titles
 			if (req.headers['icy-metadata'] == '1') {
+				console.log("[Server] Client supports ICY streaming title. Attaching to injector.");
 				distrib.pipe(injector).pipe(res);
 			} else {
 				distrib.pipe(res);
@@ -34,18 +47,26 @@ function createHTTPHelper(distrib) {
 			
 			// Queue the title at the next metaint interval
 			var waitforMetadata = function (title) {
-				injector.queue(title); 
+				console.log("[Injector] New title: %s", title);
+				clearInterval(titleTimer);
+				
+				titleTimer = setInterval(function () {
+					injector.queue(title);
+				}, config.icy.meta_int / (config.output.bitrate / 8 * 1024) * 1000);
 			};
 			
 			// Listen on a custom metadata event
-			server.on('metadata', waitforMetadata);
+			metadata.on('metadata', waitforMetadata);
 			
 			res.on('close', function () {
 				injector.unpipe(); // Remove the injector if attached
 				distrib.unpipe(injector); // Remove the injector from the source if present
 				distrib.unpipe(res); // Remove current connection
 				distrib.resume(); // Continue to consume input
-				server.removeListener('metadata', waitforMetadata); // Remove our metadata listener
+				metadata.removeListener('metadata', waitforMetadata); // Remove our metadata listener
+				
+				listenersCount--;
+				console.log("[Server] Listener leave, current count: %d", listenersCount);
 			});
 		} else if (req.url == '/') {
 			// Do a redirect to the main page
@@ -65,8 +86,10 @@ function createHTTPHelper(distrib) {
 		}
 	});
 
-	server.listen(config.ports.http);
-	return server;
+	server.listen(config.ports.http, function () {
+		console.log("[Server] Listening on %d waiting for listeners.", config.ports.http);
+	});
+	return metadata;
 };
 
 module.exports = createHTTPHelper;

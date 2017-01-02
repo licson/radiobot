@@ -39,9 +39,8 @@ function createTCPHelper() {
 				socket.destroy();
 				return;
 			}
-
+			
 			clearInterval(emptyTimer);
-
 			socket.pipe(ffmpeg.stdin, { end: false });
 
 			/* socket.setTimeout(30000, function () {
@@ -59,7 +58,9 @@ function createTCPHelper() {
 		});
 	});
 
-	server.listen(config.ports.helper);
+	server.listen(config.ports.helper, function () {
+		console.log("[Consumer] Listening on %d waiting for push connections.", config.ports.helper);
+	});
 	return ffmpeg.stdout;
 }
 

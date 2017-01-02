@@ -7,7 +7,7 @@ const utils = require('util');
 const config = require('./config.json');
 
 // Activate the streaming server
-const streamingServer = require('./streaming');
+const metadataInjector = require('./streaming');
 
 // const TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
 
@@ -25,7 +25,7 @@ function log(text) {
 
 function doBroadcast(url, chat_id, msg_id, title) {
 	return function (cb) {
-		var ffmpeg = spawn('ffmpeg', ['-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
+		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
 		ffmpeg.stdout.resume();
 		ffmpeg.stderr.resume();
 		ffmpeg.stderr.pipe(process.stderr);
@@ -37,11 +37,13 @@ function doBroadcast(url, chat_id, msg_id, title) {
 		}
 		
 		if (title) {
-			streamingServer.emit("metadata", title);
+			metadataInjector.emit("metadata", title);
 		}
 
 		ffmpeg.on('error', function (e) {
 			cb(e);
+			metadataInjector.emit("metadata", config.station.name);
+			
 			if (chat_id && msg_id) {
 				bot.sendMessage({
 					chat_id: chat_id,
@@ -72,7 +74,7 @@ function doBroadcast(url, chat_id, msg_id, title) {
 
 function doTTS(text) {
 	var url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + encodeURIComponent(text) + "&tl=en-GB&client=tw-ob";
-	return doBroadcast(url);
+	return doBroadcast(url, null, null, config.station.name);
 };
 
 function doQueueSong(file, title, ttsText, chat_id, msg_id) {
