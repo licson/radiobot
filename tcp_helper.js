@@ -39,7 +39,7 @@ function createTCPHelper() {
 				socket.destroy();
 				return;
 			}
-			
+
 			clearInterval(emptyTimer);
 			socket.pipe(ffmpeg.stdin, { end: false });
 

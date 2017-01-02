@@ -11,7 +11,7 @@ function createHTTPHelper(distrib) {
 		if (req.url == '/live.mp3') {
 			listenersCount++;
 			console.log("[Server] New listener, current count: %d", listenersCount);
-			
+
 			// HTTP and ICY headers
 			var headers = {
 				"Accept-Ranges": "none",
@@ -23,20 +23,20 @@ function createHTTPHelper(distrib) {
 				"icy-pub": config.station.public ? '1' : '0',
 				"icy-br": config.output.bitrate
 			};
-			
+
 			// Timer for sending streaming title continuously
 			var titleTimer = 0;
-			
+
 			// Client can handle ICY streaming titles, sending metaint
 			if (req.headers['icy-metadata'] == '1') {
 				console.log("[Server] Client supports ICY streaming title. Sending metaint.");
 				headers['icy-metaint'] = config.icy.meta_int;
 			}
-			
+
 			res.writeHead(200, headers);
 
 			var injector = new icy.Writer(config.icy.meta_int);
-			
+
 			// Pipe through the metadata injector if client supports streaming titles
 			if (req.headers['icy-metadata'] == '1') {
 				console.log("[Server] Client supports ICY streaming title. Attaching to injector.");
@@ -44,27 +44,27 @@ function createHTTPHelper(distrib) {
 			} else {
 				distrib.pipe(res);
 			}
-			
+
 			// Queue the title at the next metaint interval
 			var waitforMetadata = function (title) {
 				console.log("[Injector] New title: %s", title);
 				clearInterval(titleTimer);
-				
+
 				titleTimer = setInterval(function () {
 					injector.queue(title);
 				}, config.icy.meta_int / (config.output.bitrate / 8 * 1024) * 1000);
 			};
-			
+
 			// Listen on a custom metadata event
 			metadata.on('metadata', waitforMetadata);
-			
+
 			res.on('close', function () {
 				injector.unpipe(); // Remove the injector if attached
 				distrib.unpipe(injector); // Remove the injector from the source if present
 				distrib.unpipe(res); // Remove current connection
 				distrib.resume(); // Continue to consume input
 				metadata.removeListener('metadata', waitforMetadata); // Remove our metadata listener
-				
+
 				listenersCount--;
 				console.log("[Server] Listener leave, current count: %d", listenersCount);
 			});

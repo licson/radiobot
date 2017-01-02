@@ -18,7 +18,7 @@ function saveConfig() {
 }
 
 function log(text) {
-	fs.appendFile('radiobot.log', text + '\n', function(err) {
+	fs.appendFile('radiobot.log', text + '\n', function (err) {
 		if (err) console.log(err);
 	})
 }
@@ -35,7 +35,7 @@ function doBroadcast(url, chat_id, msg_id, title) {
 			var ffprobe = spawn('ffprobe', ['-hide_banner', url]);
 			ffprobe.stderr.pipe(process.stdout);
 		}
-		
+
 		if (title) {
 			metadataInjector.emit("metadata", title);
 		}
@@ -43,7 +43,7 @@ function doBroadcast(url, chat_id, msg_id, title) {
 		ffmpeg.on('error', function (e) {
 			cb(e);
 			metadataInjector.emit("metadata", config.station.name);
-			
+
 			if (chat_id && msg_id) {
 				bot.sendMessage({
 					chat_id: chat_id,
@@ -230,14 +230,14 @@ bot.on('message', function (data) {
 		var ttsText = `Next song is from ${name} on Telegram.`;
 		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): [${data.document.file_name}](${data.document.file_id})`));
-		
+
 		doQueueSong(data.document.file_id, titleText, ttsText, chat_id, msg_id);
 		addToSongList(data.document.file_id, name);
 	} else if (urlRegex({ exact: true }).test(text)) {
 		var ttsText = `Next song is from ${name} on Telegram.`;
 		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): ${text}`));
-		
+
 		queue.push(doTTS(ttsText));
 		queue.push(doBroadcast(text, chat_id, msg_id, titleText));
 		queue.start();

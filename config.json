@@ -1,24 +1,24 @@
 {
-    "ports": {
-        "http": 8080,
-        "helper": 5000
-    },
-    "station": {
-        "name": "Licson's Radio",
-        "description": "The first interactive radio, ever.",
-        "url": "https://licson.net/radio/",
-        "public": false
-    },
-    "icy": {
-        "meta_int": 2048
-    },
-    "output": {
-        "samplerate": 44100,
-        "channels": 2,
-        "bitrate": 320,
-        "normalize": true
-    },
-    "telegram": {
-        "token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ"
-    }
+	"ports": {
+		"http": 8080,
+		"helper": 5000
+	},
+	"station": {
+		"name": "Licson's Radio",
+		"description": "The first interactive radio, ever.",
+		"url": "https://licson.net/radio/",
+		"public": false
+	},
+	"icy": {
+		"meta_int": 2048
+	},
+	"output": {
+		"samplerate": 44100,
+		"channels": 2,
+		"bitrate": 320,
+		"normalize": true
+	},
+	"telegram": {
+		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ"
+	}
 }
