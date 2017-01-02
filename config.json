@@ -19,6 +19,8 @@
 		"normalize": true
 	},
 	"telegram": {
-		"token": "310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs"
-	}
+		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ"
+	},
+	"queueSize": 20,
+	"loopSize": 20
 }

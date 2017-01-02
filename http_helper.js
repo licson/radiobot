@@ -54,11 +54,13 @@ function createHTTPHelper(distrib) {
 
 			// Queue the title at the next metaint interval
 			var waitforMetadata = function (title) {
-				clearInterval(titleTimer);
-
-				titleTimer = setInterval(function () {
-					injector.queue(title);
-				}, config.icy.meta_int / (config.output.bitrate / 8 * 1024) * 1000);
+				if (req.headers['icy-metadata'] == '1') {
+					clearInterval(titleTimer);
+	
+					titleTimer = setInterval(function () {
+						injector.queue(title);
+					}, config.icy.meta_int / (config.output.bitrate / 8 * 1024) * 2000);
+				}
 			};
 
 			// Listen on a custom metadata event

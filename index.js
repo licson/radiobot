@@ -1,7 +1,8 @@
 const Telegram = require('telegram-bot-api');
-const Queue = require('queue');
+const Queue = require("./queue");
 const spawn = require('child_process').spawn;
 const urlRegex = require('url-regex');
+const retry = require('bluebird-retry');
 const fs = require('fs');
 const utils = require('util');
 const config = require('./config.json');
@@ -25,7 +26,6 @@ function doBroadcast(url, chat_id, msg_id, title) {
 	return function (cb) {
 		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', 'tcp://127.0.0.1:5000']);
 		ffmpeg.stdout.resume();
-		ffmpeg.stderr.resume();
 		ffmpeg.stderr.pipe(process.stderr);
 
 		//Show audio info
@@ -73,14 +73,22 @@ function doBroadcast(url, chat_id, msg_id, title) {
 
 function doTTS(text) {
 	var url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + encodeURIComponent(text) + "&tl=en-GB&client=tw-ob";
-	return doBroadcast(url, null, null, config.station.name);
+	return doBroadcast(url);
 };
 
 function doQueueSong(file, title, ttsText, chat_id, msg_id) {
-	bot.getFile({ file_id: file }).then(function (data) {
+	retry(function () {
+		return bot.getFile({ file_id: file });
+	}, {
+		throw_original: true,
+		interval: 10000,
+		max_tries: 10
+	}).then(function (data) {
 		var url = 'https://api.telegram.org/file/bot' + config.telegram.token + '/' + data.file_path;
-		queue.push(doTTS(ttsText));
-		queue.push(doBroadcast(url, chat_id, msg_id, title));
+		queue.push(Queue.helpers.mergeTask(
+			doTTS(ttsText),
+			doBroadcast(url, chat_id, msg_id, title)
+		))
 		queue.start();
 
 		bot.sendMessage({
@@ -94,6 +102,7 @@ function doQueueSong(file, title, ttsText, chat_id, msg_id) {
 			reply_to_message_id: msg_id,
 			text: "Oops! The file size seems larger than 20MB and I can't get it from Telegram."
 		});
+		console.error('[Song Queue] Cannot fetch from Telegram, %s', e.toString());
 	});
 };
 
@@ -101,12 +110,12 @@ function isCmd(text, cmd) {
 	return text.indexOf('/' + cmd) == 0 ? true : false;
 };
 
-var queue = Queue({ concurrency: 1 });
+var queue = new Queue(config.loopSize);
 queue.on('error', function () { });
 
 var songList = [];
 function addToSongList(file, name, title, artist) {
-	if (songList.length >= 20) songList.splice(0, 1);
+	if (songList.length >= config.queueSize) songList.splice(0, 1);
 	songList.push({
 		file: file,
 		name: name,
@@ -144,12 +153,12 @@ bot.on('message', function (data) {
 	}
 
 	if (isCmd(text, 'queue')) {
-		var realQueueLength = queue.length % 2 == 0 ? queue.length / 2 : (queue.length - 1) / 2;
+		var realQueueLength = queue.length;
 
 		bot.sendMessage({
 			chat_id: chat_id,
 			reply_to_message_id: msg_id,
-			text: "There are " + realQueueLength + " songs in the queue. " + (realQueueLength > 20 ? "I'm quite busy right now, please find me again after, like, 30 minutes." : "")
+			text: "There are " + realQueueLength + " songs in the queue. " + (realQueueLength >= config.queueSize ? "I'm quite busy right now, please find me again after, like, 30 minutes." : "")
 		});
 		return;
 	}
@@ -169,7 +178,7 @@ bot.on('message', function (data) {
 		return;
 	}
 
-	if (queue.length > 40) {
+	if (queue.length >= config.queueSize) {
 		bot.sendMessage({
 			chat_id: chat_id,
 			reply_to_message_id: msg_id,
@@ -194,8 +203,10 @@ bot.on('message', function (data) {
 
 		if (songList[index].isURL) {
 			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (from Song List) ${songList[index].file}`));
-			queue.push(doTTS(ttsText));
-			queue.push(doBroadcast(songList[index].file, chat_id, msg_id));
+			queue.push(Queue.helpers.mergeTask(
+				doTTS(ttsText),
+				doBroadcast(songList[index].file, chat_id, msg_id)
+			))
 			queue.start();
 
 			bot.sendMessage({
@@ -236,9 +247,10 @@ bot.on('message', function (data) {
 		var ttsText = `Next song is from ${name} on Telegram.`;
 		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): ${text}`));
-
-		queue.push(doTTS(ttsText));
-		queue.push(doBroadcast(text, chat_id, msg_id, titleText));
+		queue.push(Queue.helpers.mergeTask(
+			doTTS(ttsText),
+			doBroadcast(text, chat_id, msg_id, titleText)
+		))
 		queue.start();
 
 		bot.sendMessage({

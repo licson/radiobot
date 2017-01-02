@@ -10,7 +10,6 @@ function Queue(loopSize) {
 	this.prependList = [];
 }
 util.inherits(Queue, EventEmitter);
-
 Queue.prototype._updateLength = function _updateLength() {
 	this.length = this.items.length - this.old + this.exceedItems.length + this.prependList.length;
 }
@@ -51,6 +50,7 @@ Queue.prototype.shift = function shift() {
 	this.items.push(item);
 	this._updateQueue()
 	this._updateLength();
+	this.emit('requeue', item);
 	return item;
 }
 // these task only run once
@@ -93,16 +93,17 @@ Queue.prototype._next = function start() {
 	try {
 		task(function (err, data) {
 			if (err) {
-				this.remove(task);
+				self.remove(task);
 				self.emit('error', err, task);
+			} else {
+				self.emit('success', data, task);
 			}
-			self.emit('success', data, task);
 			self._next();
 		})
 	} catch (err) {
 		this.remove(task);
-		self.emit('error', err, task);
-		self._next();
+		this.emit('error', err, task);
+		this._next();
 	}
 }
 Queue.prototype.start = function start() {
