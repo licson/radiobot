@@ -9,8 +9,6 @@ const config = require('./config.json');
 // Activate the streaming server
 const metadataInjector = require('./streaming');
 
-// const TOKEN = '310584222:AAEwab47dpPjaGcmybMlDea7rzq41pTzQxs';
-
 function saveConfig() {
 	fs.writeFile('config.json', JSON.stringify(config), function (err) {
 		if (err) console.log(err);
