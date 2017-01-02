@@ -1,7 +1,8 @@
 const http = require('http');
 const icy = require('icy');
-const config = require('./config.json');
 const EventEmitter = require('events');
+const url = require('url');
+const config = require('./config.json');
 
 const metadata = new EventEmitter();
 var listenersCount = 0;
@@ -12,7 +13,9 @@ metadata.on("metadata", function (title) {
 
 function createHTTPHelper(distrib) {
 	var server = http.createServer(function (req, res) {
-		if (req.url == '/live.mp3') {
+		var obj = url.parse(req.url);
+
+		if (obj.pathname == '/live.mp3' || obj.pathname == '/;' || obj.pathname == '/stream') {
 			listenersCount++;
 			console.log("[Server] New listener, current count: %d", listenersCount);
 
@@ -75,7 +78,7 @@ function createHTTPHelper(distrib) {
 				listenersCount--;
 				console.log("[Server] Listener leave, current count: %d", listenersCount);
 			});
-		} else if (req.url == '/') {
+		} else if (obj.pathname == '/') {
 			// Do a redirect to the main page
 			res.writeHead(302, {
 				"Content-Type": "text/html",
