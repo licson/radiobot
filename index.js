@@ -1,5 +1,7 @@
 const Telegram = require('telegram-bot-api');
-const Queue = require("./queue");
+const Queue = require("./utils/queue");
+const MediaInfo = require("./utils/media_info");
+const Promise = require('bluebird');
 const spawn = require('child_process').spawn;
 const urlRegex = require('url-regex');
 const retry = require('bluebird-retry');
@@ -22,43 +24,46 @@ function log(text) {
 	})
 }
 
-function doBroadcast(url, chat_id, msg_id, title) {
+function getFile(file) {
+	return new Promise(function (resolve, reject) {
+		if (urlRegex({ exact: true }).test(file)) {
+			resolve(file);
+		} else {
+			retry(function () {
+				return bot.getFile({ file_id: file });
+			}, {
+				throw_original: true,
+				interval: 10000,
+				max_tries: 10
+			}).then(function (data) {
+				var url = 'https://api.telegram.org/file/bot' + config.telegram.token + '/' + data.file_path;
+				resolve(url);
+			}).catch(function (e) {
+				reject(e);
+			});
+		}
+	});
+};
+
+function doBroadcast(file, chat_id, msg_id, title) {
 	return function (cb) {
-		var ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', `tcp://127.0.0.1:${config.ports.helper}`]);
-		ffmpeg.stdout.resume();
-		ffmpeg.stderr.pipe(process.stderr);
-
-		//Show audio info
-		if (chat_id && msg_id) {
-			var ffprobe = spawn('ffprobe', ['-hide_banner', url]);
-			ffprobe.stderr.pipe(process.stdout);
-		}
-
-		if (title) {
-			metadataInjector.emit("metadata", title);
-		}
-
-		ffmpeg.on('error', function (e) {
-			cb(e);
-			metadataInjector.emit("metadata", config.station.name);
-
-			if (chat_id && msg_id) {
-				bot.sendMessage({
-					chat_id: chat_id,
-					reply_to_message_id: msg_id,
-					text: "Oops! There are errors and your song isn't played."
-				});
+		var ffmpeg = null, cancelled = false;
+		
+		getFile(file).then(function (url) {
+			if (cancelled) return;
+			
+			ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', `tcp://127.0.0.1:${config.ports.helper}`]);
+			ffmpeg.stdout.resume();
+			ffmpeg.stderr.pipe(process.stderr);
+	
+			if (title) {
+				metadataInjector.emit("metadata", title);
 			}
-		});
-
-		ffmpeg.on('exit', function (code) {
-			if (code == 0) {
-				setTimeout(function () {
-					metadataInjector.emit("metadata", config.station.name);
-					cb();
-				}, 1000);
-			} else {
-				cb(code);
+	
+			ffmpeg.on('error', function (e) {
+				cb(e);
+				metadataInjector.emit("metadata", config.station.name);
+	
 				if (chat_id && msg_id) {
 					bot.sendMessage({
 						chat_id: chat_id,
@@ -66,8 +71,44 @@ function doBroadcast(url, chat_id, msg_id, title) {
 						text: "Oops! There are errors and your song isn't played."
 					});
 				}
-			}
+			});
+	
+			ffmpeg.on('exit', function (code) {
+				if (code == 0 || cancelled) {
+					setTimeout(function () {
+						metadataInjector.emit("metadata", config.station.name);
+						cb();
+					}, 1000);
+				} else {
+					cb(code);
+					if (chat_id && msg_id) {
+						bot.sendMessage({
+							chat_id: chat_id,
+							reply_to_message_id: msg_id,
+							text: "Oops! There are errors and your song isn't played."
+						});
+					}
+				}
+			});
+		}).catch(function (e) {
+			bot.sendMessage({
+				chat_id: chat_id,
+				reply_to_message_id: msg_id,
+				text: "Oops! The file size seems larger than 20MB and I can't get it from Telegram."
+			});
+			
+			console.error('[Song Queue] Cannot fetch from Telegram, %s', e.toString());
+			cb(e);
 		});
+		
+		return function stop() {
+			cancelled = true;
+			if (!ffmpeg) {
+				cb();
+				return; // Don't let stupid users/script kiddies kill the server
+			}
+			ffmpeg.kill('SIGTERM');
+		}
 	};
 };
 
@@ -77,32 +118,16 @@ function doTTS(text) {
 };
 
 function doQueueSong(file, title, ttsText, chat_id, msg_id) {
-	retry(function () {
-		return bot.getFile({ file_id: file });
-	}, {
-		throw_original: true,
-		interval: 10000,
-		max_tries: 10
-	}).then(function (data) {
-		var url = 'https://api.telegram.org/file/bot' + config.telegram.token + '/' + data.file_path;
-		queue.push(Queue.helpers.mergeTask(
-			doTTS(ttsText),
-			doBroadcast(url, chat_id, msg_id, title)
-		))
-		queue.start();
+	queue.push(Queue.helpers.mergeTask(
+		doTTS(ttsText),
+		doBroadcast(file, chat_id, msg_id, title)
+	))
+	queue.start();
 
-		bot.sendMessage({
-			chat_id: chat_id,
-			reply_to_message_id: msg_id,
-			text: "Your music is scheduled to play. Use /queue to see how many songs you need to wait."
-		});
-	}).catch(function (e) {
-		bot.sendMessage({
-			chat_id: chat_id,
-			reply_to_message_id: msg_id,
-			text: "Oops! The file size seems larger than 20MB and I can't get it from Telegram."
-		});
-		console.error('[Song Queue] Cannot fetch from Telegram, %s', e.toString());
+	bot.sendMessage({
+		chat_id: chat_id,
+		reply_to_message_id: msg_id,
+		text: "Your music is scheduled to play. Use /queue to see how many songs you need to wait."
 	});
 };
 
@@ -126,7 +151,7 @@ function addToSongList(file, name, title, artist) {
 };
 
 // Timed shows
-require('./timed_broadcast')(queue, doTTS, doBroadcast);
+require('./timed_broadcast')(queue, doTTS, doBroadcast, metadataInjector);
 
 var bot = new Telegram({
 	token: config.telegram.token,
@@ -179,14 +204,25 @@ bot.on('message', function (data) {
 	}
 	
 	if (isCmd(text, 'skip') && data.chat.username && config.admin.indexOf(data.chat.username) > -1) {
+		// remove the song
+		queue.remove(queue.currentTask);
 		queue.signal('stop');
 		bot.sendMessage({
 			chat_id: chat_id,
 			reply_to_message_id: msg_id,
-			text: "The current song will stop shortly."
+			text: "The current song will stop and removed shortly."
 		});
 	}
-
+	
+	if (isCmd(text, 'next') && data.chat.username && config.admin.indexOf(data.chat.username) > -1) {
+		queue.signal('stop');
+		bot.sendMessage({
+			chat_id: chat_id,
+			reply_to_message_id: msg_id,
+			text: "The next song will start shortly."
+		});
+	}
+	
 	if (queue.length >= config.queueSize) {
 		bot.sendMessage({
 			chat_id: chat_id,
@@ -210,23 +246,8 @@ bot.on('message', function (data) {
 			title = `${songList[index].title} - ${songList[index].artist}`;
 		}
 
-		if (songList[index].isURL) {
-			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (from Song List) ${songList[index].file}`));
-			queue.push(Queue.helpers.mergeTask(
-				doTTS(ttsText),
-				doBroadcast(songList[index].file, chat_id, msg_id)
-			))
-			queue.start();
-
-			bot.sendMessage({
-				chat_id: chat_id,
-				reply_to_message_id: msg_id,
-				text: "Your music is scheduled to play. Use /queue to see how many songs you need to wait."
-			});
-		} else {
-			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (${songList[index].file})`));
-			doQueueSong(songList[index].file, ttsText, chat_id, msg_id);
-		}
+		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (${songList[index].file})`));
+		doQueueSong(songList[index].file, ttsText, chat_id, msg_id);
 	}
 
 	if (data.audio) {
@@ -246,28 +267,49 @@ bot.on('message', function (data) {
 		doQueueSong(data.audio.file_id, titleText, ttsText, chat_id, msg_id);
 		addToSongList(data.audio.file_id, name, title, artist);
 	} else if (data.document) {
+		var regex = /\.(mp3|aac|m4a|ogg|flac|asf|wma|)$/i;
 		var ttsText = `Next song is from ${name} on Telegram.`;
 		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): [${data.document.file_name}](${data.document.file_id})`));
 
-		doQueueSong(data.document.file_id, titleText, ttsText, chat_id, msg_id);
-		addToSongList(data.document.file_id, name);
+		if (regex.test(data.document.file_name)) {
+			getFile(data.document.file_id).then(function (url) {
+				MediaInfo(url).then(function (info) {
+					if (info.title && info.artist) {
+						ttsText = `Next is ${info.title} performed by ${info.artist} from ${name} on Telegram.`;
+						titleText = `${info.title} - ${info.artist}`;
+					}
+					
+					doQueueSong(url, titleText, ttsText, chat_id, msg_id);
+					addToSongList(data.document.file_id, name, info.title || null, info.artist || null);
+				});
+			}).catch(function (e) {
+				bot.sendMessage({
+					chat_id: chat_id,
+					reply_to_message_id: msg_id,
+					text: "Oops! The file size seems larger than 20MB and I can't get it from Telegram."
+				});
+				console.error('[Song Queue] Cannot fetch from Telegram, %s', e.toString());
+			});
+		} else {
+			bot.sendMessage({
+				chat_id: chat_id,
+				reply_to_message_id: msg_id,
+				text: "I don't know these formats."
+			});
+		}
 	} else if (urlRegex({ exact: true }).test(text)) {
 		var ttsText = `Next song is from ${name} on Telegram.`;
 		var titleText = `Song from ${name}.`
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): ${text}`));
-		queue.push(Queue.helpers.mergeTask(
-			doTTS(ttsText),
-			doBroadcast(text, chat_id, msg_id, titleText)
-		))
-		queue.start();
+
+		doQueueSong(text, titleText, ttsText, chat_id, msg_id);
+		addToSongList(text, name);
 
 		bot.sendMessage({
 			chat_id: chat_id,
 			reply_to_message_id: msg_id,
 			text: "Your music is scheduled to play. Use /queue to see how many songs you need to wait."
 		});
-
-		addToSongList(text, name);
 	}
 });

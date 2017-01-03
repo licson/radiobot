@@ -21,7 +21,7 @@
 	"telegram": {
 		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ"
 	},
-	"admin": [ "licson" ],
+	"admin": [ "licson", "mmis1000" ],
 	"queueSize": 20,
 	"loopSize": 20
 }

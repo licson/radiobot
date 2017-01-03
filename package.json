@@ -12,6 +12,7 @@
     "bluebird-retry": "^0.10.1",
     "icy": "^2.1.0",
     "moment": "^2.17.1",
+    "music-metadata": "^0.6.0",
     "node-cron": "^1.1.2",
     "queue": "^4.0.0",
     "request": "^2.79.0",

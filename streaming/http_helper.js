@@ -2,7 +2,7 @@ const http = require('http');
 const icy = require('icy');
 const EventEmitter = require('events');
 const url = require('url');
-const config = require('./config.json');
+const config = require('../config.json');
 
 const metadata = new EventEmitter();
 var listenersCount = 0;
@@ -101,8 +101,8 @@ function createHTTPHelper(distrib) {
 			});
 			
 			res.end(`active_conn=${listenersCount}
- rss=${process.memoryUsage().rss}
- uptime=${process.uptime()}`);
+rss=${process.memoryUsage().rss}
+uptime=${process.uptime()}`);
 		} else {
 			// We don't recognize the URL
 			res.writeHead(204, {

@@ -1,6 +1,6 @@
 const net = require('net');
 const spawn = require('child_process').spawn;
-const config = require('./config.json');
+const config = require('../config.json');
 
 var ffmpeg = spawn('ffmpeg', [
 	'-f', 's16le', // Input is signed 16-bit raw PCM
