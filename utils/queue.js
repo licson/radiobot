@@ -1,6 +1,19 @@
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
+// wrapper function to prevent duplicate call to callback
+function callOnce(fn) {
+	var called = false;
+	return function () {
+		if (called) {
+			console.error(new Error('expect function be called only once'));
+			return;
+		}
+		called = true;
+		return fn.apply(null, [].slice.call(arguments, 0));
+	}
+}
+
 function Queue(loopSize) {
 	this.max = loopSize;
 	this.items = [];
@@ -10,6 +23,7 @@ function Queue(loopSize) {
 	this.prependList = [];
 	this.length = 0;
 	this.taskHandle = null;
+	this.currentTask = null;
 }
 util.inherits(Queue, EventEmitter);
 Queue.prototype._updateLength = function _updateLength() {
@@ -28,6 +42,7 @@ Queue.prototype.push = function push(item) {
 		return true
 	}
 	if(this.old > 0) {
+		this.emit('remove', this.items[this.items.length - this.old]);
 		this.items.splice(this.items.length - this.old, 1, item);
 		this.old--;
 		this._updateLength();
@@ -48,11 +63,14 @@ Queue.prototype.shift = function shift() {
 	if (this.old < this.items.length) {
 		this.old++;
 	}
+	if (this.items.length === 0) {
+		return null;
+	}
 	item = this.items.shift();
 	this.items.push(item);
 	this._updateQueue()
 	this._updateLength();
-	this.emit('requeue', item);
+	this.emit('repeat', item);
 	return item;
 }
 // these task only run once
@@ -65,11 +83,13 @@ Queue.prototype.remove = function remove(item) {
 	for (i = this.exceedItems.length - 1; i >= 0; i--) {
 		if (item === this.exceedItems[i]) {
 			this.exceedItems.splice(i, 1)
+			this.emit('remove', item)
 		}
 	}
 	for (i = this.prependList.length - 1; i >= 0; i--) {
 		if (item === this.prependList[i]) {
 			this.prependList.splice(i, 1)
+			this.emit('remove', item)
 		}
 	}
 	for (i = this.items.length - 1; i >= 0; i--) {
@@ -77,6 +97,7 @@ Queue.prototype.remove = function remove(item) {
 		if (item === this.items[i]) {
 			if (isOld) this.old--;
 			this.items.splice(i, 1)
+			this.emit('remove', item)
 		}
 	}
 	this._updateQueue();
@@ -92,9 +113,11 @@ Queue.prototype._next = function start() {
 		this.running = false;
 		return;
 	}
+	this.currentTask = task;
 	try {
-		this.taskHandle = task(function (err, data) {
+		this.taskHandle = task(callOnce(function (err, data) {
 			self.taskHandle = null;
+			self.currentTask = null;
 			if (err) {
 				self.remove(task);
 				self.emit('error', err, task);
@@ -102,9 +125,10 @@ Queue.prototype._next = function start() {
 				self.emit('success', data, task);
 			}
 			self._next();
-		})
+		}))
 	} catch (err) {
 		this.taskHandle = null;
+		this.currentTask = null;
 		this.remove(task);
 		this.emit('error', err, task);
 		this._next();
@@ -126,20 +150,20 @@ Queue.helpers = {
 	mergeTask: function(task1, task2) {
 		return function merged(cb) {
 			var handle, stopped = false;
-			handle = task1(function (err, data) {
+			handle = task1(callOnce(function (err, data) {
 				if (err) {
 					return cb(err);
 				}
 				if (stopped) {
 					cb(null, data);
 				}
-				handle = task2(function (err, data2) {
+				handle = task2(callOnce(function (err, data2) {
 					if (err) {
 						return cb(err);
 					}
 					cb(null, [data, data2])
-				})
-			})
+				}))
+			}))
 			return function wrapHandle(data) {
 				if (data !== 'stop') {
 					throw new Error('not implement yet');
