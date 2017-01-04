@@ -247,7 +247,7 @@ bot.on('message', function (data) {
 		}
 
 		log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (${songList[index].file})`));
-		doQueueSong(songList[index].file, ttsText, chat_id, msg_id);
+		doQueueSong(songList[index].file, title, ttsText, chat_id, msg_id);
 	}
 
 	if (data.audio) {
