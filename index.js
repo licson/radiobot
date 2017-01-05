@@ -75,10 +75,10 @@ function doBroadcast(file, chat_id, msg_id, title) {
 	
 			ffmpeg.on('exit', function (code) {
 				if (code == 0 || cancelled) {
-					setTimeout(function () {
+					process.nextTick(function () {
 						metadataInjector.emit("metadata", config.station.name);
 						cb();
-					}, 1000);
+					});
 				} else {
 					cb(code);
 					if (chat_id && msg_id) {

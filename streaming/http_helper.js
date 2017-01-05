@@ -5,11 +5,39 @@ const url = require('url');
 const config = require('../config.json');
 
 const metadata = new EventEmitter();
+
+function writeServerSentEvent(res, eventName, data) {
+	res.write(`event: ${eventName}\r\ndata: ${data}\r\n\r\n`);
+}
+
 var listenersCount = 0;
+var pollingInfoConnections = [];
+var serverSentEventConnections = [];
+var currentTitle = '';
+
+// return null if the polling wait too long
+function waitTimeout(res, list) {
+	setTimeout(function() {
+		var index = list.indexOf(res);
+		if (index >= 0) {
+			res.end('{}');
+			list.splice(index, 1);
+		}
+	}, 40 * 1000);
+}
 
 metadata.on("metadata", function (title) {
 	console.log("[Injector] New title: %s", title);
+	currentTitle = title;
+	pollingInfoConnections.forEach(function (res) {
+		res.end(JSON.stringify({ title: title }));
+	})
+	pollingInfoConnections.length = 0;
+	serverSentEventConnections.forEach(function (res) {
+		writeServerSentEvent(res, "title", title);
+	})
 });
+
 
 function createHTTPHelper(distrib) {
 	var server = http.createServer(function (req, res) {
@@ -103,6 +131,64 @@ function createHTTPHelper(distrib) {
 			res.end(`active_conn=${listenersCount}
 rss=${process.memoryUsage().rss}
 uptime=${process.uptime()}`);
+		} else if (obj.pathname == '/info') {
+			res.writeHead(200, {
+				"Content-Type": "application/json",
+				"Access-Control-Allow-Origin": "*",
+				"Server": "licson-cast"
+			});
+			
+			res.end(JSON.stringify({
+				"station-name": config.station.name,
+				"url": config.station.url,
+				"description": config.station.description,
+				"bitrate": config.output.bitrate,
+				"title": currentTitle
+			}));
+		} else if (obj.pathname == '/title/poll') {
+			res.writeHead(200, {
+				"Content-Type": "application/json",
+				"Access-Control-Allow-Origin": "*",
+				"Cache-Control": "no-cache",
+				"Server": "licson-cast"
+			});
+			
+			req.on('close', function () {
+				var index = pollingInfoConnections.indexOf(res);
+				if (index >= 0) {
+					pollingInfoConnections.splice(index, 1)
+				}
+			})
+			
+			pollingInfoConnections.push(res);
+			waitTimeout(res, pollingInfoConnections);
+			
+		} else if (obj.pathname == '/title/sse') {
+			res.writeHead(200, {
+				"Content-Type": "text/event-stream",
+				"Access-Control-Allow-Origin": "*",
+				"Cache-Control": "no-cache",
+				"Server": "licson-cast"
+			});
+			
+			req.on('close', function () {
+				var index = serverSentEventConnections.indexOf(res);
+				if (index >= 0) {
+					serverSentEventConnections.splice(index, 1)
+				}
+			})
+			
+			serverSentEventConnections.push(res);
+			
+			res.write("retry: 1000\r\n\r\n");
+			
+			writeServerSentEvent(res, "info", JSON.stringify({
+				"station-name": config.station.name,
+				"url": config.station.url,
+				"description": config.station.description,
+				"bitrate": config.output.bitrate
+			}));
+			writeServerSentEvent(res, "title", currentTitle);
 		} else {
 			// We don't recognize the URL
 			res.writeHead(204, {

@@ -3,7 +3,7 @@ const spawn = require('child_process').spawn;
 const config = require('../config.json');
 
 var ffmpeg = spawn('ffmpeg', [
-	'-f', 's16le', // Input is signed 16-bit raw PCM
+	'-re', '-f', 's16le', // Input is signed 16-bit raw PCM
 	'-ac', '2', // Input has two channels
 	'-ar', '44100', // Input sample rate is 44.1kHz
 	'-i', '-', // Get from stdin
@@ -11,7 +11,8 @@ var ffmpeg = spawn('ffmpeg', [
 	'-ac', config.output.channels, // Output channels
 	'-ar', config.output.samplerate, // Output sample rate
 	'-ab', config.output.bitrate + 'k',  // Bitrate
-	'-af', config.output.normalize ? 'dynaudnorm' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio)
+	'-af', config.output.normalize ? 'dynaudnorm' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio),
+	'-bufsize', '640k', // 2 seconds of buffer
 	'-f', 'mp3', // MP3 container, clean output
 	'-' // Output to stdout
 ]);
