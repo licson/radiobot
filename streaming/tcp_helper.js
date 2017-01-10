@@ -1,6 +1,7 @@
 const net = require('net');
 const spawn = require('child_process').spawn;
 const config = require('../config.json');
+const MixerStream = require('./mixer');
 
 var ffmpeg = spawn('ffmpeg', [
 	'-re', '-f', 's16le', // Input is signed 16-bit raw PCM
@@ -11,7 +12,7 @@ var ffmpeg = spawn('ffmpeg', [
 	'-ac', config.output.channels, // Output channels
 	'-ar', config.output.samplerate, // Output sample rate
 	'-ab', config.output.bitrate + 'k',  // Bitrate
-	'-af', config.output.normalize ? 'dynaudnorm' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio),
+	'-af', config.output.normalize ? 'dynaudnorm=f=250:g=15' : 'anull', // Use Dynamic Range Normalization? (sounds like real radio),
 	'-bufsize', '640k', // 2 seconds of buffer
 	'-f', 'mp3', // MP3 container, clean output
 	'-' // Output to stdout
@@ -20,45 +21,17 @@ var ffmpeg = spawn('ffmpeg', [
 ffmpeg.stderr.resume();
 ffmpeg.stdout.resume();
 
-var EMPTY_CHUNK = Buffer.alloc(44100);
-
-var emptyTimer = 0;
-
-function writeEmpty() {
-	emptyTimer = setInterval(function () {
-		ffmpeg.stdin.write(EMPTY_CHUNK);
-	}, 250);
-};
-
-writeEmpty();
+var mixer = new MixerStream(16, 2, 44100);
+mixer.pipe(ffmpeg.stdin);
 
 function createTCPHelper() {
 	var server = net.createServer(function (socket) {
-		server.getConnections(function (e, count) {
-			if (e || count > 1) {
-				socket.end();
-				socket.destroy();
-				return;
-			}
-
-			clearInterval(emptyTimer);
-			socket.pipe(ffmpeg.stdin, { end: false });
-
-			/* socket.setTimeout(30000, function () {
-				socket.end();
-				socket.destroy();
-			}); */
-
-			socket.on('error', function (e) {
-				console.error(e);
-			});
-
-			socket.on('close', function () {
-				writeEmpty();
-			});
-		});
+		var source = mixer.addSource(socket);
+		
+		source.setVolume(0);
+		source.fadeTo(1, 400);
 	});
-
+	
 	server.listen(config.ports.helper, function () {
 		console.log("[Consumer] Listening on %d waiting for push connections.", config.ports.helper);
 	});

@@ -12,12 +12,6 @@ const config = require('./config.json');
 // Activate the streaming server
 const metadataInjector = require('./streaming');
 
-function saveConfig() {
-	fs.writeFile('config.json', JSON.stringify(config), function (err) {
-		if (err) console.log(err);
-	});
-}
-
 function log(text) {
 	fs.appendFile('radiobot.log', text + '\n', function (err) {
 		if (err) console.log(err);
@@ -105,7 +99,7 @@ function doBroadcast(file, chat_id, msg_id, title) {
 			cancelled = true;
 			if (!ffmpeg) {
 				cb();
-				return; // Don't let stupid users/script kiddies kill the server
+				return; // Since ffmpeg hasn't lived, it can't be killed.
 			}
 			ffmpeg.kill('SIGTERM');
 		}
@@ -192,7 +186,14 @@ bot.on('message', function (data) {
 		var output = "Recent songs: \n";
 
 		songList.forEach(function (item, i) {
-			output += "/song_" + (i + 1) + " uploaded by " + item.name + ". \n";
+			output += "/song_" + (i + 1) + " uploaded by " + item.name;// + ". \n";
+			if (item.title) {
+				output += ' ( ' + item.title;
+				if (item.artist) {
+					output += ' performed by ' + item.artist;
+				}
+				output += ' )\n'
+			}
 		});
 
 		bot.sendMessage({
@@ -223,6 +224,18 @@ bot.on('message', function (data) {
 		});
 	}
 	
+	if (isCmd(text, 'tts') && data.chat.username && config.admin.indexOf(data.chat.username) > -1) {
+		var speech = text.split(/\s/).slice(1).join(' ');
+		if (speech) {
+			doTTS(speech)(function () {});
+			bot.sendMessage({
+				chat_id: chat_id,
+				reply_to_message_id: msg_id,
+				text: "The text will be played shortly."
+			});
+		}
+	}
+	
 	if (queue.length >= config.queueSize) {
 		bot.sendMessage({
 			chat_id: chat_id,
@@ -242,7 +255,7 @@ bot.on('message', function (data) {
 
 		if (songList[index].title && songList[index].artist) {
 			log(utils.format(`${new Date().toLocaleTimeString()} ${name}(${data.from.username}): (from Song List) [${songList[index].artist} - ${songList[index].title}] (${songList[index].file})`));
-			ttsText = `Next song is ${songList[index].title} performed by ${songList[index].artist} from {songList[index].name}, picked up by ${name} on Telegram.`;
+			ttsText = `Next song is ${songList[index].title} performed by ${songList[index].artist} from ${songList[index].name}, picked up by ${name} on Telegram.`;
 			title = `${songList[index].title} - ${songList[index].artist}`;
 		}
 
@@ -305,11 +318,12 @@ bot.on('message', function (data) {
 
 		doQueueSong(text, titleText, ttsText, chat_id, msg_id);
 		addToSongList(text, name);
-
+		/*
 		bot.sendMessage({
 			chat_id: chat_id,
 			reply_to_message_id: msg_id,
 			text: "Your music is scheduled to play. Use /queue to see how many songs you need to wait."
 		});
+		*/
 	}
 });

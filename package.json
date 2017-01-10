@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "preinstall": "cd native_mixer && node-gyp configure build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -13,11 +14,11 @@
     "icy": "^2.1.0",
     "moment": "^2.17.1",
     "music-metadata": "^0.6.0",
+    "nan": "^2.5.0",
     "node-cron": "^1.1.2",
     "queue": "^4.0.0",
     "request": "^2.79.0",
     "telegram-bot-api": "^1.2.0",
-    "tmp": "0.0.31",
     "url-regex": "^4.0.0"
   }
 }

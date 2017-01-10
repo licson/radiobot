@@ -30,7 +30,7 @@ Queue.prototype._updateLength = function _updateLength() {
 	this.length = this.items.length - this.old + this.exceedItems.length + this.prependList.length;
 }
 Queue.prototype._updateQueue = function _updateQueue() {
-	if (this.exceedItems.length > 0 && 
+	while (this.exceedItems.length > 0 && 
 			(this.old > 0 || this.max > this.items.length)) {
 		this.push(this.exceedItems.shift());
 	}
@@ -176,46 +176,5 @@ Queue.helpers = {
 		}
 	}
 }
-
-/*
-
-var q = new Queue(5);
-
-for (var i = 0; i < 8; i++) {
-	+function (i) {
-		q.push(Queue.helpers.mergeTask(function (cb) {
-			setTimeout(function () {
-				console.log(i)
-				cb()
-			}, 500)
-		},function (cb) {
-			setTimeout(function () {
-				console.log(i + 0.5)
-				cb()
-			}, 500)
-		}))
-	} (i)
-}
-
-setInterval(function () {
-	console.log('inserting a song');
-	q.push(function (cb) {
-		setTimeout(function () {
-			console.log('song-' + Date.now())
-			cb()
-		}, 500)
-	})
-}, 3200);
-
-setTimeout(function () {
-	console.log('unshifting task...')
-	q.unshift(function (cb) {
-		console.log('this task run once only')
-		cb()
-	})
-}, 3000)
-
-q.start()
-*/
 
 module.exports = Queue;

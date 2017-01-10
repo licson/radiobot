@@ -16,7 +16,7 @@
 		"samplerate": 44100,
 		"channels": 2,
 		"bitrate": 320,
-		"normalize": true
+		"normalize": false
 	},
 	"telegram": {
 		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ"

@@ -7,7 +7,7 @@ const config = require('../config.json');
 const metadata = new EventEmitter();
 
 function writeServerSentEvent(res, eventName, data) {
-	res.write(`event: ${eventName}\r\ndata: ${data}\r\n\r\n`);
+	res.write(`event: ${eventName}\r\ndata: ${data.replace(/\r?\n/g, '\r\ndata: ')}\r\n\r\n`);
 }
 
 var listenersCount = 0;
@@ -58,9 +58,6 @@ function createHTTPHelper(distrib) {
 				"icy-pub": config.station.public ? '1' : '0',
 				"icy-br": config.output.bitrate
 			};
-
-			// Timer for sending streaming title continuously
-			var titleTimer = 0;
 			
 			// Holds last title message
 			var lastTitle = null;
@@ -79,6 +76,7 @@ function createHTTPHelper(distrib) {
 			if (req.headers['icy-metadata'] == '1') {
 				console.log("[Server] Client supports ICY streaming title. Attaching to injector.");
 				distrib.pipe(injector).pipe(res);
+				injector.queue(currentTitle);
 			} else {
 				distrib.pipe(res);
 			}
@@ -86,12 +84,7 @@ function createHTTPHelper(distrib) {
 			// Queue the title at the next metaint interval
 			var waitforMetadata = function (title) {
 				if (req.headers['icy-metadata'] == '1' && title != lastTitle) {
-					clearInterval(titleTimer);
-	
-					titleTimer = setInterval(function () {
-						injector.queue(title);
-					}, config.icy.meta_int / (config.output.bitrate / 8 * 1024) * 2000);
-					
+					injector.queue(title);
 					lastTitle = title;
 				}
 			};
@@ -107,7 +100,6 @@ function createHTTPHelper(distrib) {
 
 				injector = null;
 
-				clearInterval(titleTimer); // Remove timer
 				metadata.removeListener('metadata', waitforMetadata); // Remove our metadata listener
 
 				listenersCount--;
@@ -181,7 +173,6 @@ uptime=${process.uptime()}`);
 			serverSentEventConnections.push(res);
 			
 			res.write("retry: 1000\r\n\r\n");
-			
 			writeServerSentEvent(res, "info", JSON.stringify({
 				"station-name": config.station.name,
 				"url": config.station.url,
@@ -191,13 +182,15 @@ uptime=${process.uptime()}`);
 			writeServerSentEvent(res, "title", currentTitle);
 		} else {
 			// We don't recognize the URL
-			res.writeHead(204, {
+			res.writeHead(404, {
 				"Server": "licson-cast"
 			});
 			res.end();
 		}
 	});
-
+	
+	server.setTimeout(0);
+	
 	server.listen(config.ports.http, function () {
 		console.log("[Server] Listening on %d waiting for listeners.", config.ports.http);
 	});
