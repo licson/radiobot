@@ -26,16 +26,19 @@ mixer.pipe(ffmpeg.stdin);
 
 function createTCPHelper() {
 	var server = net.createServer(function (socket) {
-		var source = mixer.addSource(socket);
-		
-		source.setVolume(0);
-		source.fadeTo(1, 400);
+		console.log(`[Tcp] recieved PCM connection from ${socket.address().address}`);
+
+		var source = mixer.addSource(socket, ['tcp']);
 	});
 	
 	server.listen(config.ports.helper, function () {
-		console.log("[Consumer] Listening on %d waiting for push connections.", config.ports.helper);
+		console.log("[Tcp] Listening on %d waiting for push connections.", config.ports.helper);
 	});
-	return ffmpeg.stdout;
+	
+	return {
+		mp3Stream: ffmpeg.stdout,
+		mixer: mixer
+	};
 }
 
 module.exports = createTCPHelper;

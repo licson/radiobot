@@ -24,7 +24,7 @@ coverage
 .lock-wscript
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
-native_mixer/build/Release
+native_mixer/build/
 
 # Dependency directories
 node_modules
@@ -36,3 +36,5 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
+config.json
+song_queue.json

@@ -1,3 +1,4 @@
+"use strict";
 var stream = require("stream");
 var EventEmitter = require("events").EventEmitter;
 var util = require("util");
@@ -11,14 +12,15 @@ function Source(obj) {
 	EventEmitter.call(this);
 	
 	var dafaultValue = {
+		labels: [],
 		stream: null,
 		sampleRate: null,
 		buffers: [],
 		length: 0,
 		total: 0,
 		volume: 1,
-		fadeCount: 0,
-		onStep: null,
+		
+		error: null,
 		
 		transitionMode: 0,
 		transitionLength: -1,
@@ -51,31 +53,43 @@ Source.prototype.remainingSamples = function remainingSamples(sampleSize) {
 }
 
 Source.prototype.setVolume = function fadeTo(volume) {
-	this.onStep = null;
+	this.transitionLength = -1;
 	this.volume = volume;
 }
 
-// rewrite this for better effect
-Source.prototype.fadeTo = function fadeTo(volume, time) {;
-	/*
-	var self = this
-	this.fadeCount = 0;
-	var startVolume = this.volume;
-	var totalSample = time / 1000 * this.sampleRate;
-	
-	this.onStep = function (count) {
-		self.volume = startVolume + (volume - startVolume) * (self.fadeCount / totalSample);
-		if (self.fadeCount >= totalSample) {
-			self.volume = volume;
-			self.onStep = null;
-		}
-		self.fadeCount++;
-	}
-	*/
+Source.prototype.fadeTo = function fadeTo(volume, time) {
 	this.transitionFrom = this.volume;
 	this.transitionTo = volume;
 	this.transitionCurrent = 0;
 	this.transitionLength = Math.floor(time / 1000 * this.sampleRate);
+}
+
+Source.prototype.setError = function setError(err) {
+	if (err) this.error = err;
+}
+
+Source.prototype.is = function is(label) {
+	return this.labels.indexOf(label) >= 0;
+}
+
+var easingTableSize = 4000;
+var easingLookup = [];
+function easingFunction(x) {
+	return Math.exp(6.907 * x) / 1000;
+    // return x * x * x * x * x;
+}
+
+function easing(x, from, to) {
+	// Do a clamp to prevent out of bounds access
+	if(x > 1.0) x = 1.0;
+	if(x < 0.0) x = 0.0;
+	var i = ~~(x * (easingTableSize - 1));
+	return to + easingLookup[i] * (from - to);
+}
+
+// init the easingLookup table
+for (var i = 0; i < easingTableSize; i++) {
+	easingLookup.push(easingFunction(i / (easingTableSize - 1)));
 }
 
 function MixerStream (bitdepth, channel, sampleRate, prebuffer) {
@@ -122,7 +136,7 @@ MixerStream.prototype._read = function _read(size) {
 	}
 }
 
-// start to push data to distination
+// start to push data to destination
 MixerStream.prototype._startLoop = function _startLoop() {
 	var self = this;
 	
@@ -150,7 +164,7 @@ MixerStream.prototype._startLoop = function _startLoop() {
 	fn();
 }
 
-// stop to push data to distination
+// stop to push data to destination
 MixerStream.prototype._stopLoop = function _stopLoop() {
 };
 
@@ -197,8 +211,10 @@ MixerStream.prototype._startMerge = function _startMerge(length) {
 	// remove ended source
 	for (var i = this.sources.length - 1; i >= 0; i--) {
 		if (this.sources[i].ended && this.sources[i].remainingSamples(this.sampleSize) === 0) {
-			this.sources[i].emit('remove');
+			var source = this.sources[i].emit('remove', this.sources[i].error);
 			this.sources.splice(i, 1);
+			
+			this.emit('remove_track', source);
 		}
 	}
 }
@@ -210,7 +226,7 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 		offset = 0,
 		target = Buffer.alloc(length),
 		sampleSize = bitdepth / 8 * channel,
-		max = Math.pow(2, bitdepth - 1) - 1;
+		max = (1 << bitdepth - 1) - 1;
 	
 	var readValue = MixerStream.helpers.readValue[bitdepth];
 	var writeValue = MixerStream.helpers.writeValue[bitdepth];
@@ -220,18 +236,13 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 		for (sourceIndex = 0; sourceIndex < sources.length; sourceIndex++) {
 			source = sources[sourceIndex];
 			
-			/*
-			
-			if (offset % (this.sampleSize) === 0 && source.onStep) {
-				source.onStep(this.sampleCount + Math.floor(offset / this.sampleSize));
-			}
-			
-			*/
-			
 			if (offset % sampleSize === 0 && source.transitionLength > 0) {
 				source.transitionCurrent++;
-				source.volume = source.transitionFrom + (source.transitionTo - source.transitionFrom)
-					* (source.transitionCurrent / source.transitionLength);
+				source.volume = easing(
+					source.transitionCurrent / source.transitionLength,
+					source.transitionFrom,
+					source.transitionTo
+				);
 				if (source.transitionCurrent >= source.transitionLength) {
 					source.volume = source.transitionTo;
 					source.transitionLength = -1;
@@ -272,22 +283,25 @@ MixerStream.prototype._stopPolling = function _stopPolling() {
 	this.paused = true;
 }
 
-MixerStream.prototype.addSource = function addSource(readable) {
+MixerStream.prototype.addSource = function addSource(readable, labels) {
 	console.log('[Mixer] New track')
+	
+	if (!labels) {
+		labels = [];
+	} else if (!Array.isArray(labels)) {
+		labels = [labels];
+	}
 	
 	var self = this, item = Source({
 		stream: readable,
 		sampleRate: this.sampleRate,
-		buffers: [],
-		length: 0,
-		total: 0,
-		volume: 1,
-		fadeCount: 0,
-		onStep: null,
-		ended: false
+		labels: labels
 	});
 	
+	
 	this.sources.push(item)
+	
+	this.emit('new_track', item);
 	
 	readable.on('end', function () {
 		item.ended = true;
@@ -297,7 +311,8 @@ MixerStream.prototype.addSource = function addSource(readable) {
 		item.ended = true;
 	})
 	
-	readable.on('error', function () {
+	readable.on('error', function (err) {
+		item.error = err;
 		item.ended = true;
 	})
 	
@@ -310,6 +325,29 @@ MixerStream.prototype.addSource = function addSource(readable) {
 	})
 	
 	return item;
+}
+
+MixerStream.prototype.getSources = function (labels) {
+	if (labels && !Array.isArray(labels)) {
+		labels = [labels];
+	}
+	if (!labels) {
+		return this.sources.slice(0);
+	} else {
+		return this.sources.filter(function (item) {
+			var matched = false;
+			labels.forEach(function(label) {
+				if (item.labels.indexOf(label) >= 0) {
+					matched = true;
+				}
+			})
+			return matched
+		})
+	}
+}
+
+MixerStream.prototype.count = function () {
+	return this.sources.length;
 }
 
 MixerStream.helpers = {

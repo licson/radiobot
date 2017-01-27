@@ -19,9 +19,29 @@
 		"normalize": false
 	},
 	"telegram": {
-		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ"
+		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ",
+		"startMessage": "Welcome! I'm the DJ of Licson's Internet Radio. Just send me a song or a direct link to get your song played on https://licson.net/radio/ !"
 	},
+	"http": {
+		"host": "radiobot-licson.c9users.io",
+		"allowCrossOrigin": true,
+		"originWhiteList": [
+			"http://licson.net",
+			"https://licson.net",
+			"http://output.jsbin.com",
+			"https://output.jsbin.com",
+			"http://fiddle.jshell.net",
+			"https://fiddle.jshell.net"
+		],
+		"__comment__": "empty list means allow all origin"
+	},
+	"url_handles": [
+		"soundcloud",
+		"youtube"
+	],
 	"admin": [ "licson", "mmis1000" ],
 	"queueSize": 20,
-	"loopSize": 20
+	"loopSize": 20,
+	"logForward": "@licson_test_log",
+	"should_parse_youtube": true
 }

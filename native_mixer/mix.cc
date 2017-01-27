@@ -20,6 +20,15 @@ namespace NativeMixingOperation {
 	using v8::Function;
 	using v8::Value;
 	
+	struct SourceInfo {
+		double volume;
+		int64_t transitionLength;
+		int64_t transitionCurrent;
+		double transitionFrom;
+		double transitionTo;
+		char* buffer;
+	};
+	
 	// Max value lookup map to speed up GetMaxSampleValue
 	std::vector<uint32_t> maxValueLookup = {
 		(1U << 7) - 1,
@@ -27,6 +36,10 @@ namespace NativeMixingOperation {
 		(1U << 23) - 1,
 		(1U << 31) - 1
 	};
+	
+	// Easing values lookup
+	const size_t EasingTableSize = 4000;
+	std::vector<double> EasingLookup = {};
 
 	double MixSample(double a, double b) {
 		return (1.0 - fabs(a * b)) * (a + b);
@@ -34,6 +47,20 @@ namespace NativeMixingOperation {
 	
 	uint32_t GetMaxSampleValue(unsigned int byteSize) {
 		return maxValueLookup[byteSize - 1];
+	}
+	
+	double EasingFunction(double x) {
+		return exp(6.907 * x) / 1000;
+	    // return x * x * x * x * x;
+	}
+	
+	double Easing(double x, double from, double to) {
+		// Do a clamp to prevent out of bounds access (and Segfaults)
+		if(x > 1.0) x = 1.0;
+		if(x < 0.0) x = 0.0;
+		
+		uint32_t i = (uint32_t)floor(x * (EasingTableSize - 1));
+		return to + EasingLookup[i] * (from - to);
 	}
 	
 	double ReadSample(char* p, unsigned int byteSize) {
@@ -129,7 +156,7 @@ namespace NativeMixingOperation {
 		unsigned int length = args[2]->Uint32Value();
 		unsigned int bitdepth = args[3]->Uint32Value();
 		unsigned int channels = args[4]->Uint32Value();
-		// unsigned int sampleSize = bitdepth / 8 * channels;
+		unsigned int sampleSize = bitdepth / 8 * channels;
 		unsigned int byteSize = bitdepth / 8;
 		
 		if (bitdepth % 8 != 0) {
@@ -137,49 +164,57 @@ namespace NativeMixingOperation {
 			return;
 		}
 		
+		if (byteSize > 4 || byteSize == 3) {
+			Nan::ThrowError("Unsupported bit depth!");
+			return;
+		}
+		
 		char* outputBuffer = new (std::nothrow) char[length];
 		
 		if (outputBuffer == nullptr) {
 			Nan::ThrowError("Memory allocation failed!");
+			free(outputBuffer);
 			return;
 		}
 		
 		Nan::MaybeLocal<Object> output = Nan::NewBuffer(outputBuffer, length);
-		/* Local<String> transitionLengthSymbol = Nan::New("transitionLength").ToLocalChecked();
-		Local<String> transitionCurrentSymbol = Nan::New("transitionCurrent").ToLocalChecked();
-		Local<String> volumeSymbol = Nan::New("volume").ToLocalChecked(); */
+		
+		std::vector<SourceInfo*> sources;
+		
+		for (uint32_t i = 0; i < bufArray->Length(); i++) {
+			Local<Object> src = Local<Object>::Cast(srcArray->Get(i));
+			Local<Object> buf = Local<Object>::Cast(bufArray->Get(i));
+			SourceInfo* source = new SourceInfo;
+			source->volume = src->Get(Nan::New("volume").ToLocalChecked())->NumberValue();
+			source->transitionLength = src->Get(Nan::New("transitionLength").ToLocalChecked())->IntegerValue();
+			source->transitionCurrent = src->Get(Nan::New("transitionCurrent").ToLocalChecked())->IntegerValue();
+			source->transitionFrom = src->Get(Nan::New("transitionFrom").ToLocalChecked())->NumberValue();
+			source->transitionTo = src->Get(Nan::New("transitionTo").ToLocalChecked())->NumberValue();
+			source->buffer = node::Buffer::Data(buf);
+			sources.push_back(source);
+		}
 		
 		for (uint32_t offset = 0; offset < length; offset += byteSize){
 			double value = 0.0;
-			for (uint32_t i = 0; i < bufArray->Length(); i++) {
-				Local<Object> src = Local<Object>::Cast(srcArray->Get(i));
-				Local<Object> buf = Local<Object>::Cast(bufArray->Get(i));
-				/* int64_t transitionLength = src->Get(transitionLengthSymbol)->IntegerValue();
-				int64_t transitionCurrent = src->Get(transitionCurrentSymbol)->IntegerValue();
-				double transitionFrom = src->Get(Nan::New("transitionFrom").ToLocalChecked())->NumberValue();
-				double transitionTo = src->Get(Nan::New("transitionTo").ToLocalChecked())->NumberValue(); */
-				
-				double volume = 1.0;
-				
+			for (uint32_t i = 0; i < sources.size(); i++) {
 				// Process fading
-				/* if (offset % sampleSize == 0 && transitionLength >= 0) {
-					transitionCurrent++;
-					volume = transitionFrom + (transitionTo - transitionFrom) * ((double)transitionCurrent / (double)transitionLength);
+				if (offset % sampleSize == 0 && sources[i]->transitionLength >= 0) {
+					sources[i]->transitionCurrent++;
+					sources[i]->volume = Easing(
+						(double)(sources[i]->transitionCurrent) / (double)(sources[i]->transitionLength),
+						sources[i]->transitionFrom,
+						sources[i]->transitionTo
+					);
 					
-					if (transitionCurrent >= transitionLength) {
-						volume = transitionTo;
-						transitionLength = -1;
+					if (sources[i]->transitionCurrent >= sources[i]->transitionLength) {
+						sources[i]->volume = sources[i]->transitionTo;
+						sources[i]->transitionLength = -1;
 					}
-				} */
+				}
 				
-				char* buffer = node::Buffer::Data(buf);
-				
-				double sample = ReadSample(buffer + offset, byteSize) * volume;
+				char* buffer = sources[i]->buffer;
+				double sample = ReadSample(buffer + offset, byteSize) * sources[i]->volume;
 				value = MixSample(value, sample);
-				
-				/* src->Set(transitionLengthSymbol, Nan::New<Number>(transitionLength));
-				src->Set(transitionCurrentSymbol, Nan::New<Number>(transitionCurrent));
-				src->Set(volumeSymbol, Nan::New<Number>(volume)); */
 			}
 			
 			// Write the new mixed sample
@@ -187,10 +222,23 @@ namespace NativeMixingOperation {
 			outputBuffer += byteSize;
 		}
 		
+		for (uint32_t i = 0; i < sources.size(); i++) {
+			Local<Object> src = Local<Object>::Cast(srcArray->Get(i));
+			src->Set(Nan::New("volume").ToLocalChecked(), Nan::New<Number>(sources[i]->volume));
+			src->Set(Nan::New("transitionLength").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionLength));
+			src->Set(Nan::New("transitionCurrent").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionCurrent));
+			src->Set(Nan::New("transitionFrom").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionFrom));
+			src->Set(Nan::New("transitionTo").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionTo));
+		}
+		
 		args.GetReturnValue().Set(output.ToLocalChecked());
 	}
 	
 	void Init(Local<Object> exports, Local<Object> module) {
+		for (double i = 0; i < EasingTableSize; i++) {
+			EasingLookup.push_back(EasingFunction(i / (EasingTableSize - 1)));
+		}
+		
 		Nan::SetMethod(module, "exports", Mix);
 	}
 	
