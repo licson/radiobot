@@ -36,11 +36,12 @@ function getBasicData(url) {
 				if (!clientId) {
 					return reject(new Error("clientId not found"));
 				}
+				
 				resolve({
 					id: id,
 					appVersion: appVersion,
 					clientId: clientId
-				})
+				});
 			})
 		})
 	})

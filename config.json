@@ -6,7 +6,8 @@
 	"station": {
 		"name": "Licson's Radio",
 		"description": "The first interactive radio, ever.",
-		"url": "https://licson.net/radio/",
+		"url_": "https://licson.net/radio/",
+		"url": "https://radiobot-licson.c9users.io/player/embed.html?marqueeBottom=%233f4c6b&controlBottom=%2345484d",
 		"public": false
 	},
 	"icy": {
@@ -21,6 +22,11 @@
 	"telegram": {
 		"token": "316645898:AAE_DS1msAnyXtVAcLlKBu3VYQyAmF7opcQ",
 		"startMessage": "Welcome! I'm the DJ of Licson's Internet Radio. Just send me a song or a direct link to get your song played on https://licson.net/radio/ !"
+	},
+	"timed_broadcast": {
+		"enabled": true,
+		"advertisment": "Licson's Radio, the first interactive internet radio, ever. Please enjoy!",
+		"timeFormat": "h A"
 	},
 	"http": {
 		"host": "radiobot-licson.c9users.io",
@@ -39,7 +45,7 @@
 		"soundcloud",
 		"youtube"
 	],
-	"admin": [ "licson", "mmis1000" ],
+	"admin": [ "licson", "mmis1000", "james58899" ],
 	"queueSize": 20,
 	"loopSize": 20,
 	"logForward": "@licson_test_log",

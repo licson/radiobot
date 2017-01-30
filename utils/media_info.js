@@ -1,6 +1,5 @@
 const Promise = require('bluebird');
 const url = require('url');
-// const Parser = require('music-metadata');
 const Parser = require('musicmetadata');
 const request = require('request');
 const fixPathname = require("../utils/fix_pathname");

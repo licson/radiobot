@@ -72,24 +72,38 @@ Source.prototype.is = function is(label) {
 	return this.labels.indexOf(label) >= 0;
 }
 
-var easingTableSize = 4000;
+var tableSize = 4000;
 var easingLookup = [];
+var volumeLookup = [];
+
 function easingFunction(x) {
-	return Math.exp(6.907 * x) / 1000;
-    // return x * x * x * x * x;
+	return x * x * x;
 }
 
 function easing(x, from, to) {
 	// Do a clamp to prevent out of bounds access
 	if(x > 1.0) x = 1.0;
 	if(x < 0.0) x = 0.0;
-	var i = ~~(x * (easingTableSize - 1));
-	return to + easingLookup[i] * (from - to);
+	var i = ~~(x * (tableSize - 1));
+	return from + easingLookup[i] * (to - from);
 }
 
-// init the easingLookup table
-for (var i = 0; i < easingTableSize; i++) {
-	easingLookup.push(easingFunction(i / (easingTableSize - 1)));
+function volumeFunction(x) {
+	// return Math.exp(6.9077528 * x) / 1000;
+	return Math.pow(10, (1 - x) * -3);
+}
+
+function volume(rawVolume) {
+	// Do a clamp to prevent out of bounds access
+	if(rawVolume > 1.0) rawVolume = 1.0;
+	if(rawVolume < 0.0) rawVolume = 0.0;
+	var i = ~~(rawVolume * (tableSize - 1));
+	return volumeLookup[i];
+}
+
+for (var i = 0; i < tableSize; i++) {
+	easingLookup.push(easingFunction(i / (tableSize - 1)));
+	volumeLookup.push(volumeFunction(i / (tableSize - 1)));
 }
 
 function MixerStream (bitdepth, channel, sampleRate, prebuffer) {
@@ -243,13 +257,14 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 					source.transitionFrom,
 					source.transitionTo
 				);
+				
 				if (source.transitionCurrent >= source.transitionLength) {
 					source.volume = source.transitionTo;
 					source.transitionLength = -1;
 				}
 			}
 			
-			value2 = (readValue(buffers[sourceIndex], offset) * source.volume) / max;
+			value2 = (readValue(buffers[sourceIndex], offset) * volume(source.volume)) / max;
 			
 			// value += value2;
 			

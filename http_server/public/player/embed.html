@@ -150,14 +150,11 @@
 			/* global $, EventSource, location */
 			var query = {}, hasQuery = !!location.href.match(/\?/);
 			if (hasQuery) {
-				query = location.href
-				.replace(/^.+\?/, '')
-				.replace(/#.+$/, '')
-				.split(/&/g)
-				.map(function (pair) {
+				query = location.href.replace(/^.+\?/, '').replace(/#.+$/, '').split("&").map(function (pair) {
 					var temp = pair.split('=');
 					if (!temp[0]) temp[0] = '';
 					if (!temp[1]) temp[1] = '';
+					
 					temp = temp.map(function (str) {
 						try {
 							return decodeURIComponent(str);
@@ -165,16 +162,17 @@
 							return str;
 						}
 					});
+					
 					return {
 						key: temp[0],
 						value: temp[1]
 					};
-				})
-				.reduce(function (prev, curr) {
+				}).reduce(function (prev, curr) {
 					prev[curr.key] = curr.value;
 					return prev;
 				}, {});
 			}
+			
 			function setGradient(el, from, to) {
 				var gradients = [
 					from,
@@ -182,12 +180,16 @@
 					"-webkit-linear-gradient(top, " + from + " 0%, " + to + " 100%)",
 					"linear-gradient(to bottom, " + from + " 0%, " + to + " 100%)"
 				];
+				
 				var filter = "progid: DXImageTransform.Microsoft.gradient( startColorstr='" + from + "', endColorstr='" + to + "', GradientType=0);";
+				
 				gradients.forEach(function (gradient) {
 					$(el).css("background", gradient);
 				});
+				
 				$(el).css("filter", filter);
 			}
+			
 			function setUserStyle (style) {
 				var defaultStyle = {
 					marqueeTop: "#3f4c6b",
@@ -199,13 +201,16 @@
 					// controlHover: "#eee",
 					// listBorder: "#172d66"
 				};
+				
 				for (var key in style) {
 					defaultStyle[key] = style[key];
 				}
+				
 				if (style.marqueeTop || style.marqueeBottom) {
 					setGradient(".player-container .marquee-wrap", defaultStyle.marqueeTop, defaultStyle.marqueeBottom);
 					$('.playlist').css('background', defaultStyle.marqueeBottom)
 				}
+				
 				if (style.marqueeText) {
 					$('.player-container .marquee').css('color', style.marqueeText);
 					$('.playlist').css('.color', style.marqueeText)
@@ -213,12 +218,15 @@
 					$('.playlist .item').css('border-bottom', '1px solid ' + style.marqueeText)
 					$('.playlist .item').css('color', style.marqueeText);
 				}
+				
 				if (style.controlTop || style.controlBottom) {
 					setGradient(".player-container", defaultStyle.controlTop, defaultStyle.controlBottom);
 				}
+				
 				if (style.controlText) {
 					$('.player-container .controls').css('color', style.controlText);
 				}
+				
 				if (style.controlHover) {
 					$('.dynamic-hover-style').remove();
 					$('head').append(
@@ -227,10 +235,12 @@
 						.addClass('dynamic-hover-style')
 					);
 				}
+				
 				if (style.listBorder) {
 					$('.playlist').css('border-top', '1px solid ' + style.listBorder)
 					$('.playlist .item').css('border-bottom', '1px solid ' + style.listBorder)
 				}
+				
 				if (style.listOnly) {
 					$('.player-container').remove();
 					$('.playlist').css('top', '0px');
@@ -238,13 +248,16 @@
 					setGradient(".playlist", defaultStyle.marqueeTop, defaultStyle.marqueeBottom);
 				}
 			}
+			
 			if (Object.keys(query).length > 0) setUserStyle(query);
 			
 			function onresize() {
 				$('.player-container').css('height', '');
+				
 				if ($('.player-container').height() > 100 && !query.playerOnly) {
 					$('.player-container').height(50);
 				}
+				
 				$('.player-container .controls span').css('width', ~~($('.player-container').height()) + 'px');
 				$('.player-container .controls').css('font-size', ~~($('.player-container').height() * 0.6) + 'px');
 				$('.marquee-wrap').css('line-height', ~~($('.marquee').height()) + 'px');
@@ -262,28 +275,61 @@
 				$('div.marquee').text("there is a marquee").marquee();
 				([{title: "song 1"}, {title: "song 2"}]).forEach(function (task, index) {
 					$('.playlist').append(
-						$('<div>')
-						.addClass('item')
-						.append(
-							$('<div>')
-							.addClass('id')
-							.text((index + 1) + '.')
+						$('<div>').addClass('item').append(
+							$('<div>').addClass('id').text((index + 1) + '.')
+						).append(
+							$('<div>').addClass('title').text(task.title)
 						)
-						.append(
-							$('<div>')
-							.addClass('title')
-							.text(task.title)
-						)
-					)
+					);
 				});
+				
 				if (Object.keys(query).length > 1) setUserStyle(query);
+				
 				throw new Error("not loading real player");
 			}
 			
+			// call this when the audio is progressing, and it will fire a reload when it is not called
+			var keepAlive = function (idleTimeout, reconnectInterval) {
+				var nextCheckId = null;
+				var reconnectId = null;
+				
+				return function () {
+					function reconnect() {
+						if (!playing) {
+							clearInterval(reconnectId);
+							return;
+						}
+						
+						player.src = "/live.mp3?_=" + Date.now();
+						player.load();
+						player.play();
+					}
+					
+					if (nextCheckId) {
+						clearTimeout(nextCheckId);
+						nextCheckId = null;
+					}
+					
+					if (reconnectId) {
+						clearInterval(reconnectId);
+						reconnectId = null;
+					}
+					
+					if (playing) {
+						nextCheckId = setTimeout(function () {
+							console.log('network disconencted, reconnecting');
+							reconnect();
+							reconnectId = setInterval(reconnect, reconnectInterval);
+						}, idleTimeout);
+					}
+				};
+			} (10000, 10000);
+			
 			var player = new Audio();
 			var playing = false;
-
+			
 			player.src = "/live.mp3?_=" + Date.now();
+			player.addEventListener('timeupdate', keepAlive);
 			
 			$('.player-container .controls span.playpause').click(function() {
 				if ($(this).find('i').hasClass('fa-pause')) {
@@ -292,30 +338,25 @@
 					$(this).find('i').attr('class', 'fa fa-play');
 				} else {
 					// in order to prevent cache issue
-					player.src = "/live.mp3?_=" + Date.now();
-					
 					playing = true;
+					
+					player.src = "/live.mp3?_=" + Date.now();
 					player.load();
 					player.play();
+					
 					$(this).find('i').attr('class', 'fa fa-pause');
 				}
 			});
 			
 			$('.player-container .controls span.volume').click(function() {
 				if ($(this).find('i').hasClass('fa-volume-up')) {
-					$(player).animate({
-						volume: 0.251188643
-					}, 1000); // -12dBFS gain
+					$(player).animate({ volume: 0.251188643 }, 1000); // -12dBFS gain
 					$(this).find('i').attr('class', 'fa fa-volume-down');
 				} else if ($(this).find('i').hasClass('fa-volume-down')) {
-					$(player).animate({
-						volume: 0
-					}, 1000);
+					$(player).animate({ volume: 0 }, 1000);
 					$(this).find('i').attr('class', 'fa fa-volume-off');
 				} else {
-					$(player).animate({
-						volume: 1
-					}, 1000);
+					$(player).animate({ volume: 1 }, 1000);
 					$(this).find('i').attr('class', 'fa fa-volume-up');
 				}
 			});
@@ -330,26 +371,21 @@
 				});
 				
 				server.addEventListener("songList", function(e) {
-					retryInterval = 10;
-					console.log(e.data);
 					var obj = JSON.parse(e.data);
+					retryInterval = 10;
+					
 					$('.playlist').empty();
+					
 					obj.nexts.forEach(function (task, index) {
 						$('.playlist').append(
-							$('<div>')
-							.addClass('item')
-							.append(
-								$('<div>')
-								.addClass('id')
-								.text((index + 1) + '.')
-							)
-							.append(
-								$('<div>')
-								.addClass('title')
-								.text(task.title)
+							$('<div>').addClass('item').append(
+								$('<div>').addClass('id').text((index + 1) + '.')
+							).append(
+								$('<div>').addClass('title').text(task.title)
 							)
 						)
-					})
+					});
+					
 					if (Object.keys(query).length > 0) setUserStyle(query);
 				});
 				
@@ -361,13 +397,14 @@
 							
 							// in order to prevent it from accidently ddos the server
 							retryInterval *= 2;
+							
 							if (retryInterval > 10000) {
 								retryInterval = 10000;
 							}
+							
 							break;
 					}
 				});
-			
 			}
 			
 			poll();

@@ -130,14 +130,57 @@
 		<script type="text/javascript" src="//cdn.rawgit.com/Yaffle/EventSource/master/eventsource.js"></script>
 		<script type="text/javascript">
 			/* global $, EventSource */
+			
+			// call this when the audio is progressing, and it will fire a reload when it is not called
+			var keepAlive = function (idleTimeout, reconnectInterval) {
+				var nextCheckId = null;
+				var reconnectId = null;
+				
+				return function () {
+					function reconnect() {
+						if (!playing) {
+							clearInterval(reconnectId);
+							return;
+						}
+						
+						player.src = "/live.mp3?_=" + Date.now();
+						player.load();
+						player.play();
+					}
+					
+					if (nextCheckId) {
+						clearTimeout(nextCheckId);
+						nextCheckId = null;
+					}
+					
+					if (reconnectId) {
+						clearInterval(reconnectId);
+						reconnectId = null;
+					}
+					
+					if (playing) {
+						nextCheckId = setTimeout(function () {
+							console.log('network disconencted, reconnecting');
+							reconnect();
+							reconnectId = setInterval(reconnect, reconnectInterval);
+						}, idleTimeout);
+					}
+				};
+			} (10000, 10000);
+			
+			var playing = false;
 			var player = new Audio();
 			player.src = "/live.mp3?_=" + Date.now();
+			player.addEventListener('timeupdate', keepAlive);
 
 			$('.player-container .controls span.playpause').click(function() {
 				if ($(this).find('i').hasClass('fa-pause')) {
+					playing = false;
 					player.pause();
 					$(this).find('i').attr('class', 'fa fa-play');
 				} else {
+					playing = true;
+					
 					// in order to prevent cache issue
 					player.src = "/live.mp3?_=" + Date.now();
 					

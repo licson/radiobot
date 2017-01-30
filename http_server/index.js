@@ -15,25 +15,26 @@ const server = http.createServer(router);
 const io = (function () {
 	function normalizeHosts(hosts) {
 		hosts = hosts.slice(0);
+		
 		for (var i = hosts.length - 1; i >= 0; i--) {
 			if (!hosts[i].match(/^https?:\/\//)) {
-				hosts.splice(i, 1,
-					"http://" + hosts[i],
-					"https://" + hosts[i]
-				)
+				hosts.splice(i, 1, "http://" + hosts[i], "https://" + hosts[i]);
 			}
 		}
+		
 		for (var i = hosts.length - 1; i >= 0; i--) {
 			if (hosts[i].match(/:(\d+|\*)$/)) {
 				continue;
 			} else if (hosts[i].match(/^https/)) {
-				hosts[i] += ':443'
+				hosts[i] += ':443';
 			} else {
-				hosts[i] += ':80'
+				hosts[i] += ':80';
 			}
 		}
-		return hosts
+		
+		return hosts;
 	}
+	
 	if (!config.http.allowCrossOrigin) {
 		var host = normalizeHosts([config.http.host]).join(" ");
 		return socketio.listen(server, { origins: host });
@@ -65,22 +66,6 @@ function queueToObject(queue) {
 		})
 	};
 }
-
-metadata.on('queue_ready', function (queue_) {
-	queue = queue_;
-	
-	queue.on('push', function () {
-		serverSentEventConnections.forEach(function (res) {
-			writeServerSentEvent(res, "songList", JSON.stringify(queueToObject(queue)));
-		});
-	});
-	
-	queue.on('next', function () {
-		serverSentEventConnections.forEach(function (res) {
-			writeServerSentEvent(res, "songList", JSON.stringify(queueToObject(queue)));
-		});
-	});
-});
 
 // Server-sent events logic
 function writeServerSentEvent(res, eventName, data) {
@@ -117,16 +102,34 @@ function configureCORS(req, res, next) {
 	next();
 }
 
+metadata.on('queue_ready', function (queue_) {
+	queue = queue_;
+	
+	queue.on('push', function () {
+		serverSentEventConnections.forEach(function (res) {
+			writeServerSentEvent(res, "songList", JSON.stringify(queueToObject(queue)));
+		});
+	});
+	
+	queue.on('next', function () {
+		serverSentEventConnections.forEach(function (res) {
+			writeServerSentEvent(res, "songList", JSON.stringify(queueToObject(queue)));
+		});
+	});
+});
+
 metadata.on("metadata", function (title) {
 	console.log("[Injector] New title: %s", title);
 	currentTitle = title;
+	
 	pollingInfoConnections.forEach(function (res) {
 		res.jsonp({ change: true, title: title });
-	})
+	});
 	pollingInfoConnections.length = 0;
+	
 	serverSentEventConnections.forEach(function (res) {
 		writeServerSentEvent(res, "title", title);
-	})
+	});
 });
 
 router.set('x-powered-by', false);
@@ -237,7 +240,7 @@ router.get('/title/poll', configureCORS, function (req, res, next) {
 		if (index >= 0) {
 			pollingInfoConnections.splice(index, 1)
 		}
-	})
+	});
 	
 	pollingInfoConnections.push(res);
 	waitTimeout(res, pollingInfoConnections);
@@ -253,19 +256,21 @@ router.get('/title/sse', configureCORS, function (req, res, next) {
 	req.on('close', function () {
 		var index = serverSentEventConnections.indexOf(res);
 		if (index >= 0) {
-			serverSentEventConnections.splice(index, 1)
+			serverSentEventConnections.splice(index, 1);
 		}
-	})
+	});
 	
 	serverSentEventConnections.push(res);
 	
 	res.write("retry: 1000\r\n\r\n");
+	
 	writeServerSentEvent(res, "info", JSON.stringify({
 		"station-name": config.station.name,
 		"url": config.station.url,
 		"description": config.station.description,
 		"bitrate": config.output.bitrate
 	}));
+	
 	writeServerSentEvent(res, "title", currentTitle);
 	writeServerSentEvent(res, "songList", JSON.stringify(queueToObject(queue)));
 });

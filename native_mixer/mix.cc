@@ -37,10 +37,11 @@ namespace NativeMixingOperation {
 		(1U << 31) - 1
 	};
 	
-	// Easing values lookup
-	const size_t EasingTableSize = 4000;
+	// Lookup tables
+	const size_t TableSize = 4000;
 	std::vector<double> EasingLookup = {};
-
+	std::vector<double> VolumeMapping = {};
+	
 	double MixSample(double a, double b) {
 		return (1.0 - fabs(a * b)) * (a + b);
 	}
@@ -50,8 +51,7 @@ namespace NativeMixingOperation {
 	}
 	
 	double EasingFunction(double x) {
-		return exp(6.907 * x) / 1000;
-	    // return x * x * x * x * x;
+		return x * x * x;
 	}
 	
 	double Easing(double x, double from, double to) {
@@ -59,8 +59,21 @@ namespace NativeMixingOperation {
 		if(x > 1.0) x = 1.0;
 		if(x < 0.0) x = 0.0;
 		
-		uint32_t i = (uint32_t)floor(x * (EasingTableSize - 1));
-		return to + EasingLookup[i] * (from - to);
+		uint32_t i = (uint32_t)floor(x * (TableSize - 1));
+		return from + EasingLookup[i] * (to - from);
+	}
+	
+	double VolumeFunction(double x) {
+		// return exp(6.907 * x) / 1000;
+		return pow(10.0, (1.0 - x) * -3);
+	}
+	
+	double Volume(double v) {
+		if (v > 1.0) v = 1.0;
+		if (v < 0.0 ) v = 0.0;
+		
+		uint32_t i = (uint32_t)floor(v * (TableSize - 1));
+		return VolumeMapping[i];
 	}
 	
 	double ReadSample(char* p, unsigned int byteSize) {
@@ -213,7 +226,7 @@ namespace NativeMixingOperation {
 				}
 				
 				char* buffer = sources[i]->buffer;
-				double sample = ReadSample(buffer + offset, byteSize) * sources[i]->volume;
+				double sample = ReadSample(buffer + offset, byteSize) * Volume(sources[i]->volume);
 				value = MixSample(value, sample);
 			}
 			
@@ -235,8 +248,9 @@ namespace NativeMixingOperation {
 	}
 	
 	void Init(Local<Object> exports, Local<Object> module) {
-		for (double i = 0; i < EasingTableSize; i++) {
-			EasingLookup.push_back(EasingFunction(i / (EasingTableSize - 1)));
+		for (double i = 0; i < TableSize; i++) {
+			EasingLookup.push_back(EasingFunction(i / (TableSize - 1)));
+			VolumeMapping.push_back(VolumeFunction(i / (TableSize - 1)));
 		}
 		
 		Nan::SetMethod(module, "exports", Mix);

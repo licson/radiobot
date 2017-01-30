@@ -44,7 +44,9 @@ function Queue(loopSize, option) {
 		this._JSONToTask = option.JSONToTask
 	}
 }
+
 util.inherits(Queue, EventEmitter);
+
 Queue.prototype._updateLength = function _updateLength() {
 	this.length = this.items.length - this.old + this.exceedItems.length + this.prependList.length;
 }
@@ -175,13 +177,11 @@ Queue.prototype.findTask = function findTask(info) {
 	}
 	return 	this.exceedItems.filter(function(item) {
 	    return item.info.uid === info.uid
-	})
-	.concat(this.items.filter(function(item) {
+	}).concat(this.items.filter(function(item) {
 	    return item.info.uid === info.uid
-	}))
-	.concat(this.prependList.filter(function(item) {
+	})).concat(this.prependList.filter(function(item) {
 	    return item.info.uid === info.uid
-	}))
+	}));
 }
 
 Queue.prototype.toString = function toString() {
@@ -191,13 +191,17 @@ Queue.prototype.toString = function toString() {
 Queue.prototype._next = function start() {
 	var self = this;
 	var task = self.shift();
+	
 	if (!task) {
 		this.running = false;
 		return;
 	}
+	
 	task.execCount++;
 	this.currentTask = task;
+	
 	self.emit('next', task.taskFactory, task.info);
+	
 	try {
 		this.taskHandle = task.run(callOnce(function (err, data) {
 			self.taskHandle = null;
@@ -229,34 +233,38 @@ Queue.prototype.start = function start() {
 
 Queue.prototype.signal = function signal(data) {
 	if ('function' === typeof this.taskHandle) {
-		this.taskHandle(data)
+		this.taskHandle(data);
 	}
 }
 
 Queue.prototype.toJSON = function toJSON() {
 	var self = this;
+	
 	function encodeTask(task) {
 		return {
 			initTime: task.initTime,
 			execCount: task.execCount,
 			info: self._taskToJSON(task.taskFactory, task.info)
-		}
+		};
 	}
+	
 	return {
 		max: this.max,
 		old: this.old,
 		items: this.items.map(encodeTask),
 		exceedItems: this.exceedItems.map(encodeTask),
 		prependList: this.prependList.map(encodeTask)
-	}
+	};
 }
 
 Queue.prototype.loadFromObject = function fromObject(obj) {
 	var self = this;
+	
 	function decodeTask(info) {
 		var temp = self._JSONToTask(info.info);
 		return new TaskWrapper(temp.task, temp.info, info.initTime, info.execCount);
 	}
+	
 	this.max = obj.max;
 	this.old = obj.old;
 	this.items = obj.items.map(decodeTask);
@@ -287,13 +295,16 @@ Queue.helpers = {
 				if (err) {
 					return cb(err);
 				}
+				
 				if (stopped) {
 					return cb(null, data);
 				}
+				
 				handle = task2(callOnce(function (err, data2) {
 					if (err) {
 						return cb(err);
 					}
+					
 					cb(null, [data, data2]);
 				}));
 			}));

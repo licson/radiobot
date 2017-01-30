@@ -1,7 +1,6 @@
 const Telegram = require('telegram-bot-api');
 const Queue = require("./utils/queue");
 const MediaInfo = require("./utils/media_info");
-// const Promise = require('bluebird');
 const spawn = require('child_process').spawn;
 const urlRegex = require('url-regex');
 const retry = require('bluebird-retry');
@@ -176,7 +175,7 @@ var queue = new Queue(config.loopSize, {
 		if (info.type === "Advertisment") {
 			return {
 				task: function (cb) {
-					metadataInjector.emit("metadata", 'Advertisment Time');
+					metadataInjector.emit("metadata", info.title);
 					return doTTS(info.text)(cb);
 				}, 
 				info: info
@@ -398,7 +397,7 @@ bot.on('message', function (data) {
 		volume[temp[1]] = newVolume;
 
 		mixer.getSources(temp[1]).forEach(function (source) {
-			source.fadeTo(newVolume, 800);
+			source.fadeTo(newVolume, 2000);
 		});
 
 		bot.sendMessage({

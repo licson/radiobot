@@ -359,8 +359,8 @@
 				var recorder = context.createScriptProcessor(bufferSize, 2, 2);
 				recorder.onaudioprocess = recorderProcess;
 
-				audioInput.connect(recorder);
-				hookProcessorChain(recorder).connect(context.destination);
+				hookProcessorChain(audioInput).connect(recorder);
+				recorder.connect(context.destination);
 			}
 
 			function recorderProcess(e) {
