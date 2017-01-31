@@ -1,0 +1,52 @@
+{
+	"ports": {
+		"http": 8080,
+		"helper": 5000
+	},
+	"station": {
+		"name": "Radio Name Here",
+		"description": "Your Description",
+		"url": "Give him a website",
+		"public": false
+	},
+	"icy": {
+		"meta_int": 2048
+	},
+	"output": {
+		"samplerate": 44100,
+		"channels": 2,
+		"bitrate": 192,
+		"normalize": false
+	},
+	"telegram": {
+		"token": "YOUR_TELEGRAM_TOKEN",
+		"startMessage": "Bot Startup Message"
+	},
+	"timed_broadcast": {
+		"enabled": true,
+		"advertisment": "Your advertisment message",
+		"timeFormat": "h A"
+	},
+	"http": {
+		"host": "example.com",
+		"allowCrossOrigin": true,
+		"originWhiteList": [
+			"http://output.jsbin.com",
+			"https://output.jsbin.com",
+			"http://fiddle.jshell.net",
+			"https://fiddle.jshell.net"
+		],
+		"__comment__": "empty list means allow all origin"
+	},
+	"url_handles": [
+		"soundcloud",
+		"youtube"
+	],
+	"admin": [ "your_username" ],
+	"queueSize": 20,
+	"loopSize": 20,
+	"logForward": "@some_channel",
+	"debug": {
+		"useJavascriptMixer": false
+	}
+}
