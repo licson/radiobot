@@ -223,19 +223,19 @@
 					<div id="adjustments-inner">
 						<div class="adjust-slider">
 							<label for="gain">Gain</label>
-							<input id="gain" type="range" min="-12" max="12" step="0.1" value="0" />
+							<input id="gain" type="range" min="-12" max="6" step="0.1" value="0" />
 						</div>
 						<div class="adjust-slider">
 							<label for="bass">Bass</label>
-							<input id="bass" type="range" min="-12" max="12" step="0.1" value="0" />
+							<input id="bass" type="range" min="-12" max="6" step="0.1" value="0" />
 						</div>
 						<div class="adjust-slider">
 							<label for="mid">Midtone</label>
-							<input id="mid" type="range" min="-12" max="12" step="0.1" value="0" />
+							<input id="mid" type="range" min="-12" max="6" step="0.1" value="0" />
 						</div>
 						<div class="adjust-slider">
 							<label for="high">Hightone</label>
-							<input id="high" type="range" min="-12" max="12" step="0.1" value="0" />
+							<input id="high" type="range" min="-12" max="6" step="0.1" value="0" />
 						</div>
 					</div>
 					<div id="adjustments-toggle">Show/Hide controls</div>
@@ -250,8 +250,10 @@
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
 			/* global $, io, navigator */
+			var serverInfo = null;
+			
 			var socket = io();
-
+			
 			navigator.getUserMedia = 
 				navigator.getUserMedia ||
 				navigator.webkitGetUserMedia ||
@@ -300,6 +302,7 @@
 
 			function hookProcessorChain(recorder) {
 				var gainNode = context.createGain();
+
 				var bassFilter = context.createBiquadFilter();
 				bassFilter.type = "lowshelf";
 				bassFilter.gain.value = 1;
@@ -309,12 +312,12 @@
 				midFilter.type = "peaking";
 				midFilter.Q.value = 0.5;
 				midFilter.gain.value = 1;
-				midFilter.gain.value = 1500;
+				midFilter.frequency.value = 1500;
 
 				var highFilter = context.createBiquadFilter();
 				highFilter.type = "highshelf";
 				highFilter.gain.value = 1;
-				highFilter.gain.value = 4000;
+				highFilter.frequency.value = 4000;
 
 				recorder.connect(gainNode);
 				gainNode.connect(bassFilter);
@@ -356,7 +359,7 @@
 				
 				var bufferSize = 16384;
 
-				var recorder = context.createScriptProcessor(bufferSize, 2, 2);
+				var recorder = context.createScriptProcessor(bufferSize, serverInfo.channel, serverInfo.channel);
 				recorder.onaudioprocess = recorderProcess;
 
 				hookProcessorChain(audioInput).connect(recorder);
@@ -364,20 +367,26 @@
 			}
 
 			function recorderProcess(e) {
-				if (context.sampleRate === 44100) return doBroadCast(e.inputBuffer);
-				
-				var left = e.inputBuffer.getChannelData(0);
-				var right = e.inputBuffer.getChannelData(1);
-				
-				var o = new window.OfflineAudioContext(2, left.length, context.sampleRate);
-				var b = o.createBuffer(2, left.length, 44100);
-				
-				var bufLeft = b.getChannelData(0);
-				var bufRight = b.getChannelData(1);
+				if (context.sampleRate === serverInfo.sampleRate) return doBroadCast(e.inputBuffer);
 
-				for (var i = 0; i < left.length; i++) {
-					bufLeft[i] = left[i];
-					bufRight[i] = right[i];
+				var channelDatas = [];
+				for (var i = 0; i < serverInfo.channel; i++) {
+					channelDatas.push(e.inputBuffer.getChannelData(i));
+				}
+
+				var o = new window.OfflineAudioContext(serverInfo.channel, channelDatas[0].length, context.sampleRate);
+				var b = o.createBuffer(serverInfo.channel, channelDatas[0].length, serverInfo.sampleRate);
+
+				var buffers = [];
+				for (var i = 0; i < serverInfo.channel; i++) {
+					buffers.push(b.getChannelData(i));
+				}
+
+				for (var i = 0; i < channelDatas[0].length; i++) {
+					for (var j = 0; j < serverInfo.channel; j++) {
+						buffers[j][i] = channelDatas[j][i]
+						
+					}
 				}
 
 				var source = o.createBufferSource();
@@ -387,25 +396,28 @@
 				o.oncomplete = function(res) {
 					count += res.renderedBuffer.getChannelData(0).length;
 					console.log(count);
-					doBroadCast(res.renderedBuffer)
+					doBroadCast(res.renderedBuffer);
 				}
 				/* Start rendering as fast as the machine can. */
 				o.startRendering();
 			}
 
 			function doBroadCast(audioBuffer) {
-				var channels = [
-					audioBuffer.getChannelData(0),
-					audioBuffer.getChannelData(1)
-				];
+				var channels = [];
+				for (var i = 0; i < serverInfo.channel; i++) {
+					channels.push(audioBuffer.getChannelData(i));
+				}
 
 				var samples = channels[0].length;
-				var pcm_s16le_buffer = new ArrayBuffer(samples * 2 * 2);
+				var pcm_s16le_buffer = new ArrayBuffer(samples * serverInfo.channel * 2);
 				var pcm_s16le_buffer_view = new Int16Array(pcm_s16le_buffer);
-				for (var i = 1; i < samples; i++) {
-					pcm_s16le_buffer_view[i * 2] = channels[0][i] * ((1 << 15) - 1);
-					pcm_s16le_buffer_view[i * 2 + 1] = channels[1][i] * ((1 << 15) - 1);
+
+				for (var i = 0; i < samples; i++) {
+					for (var j = 0; j < serverInfo.channel; j++) {
+						pcm_s16le_buffer_view[i * serverInfo.channel + j] = channels[j][i] * 32767;
+					}
 				}
+
 				if (sendID - lastACKID <= maxBuffered) {
 					socket.emit('PCM', pcm_s16le_buffer, sendID);
 					sendID++;
@@ -447,12 +459,16 @@
 				$('#adjustments-inner').slideToggle(700);
 			});
 
-			socket.on('connect', function () {
+			socket.on('info', function (info) {
+				serverInfo = info;
+				
 				if (status === "WAIT_NETWORK") {
 					socket.emit("microphone_take");
 					return;
 				}
+				
 				status = "READY";
+				
 				$('.status')
 					.attr('class', 'status ready')
 					.text('Connection established, ready to start.');

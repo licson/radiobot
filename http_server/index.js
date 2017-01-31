@@ -139,12 +139,11 @@ router.use(function (req, res, next) {
 	next();
 });
 
-router.get(/^(?:\/live.mp3|\/stream|\/;)(?:\?|$)/, function (req, res, next) {
+router.get(/^(?:\/live.mp3|\/stream|\/;)(?:\?|$)/, function (req, res) {
 	listenersCount++;
 	console.log("[Server] New listener, current count: %d", listenersCount);
 
 	// HTTP and ICY headers
-	
 	res.header({
 		"Accept-Ranges": "none",
 		"Content-Type": "audio/mpeg",
@@ -230,7 +229,7 @@ router.get('/info', configureCORS, function (req, res, next) {
 	});
 });
 
-router.get('/title/poll', configureCORS, function (req, res, next) {
+router.get('/title/poll', configureCORS, function (req, res) {
 	res.header({
 		"Cache-Control": "no-cache"
 	});
@@ -238,7 +237,7 @@ router.get('/title/poll', configureCORS, function (req, res, next) {
 	req.on('close', function () {
 		var index = pollingInfoConnections.indexOf(res);
 		if (index >= 0) {
-			pollingInfoConnections.splice(index, 1)
+			pollingInfoConnections.splice(index, 1);
 		}
 	});
 	
@@ -246,7 +245,7 @@ router.get('/title/poll', configureCORS, function (req, res, next) {
 	waitTimeout(res, pollingInfoConnections);
 });
 
-router.get('/title/sse', configureCORS, function (req, res, next) {
+router.get('/title/sse', configureCORS, function (req, res) {
 	res.header({
 		"Content-Type": "text/event-stream",
 		"Cache-Control": "no-cache"
@@ -277,7 +276,7 @@ router.get('/title/sse', configureCORS, function (req, res, next) {
 
 router.use(express.static(path.resolve(__dirname, './public')));
 
-router.get(function (req, res, next) {			
+router.get(function (req, res) {
 	res.writeHead(404, {
 		"Server": "licson-cast"
 	});
@@ -289,6 +288,12 @@ io.on('connection', function (socket) {
 	ioUsers++;
 	
 	console.log(`[Socket.io] A user connected, total ${ioUsers} users online, ${microUsers} microphones taken`);
+	
+	// init the microphone
+	socket.emit('info', {
+		sampleRate: mixer.sampleRate,
+		channel: mixer.channel
+	})
 	
 	socket.on('microphone_take', function () {
 		if (source) return;

@@ -70,7 +70,7 @@ namespace NativeMixingOperation {
 	
 	double Volume(double v) {
 		if (v > 1.0) v = 1.0;
-		if (v < 0.0 ) v = 0.0;
+		if (v < 0.0) v = 0.0;
 		
 		uint32_t i = (uint32_t)floor(v * (TableSize - 1));
 		return VolumeMapping[i];

@@ -1,7 +1,8 @@
 "use strict";
-var stream = require("stream");
-var EventEmitter = require("events").EventEmitter;
-var util = require("util");
+const stream = require("stream");
+const EventEmitter = require("events").EventEmitter;
+const util = require("util");
+const config = require("../config");
 
 function Source(obj) {
 	var self = this;
@@ -106,7 +107,7 @@ for (var i = 0; i < tableSize; i++) {
 	volumeLookup.push(volumeFunction(i / (tableSize - 1)));
 }
 
-function MixerStream (bitdepth, channel, sampleRate, prebuffer) {
+function MixerStream (bitdepth, channel, sampleRate) {
 	stream.Readable.call(this);
 	
 	if (bitdepth % 8 != 0) {
@@ -282,6 +283,10 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 }
 
 try {
+	if (config.debug.useJavascriptMixer) {
+		throw new Error("debug throw");
+	}
+	
 	MixerStream.prototype._mixin = require('../native_mixer/build/Release/mix.node');
 	console.log("[Mixer] Using optimized C++ implementation.");
 } catch (e) {

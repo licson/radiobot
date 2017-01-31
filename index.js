@@ -24,14 +24,14 @@ var volume = {
 mixer.on('new_track', function (track) {
 	track.setVolume(0);
 	if (track.is('song')) {
-		track.fadeTo(volume.song, 400);
+		track.fadeTo(volume.song, 1000);
 	} else if (track.is('tcp')) {
-		track.fadeTo(volume.tcp, 400);
+		track.fadeTo(volume.tcp, 1000);
 	} else if (track.is('microphone')) {
-		track.fadeTo(volume.microphone, 400);
+		track.fadeTo(volume.microphone, 1000);
 	} else {
 		track.setVolume(1);
-		console.warn('unknown tpye ' + track.labels);
+		console.warn('[Mixer] Unknown track type %s.', track.labels);
 	}
 });
 
@@ -69,7 +69,18 @@ function doBroadcast(file, chat_id, msg_id, title) {
 		getFile(file).then(function (url) {
 			if (cancelled) return;
 
-			ffmpeg = spawn('ffmpeg', ['-v', '-8', '-re', '-i', url, '-ac', '2', '-ar', '44100', '-c:a', 'pcm_s16le', '-t', '900', '-f', 's16le', '-']);
+			ffmpeg = spawn('ffmpeg', [
+				'-v', '-8',
+				'-re',
+				'-i', url,
+				'-ac', config.output.channels,
+				'-ar', config.output.samplerate,
+				'-c:a', 'pcm_s16le',
+				'-t', '900',
+				'-f', 's16le',
+				'-'
+			]);
+			
 			ffmpeg.stderr.pipe(process.stderr, { end: false });
 
 			var source = mixer.addSource(ffmpeg.stdout, ['song']);
@@ -303,9 +314,11 @@ bot.on('message', function (data) {
 				output += "/song_" + (i + 1) + " uploaded by " + item.name;
 				if (item.title) {
 					output += ' ( ' + item.title;
+					
 					if (item.artist) {
 						output += ' performed by ' + item.artist;
 					}
+					
 					output += ' )';
 				}
 				output += '\n';

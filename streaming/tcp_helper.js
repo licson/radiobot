@@ -5,8 +5,8 @@ const MixerStream = require('./mixer');
 
 var ffmpeg = spawn('ffmpeg', [
 	'-re', '-f', 's16le', // Input is signed 16-bit raw PCM
-	'-ac', '2', // Input has two channels
-	'-ar', '44100', // Input sample rate is 44.1kHz
+	'-ac', config.output.channels, // Input channels
+	'-ar', config.output.samplerate, // Input sample rate
 	'-i', '-', // Get from stdin
 	'-c:a', 'libmp3lame', // Specify LAME MP3 encoder
 	'-ac', config.output.channels, // Output channels
@@ -21,7 +21,7 @@ var ffmpeg = spawn('ffmpeg', [
 ffmpeg.stderr.resume();
 ffmpeg.stdout.resume();
 
-var mixer = new MixerStream(16, 2, 44100);
+var mixer = new MixerStream(16, config.output.channels, config.output.samplerate);
 mixer.pipe(ffmpeg.stdin);
 
 function createTCPHelper() {
