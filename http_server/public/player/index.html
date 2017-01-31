@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Listen to the Radio!</title>
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+		<style>
+			html, body {
+				background: #444;
+			}
+			.player-container {
+				position: relative;
+				margin: 1% auto;
+				width: 300px;
+				height: 30px;
+				border: #fff 2px solid;
+				border-radius: 3px;
+				box-shadow: #000 0 0 5px;
+				background: #45484d;
+				/* Old browsers */
+				background: -moz-linear-gradient(top, #45484d 0%, #000000 100%);
+				/* FF3.6-15 */
+				background: -webkit-linear-gradient(top, #45484d 0%, #000000 100%);
+				/* Chrome10-25,Safari5.1-6 */
+				background: linear-gradient(to bottom, #45484d 0%, #000000 100%);
+				/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+				filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000', GradientType=0);
+				/* IE6-9 */
+			}
+				
+			.player-container .controls {
+				display: inline-block;
+				color: #fff;
+				font-size: 14px;
+			}
+			
+			.player-container .controls span {
+				display: inline-block;
+				width: 16px;
+				margin-top: 7px;
+				margin-left: 9px;
+				cursor: pointer;
+			}
+			
+			.player-container .controls span:hover {
+				color: #ccc;
+			}
+			
+			.player-container .marquee-warp {
+				position: absolute;
+				top: 0;
+				right: 0;
+				width: 80%;
+				height: 100%;
+				background: #3f4c6b;
+				/* Old browsers */
+				background: -moz-linear-gradient(top, #3f4c6b 0%, #172d66 100%);
+				/* FF3.6-15 */
+				background: -webkit-linear-gradient(top, #3f4c6b 0%, #172d66 100%);
+				/* Chrome10-25,Safari5.1-6 */
+				background: linear-gradient(to bottom, #3f4c6b 0%, #172d66 100%);
+				/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+				filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#3f4c6b', endColorstr='#172d66', GradientType=0);
+				/* IE6-9 */
+			}
+			
+			.player-container .marquee {
+				width: 100%;
+				height: 100%;
+				color: #eee;
+				text-align: center;
+				box-sizing: border-box;
+				font-size: 15px;
+				padding: 5px;
+				overflow: hidden;
+			}
+			
+			.song-list-container {
+				position: relative;
+				margin: 1% auto;
+				width: 300px;
+				
+				border: #fff 2px solid;
+				border-radius: 3px;
+				box-shadow: #000 0 0 5px;
+				background: #3f4c6b;
+				/* Old browsers */
+				background: -moz-linear-gradient(top, #3f4c6b 0%, #172d66 100%);
+				/* FF3.6-15 */
+				background: -webkit-linear-gradient(top, #3f4c6b 0%, #172d66 100%);
+				/* Chrome10-25,Safari5.1-6 */
+				background: linear-gradient(to bottom, #3f4c6b 0%, #172d66 100%);
+				/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+				filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#3f4c6b', endColorstr='#172d66', GradientType=0);
+				/* IE6-9 */
+			}
+			.song-list-inner {
+				margin: 0px;
+				padding-left: 2em;
+			}
+			.song-list-container .head {
+				text-align: center;
+			}
+			.song-list-container .item {
+				margin: 0.25em;
+				line-height: 1.5em;
+				padding-left: 0.5em;
+				color: white;
+				/* border-bottom: 1px solid rgba(255, 255, 255, 0.2); */
+			}
+		</style>
+	</head>
+	<body>
+		<div class="player-container">
+			<div class="controls">
+				<span class="playpause"><i class="fa fa-play"></i></span>
+				<span class="volume"><i class="fa fa-volume-up"></i></span>
+			</div>
+			<div class="marquee-warp">
+				<div class="marquee">-</div>
+			</div>
+		</div>
+		<div class="song-list-container">
+			<div class="item head">Songs to play</div>
+			<ol class="song-list-inner">
+			</ol>
+		</div>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script type="text/javascript" src="//cdn.jsdelivr.net/jquery.marquee/1.4.0/jquery.marquee.min.js"></script>
+		<script type="text/javascript" src="//cdn.rawgit.com/Yaffle/EventSource/master/eventsource.js"></script>
+		<script type="text/javascript">
+			/* global $, EventSource */
+			
+			// call this when the audio is progressing, and it will fire a reload when it is not called
+			var keepAlive = function (idleTimeout, reconnectInterval) {
+				var nextCheckId = null;
+				var reconnectId = null;
+				
+				return function () {
+					function reconnect() {
+						if (!playing) {
+							clearInterval(reconnectId);
+							return;
+						}
+						
+						player.src = "/live.mp3?_=" + Date.now();
+						player.load();
+						player.play();
+					}
+					
+					if (nextCheckId) {
+						clearTimeout(nextCheckId);
+						nextCheckId = null;
+					}
+					
+					if (reconnectId) {
+						clearInterval(reconnectId);
+						reconnectId = null;
+					}
+					
+					if (playing) {
+						nextCheckId = setTimeout(function () {
+							console.log('network disconencted, reconnecting');
+							reconnect();
+							reconnectId = setInterval(reconnect, reconnectInterval);
+						}, idleTimeout);
+					}
+				};
+			} (10000, 10000);
+			
+			var playing = false;
+			var player = new Audio();
+			player.src = "/live.mp3?_=" + Date.now();
+			player.addEventListener('timeupdate', keepAlive);
+
+			$('.player-container .controls span.playpause').click(function() {
+				if ($(this).find('i').hasClass('fa-pause')) {
+					playing = false;
+					player.pause();
+					$(this).find('i').attr('class', 'fa fa-play');
+				} else {
+					playing = true;
+					
+					// in order to prevent cache issue
+					player.src = "/live.mp3?_=" + Date.now();
+					
+					player.load();
+					player.play();
+					$(this).find('i').attr('class', 'fa fa-pause');
+				}
+			});
+
+			$('.player-container .controls span.volume').click(function() {
+				if ($(this).find('i').hasClass('fa-volume-up')) {
+					$(player).animate({
+						volume: 0.251188643
+					}, 1000); // -12dBFS gain
+					$(this).find('i').attr('class', 'fa fa-volume-down');
+				} else if ($(this).find('i').hasClass('fa-volume-down')) {
+					$(player).animate({
+						volume: 0
+					}, 1000);
+					$(this).find('i').attr('class', 'fa fa-volume-off');
+				} else {
+					$(player).animate({
+						volume: 1
+					}, 1000);
+					$(this).find('i').attr('class', 'fa fa-volume-up');
+				}
+			});
+
+			var retryInterval = 10;
+			function poll() {
+				var server = new EventSource("/title/sse");
+
+				server.addEventListener("title", function(e) {
+					retryInterval = 10;
+					$('div.marquee').text(e.data).marquee();
+				});
+
+				server.addEventListener("songList", function(e) {
+					retryInterval = 10;
+					console.log(e.data);
+					var obj = JSON.parse(e.data);
+					$('.song-list-inner').empty();
+					obj.nexts.forEach(function (task) {
+						$('.song-list-inner').append(
+							$('<li>')
+							.addClass('item')
+							.text(task.title)
+						)
+					})
+				});
+
+				server.addEventListener("error", function(event) {
+					var txt;
+					switch (event.target.readyState) {
+						case EventSource.CLOSED:
+							txt = 'Force Reconnecting...';
+							setTimeout(poll, retryInterval);
+							
+							// in order to prevent it from accidently ddos the server
+							retryInterval *= 2;
+							if (retryInterval > 10000) {
+								retryInterval = 10000;
+							}
+							break;
+					}
+					console.log(txt);
+				});
+
+			}
+
+			poll();
+		</script>
+	</body>
+</html>

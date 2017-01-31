@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Broadcast your voice!</title>
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rangeslider.js/2.3.0/rangeslider.min.css" type="text/css" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				outline: none;
+				box-sizing: border-box;
+			}
+			
+			body {
+				font-family: Arial, sans-serif;
+				font-size: 12px;
+			}
+			
+			#container-outer {
+				position: fixed;
+				top: 0px;
+				bottom: 0px;
+				left: 0px;
+				right: 0px;
+				line-height: 0px;
+				font-size: 0px;
+				text-align: center;
+				overflow: auto;
+			}
+			
+			#container {
+				width: 80%;
+				vertical-align: middle;
+				display: inline-block;
+				max-width: 1000px;
+				margin: 0 auto;
+				font-size: 14px;
+			}
+			
+			#embedded_player {
+				position: fixed;
+				top: 0px;
+				left: 0px;
+				right: 0px;
+				height: 40px;
+				margin: 0px;
+				box-shadow: #000 0 0 5px;
+				background: #3f4c6b;
+			}
+			
+			#btn {
+				width: 12vmax;
+				height: 12vmax;
+				border-radius: 6vmax;
+				background: #f75445;
+				color: #fff;
+				font-size: 6vmax;
+				text-align: center;
+				line-height: 12vmax;
+				margin: 0 auto;
+				margin-top: 80px;
+				cursor: pointer;
+				box-shadow: #ccc 4px 4px 10px;
+				transition: all 0.2s ease-in;
+			}
+			
+			#btn:hover {
+				background: #e0483a;
+				color: #f7f7f7;
+				box-shadow: #ccc 2px 2px 5px;
+			}
+			
+			#status, #adjustments {
+				box-sizing: border-box;
+				width: 50%;
+				min-width: 250px;
+				line-height: 14px;
+				margin: 2em auto;
+				padding: 2em;
+				text-align: center;
+				box-shadow: #ccc 4px 4px 10px;
+			}
+			
+			span.status {
+				display: inline-block;
+				position: relative;
+			}
+			
+			span.status:before {
+				position: absolute;
+				left: -16px;
+				top: 3px;
+				width: 8px;
+				height: 8px;
+				border-radius: 4px;
+				content: " ";
+			}
+			
+			span.status.notready:before {
+				background: #e02b1a;
+			}
+			
+			span.status.ready:before {
+				background: #ff9c23;
+			}
+			
+			span.status.recording:before {
+				background: #23ff70;
+			}
+			
+			span.status-text {
+				display: inline-block;
+				margin-left: 1em;
+			}
+			
+			#adjustments-toggle {
+				line-height: 24px;
+				margin-top: 0.5em;
+				margin-bottom: 0.5em;
+			}
+			
+			#adjustments-inner {
+				text-align: left;
+				display: none;
+			}
+			
+			.adjust-slider {
+				margin-bottom: 1.5em;
+			}
+			
+			.adjust-slider:last-of-type {
+				margin-bottom: 0;
+			}
+			
+			.adjust-slider label {
+				width: 10%;
+				display: inline-block;
+				margin-right: 2em;
+			}
+			
+			.rangeslider--horizontal {
+				width: 80%;
+				height: 3px;
+				display: inline-block;
+				box-shadow: none;
+			}
+			
+			.rangeslider--horizontal .rangeslider__handle {
+				top: -5.75px;
+				width: 15px;
+				height: 15px;
+				box-shadow: none;
+				background: #65c393;
+				border: none;
+			}
+			
+			.rangeslider--horizontal .rangeslider__handle:after {
+				background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=);
+			}
+			
+			.rangeslider__fill {
+				background: #65c393;
+				box-shadow: none;
+			}
+			
+			@media screen and (max-width: 1024px) {
+				#btn {
+					width: 15vmax;
+					height: 15vmax;
+					border-radius: 7.5vmax;
+					font-size: 7.5vmax;
+					line-height: 15vmax;
+				}
+				
+				#status, #adjustments {
+					width: 75%;
+				}
+			}
+			
+			@media screen and (max-width: 768px) {
+				#btn {
+					width: 18vmax;
+					height: 18vmax;
+					border-radius: 9vmax;
+					font-size: 9vmax;
+					line-height: 18vmax;
+				}
+				
+				#status, #adjustments {
+					width: 90%;
+				}
+			}
+			
+			@media screen and (max-width: 640px) {
+				#status, #adjustments {
+					width: 96%;
+				}
+				
+				.adjust-slider label {
+					width: auto;
+					display: block;
+					margin: 0.8em auto;
+					text-align: center;
+				}
+				
+				.rangeslider--horizontal {
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container-outer">
+			<div id="container">
+				<div id="btn"><i class="fa fa-microphone"></i></div>
+				<div id="status">
+					<span class="status notready">Not ready</span>
+				</div>
+				<div id="adjustments">
+					<div id="adjustments-inner">
+						<div class="adjust-slider">
+							<label for="gain">Gain</label>
+							<input id="gain" type="range" min="-12" max="6" step="0.1" value="0" />
+						</div>
+						<div class="adjust-slider">
+							<label for="bass">Bass</label>
+							<input id="bass" type="range" min="-12" max="6" step="0.1" value="0" />
+						</div>
+						<div class="adjust-slider">
+							<label for="mid">Midtone</label>
+							<input id="mid" type="range" min="-12" max="6" step="0.1" value="0" />
+						</div>
+						<div class="adjust-slider">
+							<label for="high">Hightone</label>
+							<input id="high" type="range" min="-12" max="6" step="0.1" value="0" />
+						</div>
+					</div>
+					<div id="adjustments-toggle">Show/Hide controls</div>
+				</div>
+			</div>
+		</div>
+		<div id="embedded_player">
+			<iframe src="/player/embed.html?marqueeBottom=%233f4c6b&controlBottom=%2345484d" frameborder="0" style="width: 100%; height: 100%;"></iframe>
+		</div>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/rangeslider.js/2.3.0/rangeslider.min.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript">
+			/* global $, io, navigator */
+			var serverInfo = null;
+			
+			var socket = io();
+			
+			navigator.getUserMedia = 
+				navigator.getUserMedia ||
+				navigator.webkitGetUserMedia ||
+				navigator.mozGetUserMedia ||
+				(navigator.mediaDevices ? navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices) : 0);
+
+			var recordRTC = null;
+			var context = null;
+			var count = 0;
+			var mediaStream = null;
+			var filters = null;
+
+			// WAITING
+			// READY
+			// BROADCASTING
+			// WAIT_NETWORK
+			var status = "WAITING";
+
+			var sendID;
+			var lastACKID;
+			// stop send data after 20 chunks of data stucks
+			var maxBuffered = 20;
+
+			var disconnectDueToError = false;
+			var disconnectReason = null;
+
+			function startMicrophone() {
+				sendID = 0;
+				lastACKID = -1;
+
+				if (mediaStream) return;
+				socket.emit('microphone_take');
+
+				var temp = navigator.getUserMedia({ audio: true }, initializeRecorder, function (err) {
+					console.error(err);
+					socket.emit('microphone_drop');
+					disconnectDueToError = true;
+					disconnectReason = err;
+				});
+
+				if (temp && temp.then) {
+					temp.then(initializeRecorder);
+					temp.catch(console.error.bind(console));
+				}
+			}
+
+			function hookProcessorChain(recorder) {
+				var gainNode = context.createGain();
+
+				var bassFilter = context.createBiquadFilter();
+				bassFilter.type = "lowshelf";
+				bassFilter.gain.value = 1;
+				bassFilter.frequency.value = 120;
+
+				var midFilter = context.createBiquadFilter();
+				midFilter.type = "peaking";
+				midFilter.Q.value = 0.5;
+				midFilter.gain.value = 1;
+				midFilter.frequency.value = 1500;
+
+				var highFilter = context.createBiquadFilter();
+				highFilter.type = "highshelf";
+				highFilter.gain.value = 1;
+				highFilter.frequency.value = 4000;
+
+				recorder.connect(gainNode);
+				gainNode.connect(bassFilter);
+				bassFilter.connect(midFilter);
+				midFilter.connect(highFilter);
+
+				filters = {
+					gain: gainNode,
+					bass: bassFilter,
+					mid: midFilter,
+					high: highFilter
+				};
+
+				return highFilter;
+			}
+
+			function stopMicrophone() {
+				if (!mediaStream) return;
+
+				socket.emit('microphone_drop');
+
+				if (mediaStream.getAudioTracks) {
+					mediaStream.getAudioTracks().forEach(function (track) {
+						track.stop();
+					});
+				} else {
+					mediaStream.stop();
+				}
+
+				mediaStream = null;
+			}
+
+			function initializeRecorder(stream) {
+				disconnectDueToError = false;
+				mediaStream = stream;
+				context = new (window.AudioContext || window.webkitAudioContext)();
+
+				var audioInput = context.createMediaStreamSource(stream);
+				
+				var bufferSize = 16384;
+
+				var recorder = context.createScriptProcessor(bufferSize, serverInfo.channel, serverInfo.channel);
+				recorder.onaudioprocess = recorderProcess;
+
+				hookProcessorChain(audioInput).connect(recorder);
+				recorder.connect(context.destination);
+			}
+
+			function recorderProcess(e) {
+				if (context.sampleRate === serverInfo.sampleRate) return doBroadCast(e.inputBuffer);
+
+				var channelDatas = [];
+				for (var i = 0; i < serverInfo.channel; i++) {
+					channelDatas.push(e.inputBuffer.getChannelData(i));
+				}
+
+				var o = new window.OfflineAudioContext(serverInfo.channel, channelDatas[0].length, context.sampleRate);
+				var b = o.createBuffer(serverInfo.channel, channelDatas[0].length, serverInfo.sampleRate);
+
+				var buffers = [];
+				for (var i = 0; i < serverInfo.channel; i++) {
+					buffers.push(b.getChannelData(i));
+				}
+
+				for (var i = 0; i < channelDatas[0].length; i++) {
+					for (var j = 0; j < serverInfo.channel; j++) {
+						buffers[j][i] = channelDatas[j][i]
+						
+					}
+				}
+
+				var source = o.createBufferSource();
+				source.buffer = b;
+				source.connect(o.destination);
+				source.start(0);
+				o.oncomplete = function(res) {
+					count += res.renderedBuffer.getChannelData(0).length;
+					console.log(count);
+					doBroadCast(res.renderedBuffer);
+				}
+				/* Start rendering as fast as the machine can. */
+				o.startRendering();
+			}
+
+			function doBroadCast(audioBuffer) {
+				var channels = [];
+				for (var i = 0; i < serverInfo.channel; i++) {
+					channels.push(audioBuffer.getChannelData(i));
+				}
+
+				var samples = channels[0].length;
+				var pcm_s16le_buffer = new ArrayBuffer(samples * serverInfo.channel * 2);
+				var pcm_s16le_buffer_view = new Int16Array(pcm_s16le_buffer);
+
+				for (var i = 0; i < samples; i++) {
+					for (var j = 0; j < serverInfo.channel; j++) {
+						pcm_s16le_buffer_view[i * serverInfo.channel + j] = channels[j][i] * 32767;
+					}
+				}
+
+				if (sendID - lastACKID <= maxBuffered) {
+					socket.emit('PCM', pcm_s16le_buffer, sendID);
+					sendID++;
+					if (status === "WAIT_NETWORK") {
+						console.warn("resuming broadcasting");
+						$('.status')
+							.attr('class', 'status recording')
+							.text('Broadcasting...');
+						status = "BROADCASTING";
+					}
+				} else {
+					if (status === "BROADCASTING") {
+						console.warn("connection to server is too slow, stopping broadcasting");
+						$('.status')
+							.attr('class', 'status notready')
+							.text('Network Issue, will reconnect after network connect...');
+						status = "WAIT_NETWORK";
+					}
+				}
+			}
+
+			$('#btn').click(function () {
+				if($(this).find('.fa').hasClass('fa-microphone')) {
+					startMicrophone();
+					$(this).find('.fa').attr('class', 'fa fa-microphone-slash');
+				} else {
+					stopMicrophone();
+					$(this).find('.fa').attr('class', 'fa fa-microphone');
+				}
+			});
+
+			$('input[type="range"]').rangeslider({ polyfill: false });
+
+			$('#gain, #bass, #mid, #high').change(function () {
+				filters[this.id].gain.value = Math.pow(10, $(this).val() / 20);
+			});
+
+			$('#adjustments-toggle').click(function () {
+				$('#adjustments-inner').slideToggle(700);
+			});
+
+			socket.on('info', function (info) {
+				serverInfo = info;
+				
+				if (status === "WAIT_NETWORK") {
+					socket.emit("microphone_take");
+					return;
+				}
+				
+				status = "READY";
+				
+				$('.status')
+					.attr('class', 'status ready')
+					.text('Connection established, ready to start.');
+					
+			});
+
+			socket.on('microphone_ready', function () {
+				status = "BROADCASTING";
+				sendID = 0;
+				lastACKID = -1;
+				$('.status')
+					.attr('class', 'status recording')
+					.text('Broadcasting...');
+			});
+
+			socket.on('microphone_dropped', function () {
+				status = "WAITING";
+				if (!disconnectDueToError) {
+					$('.status')
+						.attr('class', 'status ready')
+						.text('Stopped.');
+				} else {
+					$('.status')
+						.attr('class', 'status notready')
+						.text('Error: ' + (disconnectReason.message || disconnectReason.toString()));
+				}
+				disconnectDueToError = false;
+			});
+
+			socket.on('ACK', function (id) {
+				lastACKID = id;
+			});
+		</script>
+	</body>
+</html>

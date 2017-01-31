@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Listen to the Radio!</title>
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+		<style>
+			.player-container {
+				position: fixed;
+				top: 0px;
+				bottom: 0px;
+				left: 0px;
+				right: 0px;
+				box-shadow: #464646 0 0 5px;
+				box-shadow: rgba(127, 127, 127, 0.3) 0 0 5px;
+				background: #45484d;
+				/* Old browsers */
+				background: -moz-linear-gradient(top, #45484d 0%, #000000 100%);
+				/* FF3.6-15 */
+				background: -webkit-linear-gradient(top, #45484d 0%, #000000 100%);
+				/* Chrome10-25,Safari5.1-6 */
+				background: linear-gradient(to bottom, #45484d 0%, #000000 100%);
+				/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+				filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000', GradientType=0);
+				/* IE6-9 */
+				font-size: 0px;
+				vertical-align: middle;
+			}
+			
+			.player-container:before {
+				line-height: 0px;
+				display: inline-block;
+				height: 100%;
+				width: 0px;
+				overflow: hidden;
+				content: "　";
+				font-size: 0px;
+				vertical-align: middle;
+			}
+			
+			.player-container .controls {
+				display: inline-block;
+				color: #fff;
+				font-size: 14px;
+				vertical-align: middle;
+				overflow: hidden;
+			}
+			
+			.player-container .controls span {
+				display: inline-block;
+				text-align: center;
+				width: 16px;
+				cursor: pointer;
+			}
+			
+			.player-container .controls span:hover {
+				color: #ccc;
+			}
+			
+			.player-container .marquee-wrap {
+				position: absolute;
+				top: 0;
+				right: 0;
+				width: 80%;
+				height: 100%;
+				background: #3f4c6b;
+				/* Old browsers */
+				background: -moz-linear-gradient(top, #3f4c6b 0%, #172d66 100%);
+				/* FF3.6-15 */
+				background: -webkit-linear-gradient(top, #3f4c6b 0%, #172d66 100%);
+				/* Chrome10-25,Safari5.1-6 */
+				background: linear-gradient(to bottom, #3f4c6b 0%, #172d66 100%);
+				/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+				filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#3f4c6b', endColorstr='#172d66', GradientType=0);
+				/* IE6-9 */
+			}
+			
+			.player-container .marquee {
+				width: 100%;
+				height: 100%;
+				color: #eee;
+				text-align: center;
+				box-sizing: border-box;
+				font-size: 15px;
+				padding: 5px;
+				overflow: hidden;
+			}
+			
+			.playlist {
+				border-top: 1px solid #fff;
+				position: fixed;
+				top: 50px;
+				left: 0px;
+				right: 0px;
+				bottom: 0px;
+				overflow-y: auto;
+				background: #172d66;
+				color: #fff;
+			}
+			
+			.playlist .item {
+				border-bottom: 1px solid #fff;
+				position: relative;
+				padding: 10px 0px 10px 0px;
+				line-height: 30px;
+			}
+			
+			.playlist .id {
+				width: 30px;
+				height: 100%;
+				padding-right: 0.25em;
+				text-align: right;
+				float: left;
+			}
+			
+			.playlist .title {
+				padding-right: 30px;
+				text-overflow: ellipsis;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="playlist">
+			<!--
+			<div class="item">
+				<div class="id">1</div><div class="title">2</div>
+			</div>
+			<div class="item">
+				<div class="id">2</div><div class="title">3</div>
+			</div>
+			-->
+		</div>
+		<div class="player-container">
+			<div class="controls">
+				<span class="playpause"><i class="fa fa-play"></i></span><!--
+			 --><span class="volume"><i class="fa fa-volume-up"></i></span>
+			</div>
+			<div class="marquee-wrap">
+				<div class="marquee">-</div>
+			</div>
+		</div>
+		<div id="loading" style="background: #777"></div>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script type="text/javascript" src="//cdn.jsdelivr.net/jquery.marquee/1.4.0/jquery.marquee.min.js"></script>
+		<script type="text/javascript" src="//cdn.rawgit.com/Yaffle/EventSource/master/eventsource.js"></script>
+		<script type="text/javascript">
+			/* global $, EventSource, location */
+			var query = {}, hasQuery = !!location.href.match(/\?/);
+			if (hasQuery) {
+				query = location.href.replace(/^.+\?/, '').replace(/#.+$/, '').split("&").map(function (pair) {
+					var temp = pair.split('=');
+					if (!temp[0]) temp[0] = '';
+					if (!temp[1]) temp[1] = '';
+					
+					temp = temp.map(function (str) {
+						try {
+							return decodeURIComponent(str);
+						} catch (e) {
+							return str;
+						}
+					});
+					
+					return {
+						key: temp[0],
+						value: temp[1]
+					};
+				}).reduce(function (prev, curr) {
+					prev[curr.key] = curr.value;
+					return prev;
+				}, {});
+			}
+			
+			function setGradient(el, from, to) {
+				var gradients = [
+					from,
+					"-moz-linear-gradient(top, " + from + " 0%, " + to + " 100%)",
+					"-webkit-linear-gradient(top, " + from + " 0%, " + to + " 100%)",
+					"linear-gradient(to bottom, " + from + " 0%, " + to + " 100%)"
+				];
+				
+				var filter = "progid: DXImageTransform.Microsoft.gradient( startColorstr='" + from + "', endColorstr='" + to + "', GradientType=0);";
+				
+				gradients.forEach(function (gradient) {
+					$(el).css("background", gradient);
+				});
+				
+				$(el).css("filter", filter);
+			}
+			
+			function setUserStyle (style) {
+				var defaultStyle = {
+					marqueeTop: "#3f4c6b",
+					marqueeBottom: "#172d66",
+					// marqueeText: "#eee",
+					controlTop: "#45484d",
+					controlBottom: "#000000",
+					// controlText: "#fff",
+					// controlHover: "#eee",
+					// listBorder: "#172d66"
+				};
+				
+				for (var key in style) {
+					defaultStyle[key] = style[key];
+				}
+				
+				if (style.marqueeTop || style.marqueeBottom) {
+					setGradient(".player-container .marquee-wrap", defaultStyle.marqueeTop, defaultStyle.marqueeBottom);
+					$('.playlist').css('background', defaultStyle.marqueeBottom)
+				}
+				
+				if (style.marqueeText) {
+					$('.player-container .marquee').css('color', style.marqueeText);
+					$('.playlist').css('.color', style.marqueeText)
+					$('.playlist').css('border-top', '1px solid ' + style.marqueeText)
+					$('.playlist .item').css('border-bottom', '1px solid ' + style.marqueeText)
+					$('.playlist .item').css('color', style.marqueeText);
+				}
+				
+				if (style.controlTop || style.controlBottom) {
+					setGradient(".player-container", defaultStyle.controlTop, defaultStyle.controlBottom);
+				}
+				
+				if (style.controlText) {
+					$('.player-container .controls').css('color', style.controlText);
+				}
+				
+				if (style.controlHover) {
+					$('.dynamic-hover-style').remove();
+					$('head').append(
+						$('<style>')
+						.text('.player-container .controls span:hover { color:' + style.controlHover + '}')
+						.addClass('dynamic-hover-style')
+					);
+				}
+				
+				if (style.listBorder) {
+					$('.playlist').css('border-top', '1px solid ' + style.listBorder)
+					$('.playlist .item').css('border-bottom', '1px solid ' + style.listBorder)
+				}
+				
+				if (style.listOnly) {
+					$('.player-container').remove();
+					$('.playlist').css('top', '0px');
+					$('.playlist').css('border-top', '0px');
+					setGradient(".playlist", defaultStyle.marqueeTop, defaultStyle.marqueeBottom);
+				}
+			}
+			
+			if (Object.keys(query).length > 0) setUserStyle(query);
+			
+			function onresize() {
+				$('.player-container').css('height', '');
+				
+				if ($('.player-container').height() > 100 && !query.playerOnly) {
+					$('.player-container').height(50);
+				}
+				
+				$('.player-container .controls span').css('width', ~~($('.player-container').height()) + 'px');
+				$('.player-container .controls').css('font-size', ~~($('.player-container').height() * 0.6) + 'px');
+				$('.marquee-wrap').css('line-height', ~~($('.marquee').height()) + 'px');
+				$('.marquee-wrap').css('width', ~~($('.player-container').width() - $('.player-container').height() * 2) + 'px');
+				$('.marquee').css('font-size', ~~($('.marquee').height() * 0.7) + 'px');
+			}
+			
+			$(window).on('resize', onresize);
+			onresize();
+			
+			// All UI components are ready!
+			$('#loading').remove();
+			
+			if (query["ui-test"]) {
+				$('div.marquee').text("there is a marquee").marquee();
+				([{title: "song 1"}, {title: "song 2"}]).forEach(function (task, index) {
+					$('.playlist').append(
+						$('<div>').addClass('item').append(
+							$('<div>').addClass('id').text((index + 1) + '.')
+						).append(
+							$('<div>').addClass('title').text(task.title)
+						)
+					);
+				});
+				
+				if (Object.keys(query).length > 1) setUserStyle(query);
+				
+				throw new Error("not loading real player");
+			}
+			
+			// call this when the audio is progressing, and it will fire a reload when it is not called
+			var keepAlive = function (idleTimeout, reconnectInterval) {
+				var nextCheckId = null;
+				var reconnectId = null;
+				
+				return function () {
+					function reconnect() {
+						if (!playing) {
+							clearInterval(reconnectId);
+							return;
+						}
+						
+						player.src = "/live.mp3?_=" + Date.now();
+						player.load();
+						player.play();
+					}
+					
+					if (nextCheckId) {
+						clearTimeout(nextCheckId);
+						nextCheckId = null;
+					}
+					
+					if (reconnectId) {
+						clearInterval(reconnectId);
+						reconnectId = null;
+					}
+					
+					if (playing) {
+						nextCheckId = setTimeout(function () {
+							console.log('network disconencted, reconnecting');
+							reconnect();
+							reconnectId = setInterval(reconnect, reconnectInterval);
+						}, idleTimeout);
+					}
+				};
+			} (10000, 10000);
+			
+			var player = new Audio();
+			var playing = false;
+			
+			player.src = "/live.mp3?_=" + Date.now();
+			player.addEventListener('timeupdate', keepAlive);
+			
+			$('.player-container .controls span.playpause').click(function() {
+				if ($(this).find('i').hasClass('fa-pause')) {
+					playing = false;
+					player.pause();
+					$(this).find('i').attr('class', 'fa fa-play');
+				} else {
+					// in order to prevent cache issue
+					playing = true;
+					
+					player.src = "/live.mp3?_=" + Date.now();
+					player.load();
+					player.play();
+					
+					$(this).find('i').attr('class', 'fa fa-pause');
+				}
+			});
+			
+			$('.player-container .controls span.volume').click(function() {
+				if ($(this).find('i').hasClass('fa-volume-up')) {
+					$(player).animate({ volume: 0.251188643 }, 1000); // -12dBFS gain
+					$(this).find('i').attr('class', 'fa fa-volume-down');
+				} else if ($(this).find('i').hasClass('fa-volume-down')) {
+					$(player).animate({ volume: 0 }, 1000);
+					$(this).find('i').attr('class', 'fa fa-volume-off');
+				} else {
+					$(player).animate({ volume: 1 }, 1000);
+					$(this).find('i').attr('class', 'fa fa-volume-up');
+				}
+			});
+			
+			var retryInterval = 10;
+			function poll() {
+				var server = new EventSource("/title/sse");
+			
+				server.addEventListener("title", function(e) {
+					retryInterval = 10;
+					$('div.marquee').text(e.data).marquee();
+				});
+				
+				server.addEventListener("songList", function(e) {
+					var obj = JSON.parse(e.data);
+					retryInterval = 10;
+					
+					$('.playlist').empty();
+					
+					obj.nexts.forEach(function (task, index) {
+						$('.playlist').append(
+							$('<div>').addClass('item').append(
+								$('<div>').addClass('id').text((index + 1) + '.')
+							).append(
+								$('<div>').addClass('title').text(task.title)
+							)
+						)
+					});
+					
+					if (Object.keys(query).length > 0) setUserStyle(query);
+				});
+				
+				server.addEventListener("error", function(event) {
+					switch (event.target.readyState) {
+						case EventSource.CLOSED:
+							console.log('Force Reconnecting...');
+							setTimeout(poll, retryInterval);
+							
+							// in order to prevent it from accidently ddos the server
+							retryInterval *= 2;
+							
+							if (retryInterval > 10000) {
+								retryInterval = 10000;
+							}
+							
+							break;
+					}
+				});
+			}
+			
+			poll();
+		</script>
+	</body>
+</html>
