@@ -21,7 +21,8 @@
 	"telegram": {
 		"token": "YOUR_TELEGRAM_TOKEN",
 		"startMessage": "Bot Startup Message",
-		"admin": [ "Your telegram username here" ]
+		"admin": [ "Your telegram username here" ],
+		"logForward": "@licson_test_log"
 	},
 	"timed_broadcast": {
 		"enabled": true,
@@ -45,7 +46,6 @@
 	],
 	"queueSize": 20,
 	"loopSize": 20,
-	"logForward": "@some_channel",
 	"debug": {
 		"useJavascriptMixer": false
 	}
