@@ -20,7 +20,8 @@
 	},
 	"telegram": {
 		"token": "YOUR_TELEGRAM_TOKEN",
-		"startMessage": "Bot Startup Message"
+		"startMessage": "Bot Startup Message",
+		"admin": [ "Your telegram username here" ]
 	},
 	"timed_broadcast": {
 		"enabled": true,
@@ -42,7 +43,6 @@
 		"soundcloud",
 		"youtube"
 	],
-	"admin": [ "your_username" ],
 	"queueSize": 20,
 	"loopSize": 20,
 	"logForward": "@some_channel",
