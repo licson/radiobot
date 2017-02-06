@@ -1,1 +1,1 @@
-module.exports = require("./lib/radiobot");
+module.exports = require("./lib/");
