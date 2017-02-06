@@ -18,6 +18,11 @@
 		"bitrate": 192,
 		"normalize": false
 	},
+	"hls": {
+		"enabled": false,
+		"segment_length": 5,
+		"segment_list_length": 6
+	},
 	"telegram": {
 		"token": "YOUR_TELEGRAM_TOKEN",
 		"startMessage": "Bot Startup Message",
