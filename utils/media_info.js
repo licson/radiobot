@@ -37,7 +37,7 @@ function parse(url) {
 			
 			if (
 				!response.headers['content-type'] ||
-				(!response.headers['content-type'].match(/^audio/) && response.headers['content-type'] != 'application/octet-stream')
+				(!response.headers['content-type'].match(/(^audio)|(flac$)/) && response.headers['content-type'] != 'application/octet-stream')
 			) {
 				urlStream.abort();
 				return reject(new Error(`unexpected content-type: ${response.headers['content-type']}`));
