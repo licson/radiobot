@@ -11,7 +11,7 @@ util.inherits(StickyEventEmitter, EventEmitter);
 
 StickyEventEmitter.prototype.emitSticky = function emitSticky(event) {
 	if (this._stickyEventOptions.debug) {
-		console.log('[stick event] emit sticky event: ' + event, [].slice.call(arguments, 1));
+		console.log('[stick event] emit sticky event: ' + event, ([].slice.call(arguments, 1) + "").replace(/\r|\n/g, ' ').slice(0, 30));
 	}
 	this._stickyEvent[event] = [].slice.call(arguments, 1);
 	return EventEmitter.prototype.emit.apply(this, [].slice.call(arguments, 0));

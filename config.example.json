@@ -29,6 +29,13 @@
 		"admin": [ "Your telegram username here" ],
 		"logForward": "@licson_test_log"
 	},
+	"discord": {
+		"token": null,
+		"startMessage": "",
+		"admin": [],
+		"logForward": null,
+		"audioChannel": null
+	},
 	"timed_broadcast": {
 		"enabled": true,
 		"advertisment": "Your advertisment message",
