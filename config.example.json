@@ -30,9 +30,15 @@
 		"logForward": "@licson_test_log"
 	},
 	"discord": {
+		"debug": false,
 		"token": null,
 		"startMessage": "",
 		"admin": [ "Your discord id here"],
+		"streamOptions": {
+			"seek": 0,
+			"volume": 1,
+			"passes": 1
+		},
 		"guild": {
 			"275570427806482432" : {
 				"logForward": "Text channel id here",
