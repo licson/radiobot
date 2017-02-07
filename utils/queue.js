@@ -86,7 +86,6 @@ Queue.prototype.push = function push(task, info) {
 		
 		this.remove(oldest);
 		this.items.splice(this.items.length - this.old, 0, item);
-		this.old--;
 		this._updateLength();
 		return true;
 	}
