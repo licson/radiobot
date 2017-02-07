@@ -32,9 +32,13 @@
 	"discord": {
 		"token": null,
 		"startMessage": "",
-		"admin": [],
-		"logForward": null,
-		"audioChannel": null
+		"admin": [ "Your discord id here"],
+		"guild": {
+			"275570427806482432" : {
+				"logForward": "Text channel id here",
+				"audioChannel": "Audio channel id here"
+			}
+		}
 	},
 	"timed_broadcast": {
 		"enabled": true,
