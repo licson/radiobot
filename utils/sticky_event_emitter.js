@@ -4,7 +4,7 @@ const util = require("util");
 function StickyEventEmitter(opts) {
 	EventEmitter.call(this);
 	this._stickyEvent = {};
-	this._stickyEventOptions = opts || {}
+	this._stickyEventOptions = opts || {};
 }
 
 util.inherits(StickyEventEmitter, EventEmitter);
@@ -100,10 +100,10 @@ StickyEventEmitter.prototype.allOnce = function allOnce(events, listener) {
 			if (remain === 0) {
 				listener.apply(self, results);
 			}
-		})
+		});
 	});
 	
 	return this;
-}
+};
 
 module.exports = StickyEventEmitter;
