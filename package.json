@@ -28,7 +28,6 @@
     "socket.io": "^1.7.2",
     "telegram-bot-api": "^1.2.0",
     "url-regex": "^4.0.0",
-    "uws": "^0.12.0",
     "ytdl-core": "^0.7.21"
   }
 }
