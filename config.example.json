@@ -40,7 +40,7 @@
 			"passes": 1
 		},
 		"guild": {
-			"275570427806482432" : {
+			"Guild Id Here" : {
 				"logForward": "Text channel id here",
 				"audioChannel": "Audio channel id here"
 			}
