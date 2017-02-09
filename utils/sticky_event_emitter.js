@@ -4,7 +4,7 @@ const util = require("util");
 function StickyEventEmitter(opts) {
 	EventEmitter.call(this);
 	this._stickyEvent = {};
-	this._stickyEventOptions = opts || {}
+	this._stickyEventOptions = opts || {};
 }
 
 util.inherits(StickyEventEmitter, EventEmitter);
@@ -13,6 +13,7 @@ StickyEventEmitter.prototype.emitSticky = function emitSticky(event) {
 	if (this._stickyEventOptions.debug) {
 		console.log('[stick event] emit sticky event: ' + event, ([].slice.call(arguments, 1) + "").replace(/\r|\n/g, ' ').slice(0, 30));
 	}
+	
 	this._stickyEvent[event] = [].slice.call(arguments, 1);
 	return EventEmitter.prototype.emit.apply(this, [].slice.call(arguments, 0));
 };
@@ -77,6 +78,7 @@ StickyEventEmitter.prototype.allOnce = function allOnce(events, listener) {
 	if (!Array.isArray(events)) {
 		throw new TypeError('"events" argument must be an array');
 	}
+	
 	if (typeof listener !== 'function') {
 		throw new TypeError('"listener" argument must be a function');
 	}
@@ -100,10 +102,10 @@ StickyEventEmitter.prototype.allOnce = function allOnce(events, listener) {
 			if (remain === 0) {
 				listener.apply(self, results);
 			}
-		})
+		});
 	});
 	
 	return this;
-}
+};
 
 module.exports = StickyEventEmitter;

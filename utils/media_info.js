@@ -23,7 +23,7 @@ function parse(url) {
 	url = fixPathname(url);
 	return new Promise(function (resolve, reject) {
 		var urlStream = request(url);
-		var all = 0
+		var all = 0;
 		
 		urlStream.on('error', function() {
 			resolve({});

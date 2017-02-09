@@ -84,7 +84,7 @@ namespace NativeMixingOperation {
 		// Assuming signed little-endian for all types
 		switch (byteSize) {
 			case 1:
-				rawValue = !(*p & 0x80) ? (int32_t)*p : (int32_t)((0xff - *p + 1) * -1);
+				rawValue = !(*p & 0x80) ? (int32_t)*p : (int32_t)(0xff - *p + 1) * -1;
 			break;
 			
 			case 2:
