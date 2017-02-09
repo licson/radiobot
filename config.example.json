@@ -30,10 +30,9 @@
 		"logForward": "@licson_test_log"
 	},
 	"discord": {
-		"debug": false,
-		"token": null,
+		"token": "Mjc4MTQ4MzQ5MzIyODU0NDEw.C3oFYQ.Tm5ngWIqhyDXU3oI_AcqHfKdnC0",
 		"startMessage": "",
-		"admin": [ "Your discord id here"],
+		"admin": [ "275570140794322946"],
 		"streamOptions": {
 			"seek": 0,
 			"volume": 1,
@@ -41,8 +40,8 @@
 		},
 		"guild": {
 			"275570427806482432" : {
-				"logForward": "Text channel id here",
-				"audioChannel": "Audio channel id here"
+				"logForward": "275570427806482432",
+				"audioChannel": "278145222225952770"
 			}
 		}
 	},
