@@ -207,7 +207,7 @@ namespace NativeMixingOperation {
 			sources.push_back(source);
 		}
 		
-		for (uint32_t offset = 0; offset < length; offset += byteSize){
+		for (uint32_t offset = 0; offset < length; offset += byteSize) {
 			double value = 0.0;
 			for (uint32_t i = 0; i < sources.size(); i++) {
 				// Process fading
