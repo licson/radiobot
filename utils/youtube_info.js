@@ -8,6 +8,10 @@ function parse(url) {
 				return reject(err);
 			}
 			
+			if (res.live_playback) {
+				return reject(new Error("Bad format: is a live stream"));
+			}
+			
 			var selected = res.formats.filter(function (i) {
 				return i.bitrate == null && i.audioBitrate;
 			});
