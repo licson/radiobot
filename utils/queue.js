@@ -248,7 +248,6 @@ Queue.prototype.toJSON = function toJSON() {
 	}
 	
 	return {
-		max: this.max,
 		old: this.old,
 		items: this.items.map(encodeTask),
 		exceedItems: this.exceedItems.map(encodeTask),
@@ -264,7 +263,6 @@ Queue.prototype.loadFromObject = function fromObject(obj) {
 		return new TaskWrapper(temp.task, temp.info, info.initTime, info.execCount);
 	}
 	
-	this.max = obj.max;
 	this.old = obj.old;
 	this.items = obj.items.map(decodeTask);
 	this.exceedItems = obj.exceedItems.map(decodeTask);
