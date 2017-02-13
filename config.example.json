@@ -24,13 +24,14 @@
 		"segment_list_length": 6
 	},
 	"telegram": {
-		"token": "YOUR_TELEGRAM_TOKEN",
+		"token": "YOUR_TELEGRAM_TOKEN  or null",
 		"startMessage": "Bot Startup Message",
 		"admin": [ "Your telegram username here" ],
-		"logForward": "@licson_test_log"
+		"logForward": "@log_channel_here or null"
+		"playList": "@play_list_channel_here or null"
 	},
 	"discord": {
-		"debug": false,
+		"debug": "YOUR_DISCORD_TOKEN  or null",
 		"token": null,
 		"startMessage": "",
 		"admin": [ "Your discord id here"],
@@ -41,8 +42,9 @@
 		},
 		"guild": {
 			"Guild Id Here" : {
-				"logForward": "Text channel id here",
-				"audioChannel": "Audio channel id here"
+				"logForward": "Text channel id here or null",
+				"audioChannel": "Audio channel id here or null"
+				"playList": "Text channel id here or null"
 			}
 		}
 	},
