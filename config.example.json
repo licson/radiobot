@@ -33,14 +33,14 @@
 		"debug": false,
 		"token": null,
 		"startMessage": "",
-		"admin": [ "Your discord id here"],
+		"admin": [ "Your discord ID here"],
 		"streamOptions": {
 			"seek": 0,
 			"volume": 1,
 			"passes": 1
 		},
 		"guild": {
-			"Guild Id Here" : {
+			"Room ID Here" : {
 				"logForward": "Text channel id here",
 				"audioChannel": "Audio channel id here"
 			}
@@ -48,6 +48,7 @@
 	},
 	"timed_broadcast": {
 		"enabled": true,
+		"advertisment_track": false,
 		"advertisment": "Your advertisment message",
 		"timeFormat": "h A"
 	},
