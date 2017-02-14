@@ -27,7 +27,7 @@
 		"token": "YOUR_TELEGRAM_TOKEN  or null",
 		"startMessage": "Bot Startup Message",
 		"admin": [ "Your telegram username here" ],
-		"logForward": "@log_channel_here or null"
+		"logForward": "@log_channel_here or null",
 		"playList": "@play_list_channel_here or null"
 	},
 	"discord": {
