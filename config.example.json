@@ -24,27 +24,27 @@
 		"segment_list_length": 6
 	},
 	"telegram": {
-		"token": "YOUR_TELEGRAM_TOKEN  or null",
+		"token": "YOUR_TELEGRAM_TOKEN",
 		"startMessage": "Bot Startup Message",
-		"admin": [ "Your telegram username here" ],
-		"logForward": "@log_channel_here or null",
-		"playList": "@play_list_channel_here or null"
+		"admin": [ "YOUR_TELEGRAM_USERNAME" ],
+		"logForward": "@log_channel_here",
+		"playList": "@play_list_channel_here"
 	},
 	"discord": {
 		"debug": false,
-		"token": "YOUR_DISCORD_TOKEN  or null",
+		"token": "YOUR_DISCORD_TOKEN",
 		"startMessage": "",
-		"admin": [ "Your discord ID here"],
+		"admin": [ "DISCORD_USER_ID"],
 		"streamOptions": {
 			"seek": 0,
 			"volume": 1,
 			"passes": 1
 		},
 		"guild": {
-			"Room ID Here" : {
-				"logForward": "Text channel id here or null",
-				"audioChannel": "Audio channel id here or null",
-				"playList": "Text channel id here or null"
+			"ROOM_ID_HERE" : {
+				"logForward": "CHATROOM_ID",
+				"audioChannel": "VOICECHANNEL_ID",
+				"playList": "CHATROOM_ID"
 			}
 		}
 	},
