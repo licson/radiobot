@@ -84,7 +84,7 @@ namespace NativeMixingOperation {
 		// Assuming signed little-endian for all types
 		switch (byteSize) {
 			case 1:
-				rawValue = !(*p & 0x80) ? (int32_t)*p : (int32_t)((0xff - *p + 1) * -1);
+				rawValue = !(*p & 0x80) ? (int32_t)*p : (int32_t)(0xff - *p + 1) * -1;
 			break;
 			
 			case 2:
@@ -207,7 +207,7 @@ namespace NativeMixingOperation {
 			sources.push_back(source);
 		}
 		
-		for (uint32_t offset = 0; offset < length; offset += byteSize){
+		for (uint32_t offset = 0; offset < length; offset += byteSize) {
 			double value = 0.0;
 			for (uint32_t i = 0; i < sources.size(); i++) {
 				// Process fading

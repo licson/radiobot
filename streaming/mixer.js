@@ -30,15 +30,15 @@ function Source(obj) {
 		transitionTo: 1,
 		
 		ended: false
-	}
+	};
 	
 	Object.keys(dafaultValue).forEach(function (key) {
 		self[key] = dafaultValue[key];
-	})
+	});
 	
 	Object.keys(obj).forEach(function (key) {
 		self[key] = obj[key];
-	})
+	});
 }
 
 util.inherits(Source, EventEmitter);
@@ -47,31 +47,31 @@ Source.prototype.addBuffer = function addBuffer(buffer) {
 	this.buffers.push(buffer);
 	this.length += buffer.length;
 	this.total += buffer.length;
-}
+};
 
 Source.prototype.remainingSamples = function remainingSamples(sampleSize) {
 	return Math.floor(this.length / sampleSize);
-}
+};
 
 Source.prototype.setVolume = function fadeTo(volume) {
 	this.transitionLength = -1;
 	this.volume = volume;
-}
+};
 
 Source.prototype.fadeTo = function fadeTo(volume, time) {
 	this.transitionFrom = this.volume;
 	this.transitionTo = volume;
 	this.transitionCurrent = 0;
 	this.transitionLength = Math.floor(time / 1000 * this.sampleRate);
-}
+};
 
 Source.prototype.setError = function setError(err) {
 	if (err) this.error = err;
-}
+};
 
 Source.prototype.is = function is(label) {
 	return this.labels.indexOf(label) >= 0;
-}
+};
 
 var tableSize = 4000;
 var easingLookup = [];
@@ -149,7 +149,7 @@ MixerStream.prototype._read = function _read(size) {
 		this.startTime = Date.now();
 		this.started = true;
 	}
-}
+};
 
 // start to push data to destination
 MixerStream.prototype._startLoop = function _startLoop() {
@@ -169,15 +169,15 @@ MixerStream.prototype._startLoop = function _startLoop() {
 					item.addBuffer(buff);
 				}
 			}
-		})
+		});
 		
 		self._startMerge(self.sampleRate * self.sampleSize / self.fps);
-		self.loopId = setTimeout(fn, self.startTime + 1000 / self.fps * self.frame - Date.now())
+		self.loopId = setTimeout(fn, self.startTime + 1000 / self.fps * self.frame - Date.now());
 	};
 	
-	this.loopId = setTimeout(fn, 1000 / this.fps)
+	this.loopId = setTimeout(fn, 1000 / this.fps);
 	fn();
-}
+};
 
 // stop to push data to destination
 MixerStream.prototype._stopLoop = function _stopLoop() {
@@ -217,7 +217,7 @@ MixerStream.prototype._startMerge = function _startMerge(length) {
 		} else {
 		    buffers.push(self.emptyBuffer);
 		}
-	})
+	});
 
 	var output = this._mixin(buffers, this.sources, length, this.bitdepth, this.channel);
 	this.sampleCount += length / this.sampleSize;
@@ -232,7 +232,7 @@ MixerStream.prototype._startMerge = function _startMerge(length) {
 			this.emit('remove_track', source);
 		}
 	}
-}
+};
 
 // merge sounds and push it out
 MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth, channel) {
@@ -269,7 +269,7 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 			
 			// value += value2;
 			
-			value = (1 - Math.abs(value * value2)) * (value + value2)
+			value = (1 - Math.abs(value * value2)) * (value + value2);
 		}
 		
 		// Clip the sample if neccessary
@@ -280,7 +280,7 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 	}
 	
 	return target;
-}
+};
 
 try {
 	if (config.debug.useJavascriptMixer) {
@@ -296,15 +296,15 @@ try {
 // start to pull from source
 MixerStream.prototype._startPolling = function _startPolling() {
 	this.paused = false;
-}
+};
 
 // stop to pull from source
 MixerStream.prototype._stopPolling = function _stopPolling() {
 	this.paused = true;
-}
+};
 
 MixerStream.prototype.addSource = function addSource(readable, labels) {
-	console.log('[Mixer] New track')
+	console.log('[Mixer] New track');
 	
 	if (!labels) {
 		labels = [];
@@ -319,33 +319,33 @@ MixerStream.prototype.addSource = function addSource(readable, labels) {
 	});
 	
 	
-	this.sources.push(item)
+	this.sources.push(item);
 	
 	this.emit('new_track', item);
 	
 	readable.on('end', function () {
 		item.ended = true;
-	})
+	});
 	
 	readable.on('close', function () {
 		item.ended = true;
-	})
+	});
 	
 	readable.on('error', function (err) {
 		item.error = err;
 		item.ended = true;
-	})
+	});
 	
 	// force the underlying data source to start
 	var res = readable.read(this.highWaterMark);
 	if (res) item.addBuffer(res);
 	
 	item.on('remove', function () {
-		console.log('[Mixer] Removing track...')
-	})
+		console.log('[Mixer] Removing track...');
+	});
 	
 	return item;
-}
+};
 
 MixerStream.prototype.getSources = function (labels) {
 	if (labels && !Array.isArray(labels)) {
@@ -356,19 +356,21 @@ MixerStream.prototype.getSources = function (labels) {
 	} else {
 		return this.sources.filter(function (item) {
 			var matched = false;
+			
 			labels.forEach(function(label) {
 				if (item.labels.indexOf(label) >= 0) {
 					matched = true;
 				}
-			})
-			return matched
-		})
+			});
+			
+			return matched;
+		});
 	}
-}
+};
 
 MixerStream.prototype.count = function () {
 	return this.sources.length;
-}
+};
 
 MixerStream.helpers = {
 	readValue: {
@@ -381,6 +383,6 @@ MixerStream.helpers = {
 		"16": Function.prototype.call.bind(Buffer.prototype.writeInt16LE),
 		"32": Function.prototype.call.bind(Buffer.prototype.writeInt32LE)
 	},
-}
+};
 
 module.exports = MixerStream;

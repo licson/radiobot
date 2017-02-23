@@ -23,7 +23,7 @@ function parse(url) {
 	url = fixPathname(url);
 	return new Promise(function (resolve, reject) {
 		var urlStream = request(url);
-		var all = 0
+		var all = 0;
 		
 		urlStream.on('error', function() {
 			resolve({});
@@ -37,7 +37,7 @@ function parse(url) {
 			
 			if (
 				!response.headers['content-type'] ||
-				(!response.headers['content-type'].match(/^audio/) && response.headers['content-type'] != 'application/octet-stream')
+				(!response.headers['content-type'].match(/(^audio)|(flac$)/) && response.headers['content-type'] != 'application/octet-stream')
 			) {
 				urlStream.abort();
 				return reject(new Error(`unexpected content-type: ${response.headers['content-type']}`));
