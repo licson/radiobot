@@ -67,11 +67,7 @@ function parse(url) {
 			urlStream.abort();
 			
 			if (e) {
-				if (e.message === "Could not find metadata header") {
-					resolve({});
-				} else {
-					reject(e);
-				}
+				reject(e);
 			} else if (metadata.artist && metadata.title) {
 				resolve({
 					title: arrayToString(metadata.title),
@@ -82,6 +78,6 @@ function parse(url) {
 			}
 		});
 	});
-};
+}
 
 module.exports = parse;
