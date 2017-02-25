@@ -67,7 +67,7 @@ function parse(url) {
 			urlStream.abort();
 			
 			if (e) {
-				reject(e);
+				resolve({});
 			} else if (metadata.artist && metadata.title) {
 				resolve({
 					title: arrayToString(metadata.title),
