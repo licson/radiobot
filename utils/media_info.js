@@ -5,7 +5,7 @@ const fixPathname = require("../utils/fix_pathname");
 function parse(url) {
 	url = fixPathname(url);
 	return new Promise(function (resolve, reject) {
-		execFile("ffprobe", ["-v", "error", "-show_entries", "stream_tags=title,artist:format_tags=title,artist", url], {timeout: 10000}, (error, stdout, stderr) => {
+		execFile("ffprobe", ["-v", "error", "-show_entries", "stream_tags=title,artist:format_tags=title,artist", url], {timeout: 10000}, function(error, stdout, stderr) {
 			if (error) {
 				if (error.code === 1) {
 					console.log("[MediaInfo] Error: Can't parse file " + url);
