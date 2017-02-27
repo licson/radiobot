@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "install": "cd native_mixer && node-gyp configure build",
+    "eslint": "eslint --fix *.js lib/*.js lib/html5_player/index.js lib/microphone/index.js streaming/ url_handlers/ utils/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "licson0729",

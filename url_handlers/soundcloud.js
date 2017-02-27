@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
-const request = require("request");
-const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0";
+const request = require('request');
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0';
 
 function getBasicData(url) {
 	return new Promise(function (resolve, reject) {
@@ -8,33 +8,33 @@ function getBasicData(url) {
 			headers: { 'User-Agent': USER_AGENT }
 		}, function (err, res, txt) {
 			if (err || res.statusCode !== 200) {
-				return reject(err || new Error("unexpect status code " + res.statusCode));
+				return reject(err || new Error('unexpect status code ' + res.statusCode));
 			}
 	
 			var id = /soundcloud:\/\/sounds:(\d+)/.exec(txt);
 			if (id) id = id[1];
 			
-			var appPath = txt.match(/assets\/app-[0-9a-f\-]+\.js/)[0];
+			var appPath = txt.match(/assets\/app-[0-9a-f-]+\.js/)[0];
 			
 			var appVersion = /window\.__sc_version = "(\d+)"/.exec(txt);
 			if (appVersion) appVersion = appVersion[1];
 	
 			if (!id || !appPath || !appVersion) {
-				return reject(new Error("unable to extract track info"));
+				return reject(new Error('unable to extract track info'));
 			}
 	
 			request.get('https://a-v2.sndcdn.com/' + appPath, {
 				headers: { 'User-Agent': USER_AGENT }
 			}, function (err, res, txt) {
 				if (err || res.statusCode !== 200) {
-					return reject(err || new Error("unexpect status code " + res.statusCode));
+					return reject(err || new Error('unexpect status code ' + res.statusCode));
 				}
 	
-				var clientId = /,client_id:"([a-zA-Z0-9]+)",/.exec(txt)
+				var clientId = /,client_id:"([a-zA-Z0-9]+)",/.exec(txt);
 				if (clientId) clientId = clientId[1];
 				
 				if (!clientId) {
-					return reject(new Error("clientId not found"));
+					return reject(new Error('clientId not found'));
 				}
 				
 				resolve({
@@ -42,14 +42,14 @@ function getBasicData(url) {
 					appVersion: appVersion,
 					clientId: clientId
 				});
-			})
-		})
-	})
+			});
+		});
+	});
 }
 
 module.exports = {
 	shouldHandle: function (url) {
-		return /^https?:\/\/soundcloud.com\/[0-9a-zA-Z\-]+\/[0-9a-zA-Z\-]+$/.test(url);
+		return /^https?:\/\/soundcloud.com\/[0-9a-zA-Z-]+\/[0-9a-zA-Z-]+$/.test(url);
 	},
 	getInfo: function (url) {
 		return getBasicData(url).then(function (info) {
@@ -58,7 +58,7 @@ module.exports = {
 					headers: { 'User-Agent': USER_AGENT }
 				}, function (err, res, txt) {
 					if (err || res.statusCode !== 200) {
-						return reject(err || new Error("unexpect status code " + res.statusCode));
+						return reject(err || new Error('unexpect status code ' + res.statusCode));
 					}
 
 					try {
@@ -82,7 +82,7 @@ module.exports = {
 					headers: { 'User-Agent': USER_AGENT }
 				}, function (err, res, txt) {
 					if (err || res.statusCode !== 200) {
-						return reject(err || new Error("unexpect status code " + res.statusCode));
+						return reject(err || new Error('unexpect status code ' + res.statusCode));
 					}
 
 					try {

@@ -1,12 +1,12 @@
 function ChatSource(obj) {
 	var requires = [
-		"type",
-		"generalName"
+		'type',
+		'generalName'
 	];
 	
 	for (var i = 0; i < requires.length; i++) {
 		if (!obj.hasOwnProperty(requires[i])) {
-			throw new Error("missing property: " + requires[i])
+			throw new Error('missing property: ' + requires[i]);
 		}
 	}
 	

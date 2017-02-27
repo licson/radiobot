@@ -9,7 +9,7 @@ function parse(url) {
 			}
 			
 			if (res.live_playback) {
-				return reject(new Error("Bad format: is a live stream"));
+				return reject(new Error('Bad format: is a live stream'));
 			}
 			
 			var selected = res.formats.filter(function (i) {
@@ -17,7 +17,7 @@ function parse(url) {
 			});
 			
 			if (selected.length === 0) {
-				return reject(new Error("This video does not have any audio only format."));
+				return reject(new Error('This video does not have any audio only format.'));
 			}
 			
 			selected = selected.sort(function (a, b) {
