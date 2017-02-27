@@ -1,7 +1,8 @@
 {
   "name": "radiobot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Your hobbyist radio station solution.",
+  "keywords": [ "radio", "bot", "hls", "shoutcast", "autodj" ],
   "main": "index.js",
   "scripts": {
     "install": "cd native_mixer && node-gyp configure build",
@@ -9,7 +10,16 @@
   },
   "author": "licson0729",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/licson0729/radiobot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/licson0729/radiobot/issues",
+    "email": "admin@licson.net"
+  },
   "dependencies": {
+    "bluebird": "^3.4.7",
     "bluebird-retry": "^0.10.1",
     "discord.js": "^11.0.0",
     "erlpack": "github:hammerandchisel/erlpack#master",
