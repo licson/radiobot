@@ -1,12 +1,12 @@
 const Promise = require('bluebird');
 const url = require('url');
-const Parser = require('musicmetadata');
+const parser = require('musicmetadata');
 const request = require('request');
-const fixPathname = require("../utils/fix_pathname");
+const fixPathname = require('../utils/fix_pathname');
 const MAX_SIZE = 100 * 1000 * 1000;
 
 const streamWhiteList = [
-	"ak.cdn.licson.net"
+	'ak.cdn.licson.net'
 ];
 
 function isStreamWhiteListed (str) {
@@ -45,7 +45,7 @@ function parse(url) {
 			
 			if (!response.headers['content-length'] && !isStreamWhiteListed(url)) {
 				urlStream.abort();
-				return reject(new Error("streaming source is not supported"));
+				return reject(new Error('streaming source is not supported'));
 			}
 			
 			if (parseInt(response.headers['content-length'], 10) > MAX_SIZE) {
@@ -62,7 +62,7 @@ function parse(url) {
 			}
 		});
 		
-		Parser(urlStream, function (e, metadata) {
+		parser(urlStream, function (e, metadata) {
 			urlStream.resume();
 			urlStream.abort();
 			

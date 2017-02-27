@@ -27,7 +27,6 @@
     "no-dupe-class-members": "error",
     "dot-notation": "error",
     "one-var": ["warn", "never"],
-    "eqeqeq": "error",
     "no-unneeded-ternary": "error",
     "no-undef": "warn",
     "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
@@ -42,7 +41,6 @@
     "comma-style": "error",
     "camelcase": "warn",
     "new-cap": "warn",
-    "no-underscore-dangle": "error",
     "no-extra-boolean-cast": "off"
   }
 }

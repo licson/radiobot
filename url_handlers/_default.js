@@ -1,5 +1,5 @@
 const Promise = require('bluebird');
-const MediaInfo = require("../utils/media_info");
+const MediaInfo = require('../utils/media_info');
 
 module.exports = {
 	shouldHandle: function (url) {
