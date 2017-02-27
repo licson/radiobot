@@ -30,7 +30,6 @@
     "icy": "^2.1.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.17.1",
-    "musicmetadata": "^2.0.5",
     "nan": "^2.5.0",
     "node-cron": "^1.1.2",
     "node-opus": "^0.2.4",
