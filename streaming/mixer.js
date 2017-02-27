@@ -1,8 +1,8 @@
-"use strict";
-const stream = require("stream");
-const EventEmitter = require("events").EventEmitter;
-const util = require("util");
-const config = require("../config");
+'use strict';
+const stream = require('stream');
+const EventEmitter = require('events').EventEmitter;
+const util = require('util');
+const config = require('../config');
 
 function Source(obj) {
 	var self = this;
@@ -83,8 +83,8 @@ function easingFunction(x) {
 
 function easing(x, from, to) {
 	// Do a clamp to prevent out of bounds access
-	if(x > 1.0) x = 1.0;
-	if(x < 0.0) x = 0.0;
+	if (x > 1.0) x = 1.0;
+	if (x < 0.0) x = 0.0;
 	var i = ~~(x * (tableSize - 1));
 	return from + easingLookup[i] * (to - from);
 }
@@ -96,8 +96,8 @@ function volumeFunction(x) {
 
 function volume(rawVolume) {
 	// Do a clamp to prevent out of bounds access
-	if(rawVolume > 1.0) rawVolume = 1.0;
-	if(rawVolume < 0.0) rawVolume = 0.0;
+	if (rawVolume > 1.0) rawVolume = 1.0;
+	if (rawVolume < 0.0) rawVolume = 0.0;
 	var i = ~~(rawVolume * (tableSize - 1));
 	return volumeLookup[i];
 }
@@ -209,13 +209,12 @@ MixerStream.prototype._startMerge = function _startMerge(length) {
 				item.buffers[0] = temp.slice(length);
 			} else {
 				temp = Buffer.concat(item.buffers);
-			    buffers.push(temp.slice(0, length));
-			    item.buffers = [temp.slice(length)];
+				buffers.push(temp.slice(0, length));
+				item.buffers = [temp.slice(length)];
 			}
-		    item.length -= length;
-		    
+			item.length -= length;
 		} else {
-		    buffers.push(self.emptyBuffer);
+			buffers.push(self.emptyBuffer);
 		}
 	});
 
@@ -284,13 +283,13 @@ MixerStream.prototype._mixin = function mixin(buffers, sources, length, bitdepth
 
 try {
 	if (config.debug.useJavascriptMixer) {
-		throw new Error("debug throw");
+		throw new Error('debug throw');
 	}
 	
 	MixerStream.prototype._mixin = require('../native_mixer/build/Release/mix.node');
-	console.log("[Mixer] Using optimized C++ implementation.");
+	console.log('[Mixer] Using optimized C++ implementation.');
 } catch (e) {
-	console.warn("[Mixer] Using JS implementation.");
+	console.warn('[Mixer] Using JS implementation.');
 }
 
 // start to pull from source
@@ -374,14 +373,14 @@ MixerStream.prototype.count = function () {
 
 MixerStream.helpers = {
 	readValue: {
-		"8": Function.prototype.call.bind(Buffer.prototype.readInt8),
-		"16": Function.prototype.call.bind(Buffer.prototype.readInt16LE),
-		"32": Function.prototype.call.bind(Buffer.prototype.readInt32LE)
+		'8': Function.prototype.call.bind(Buffer.prototype.readInt8),
+		'16': Function.prototype.call.bind(Buffer.prototype.readInt16LE),
+		'32': Function.prototype.call.bind(Buffer.prototype.readInt32LE)
 	},
 	writeValue: {
-		"8": Function.prototype.call.bind(Buffer.prototype.writeInt8),
-		"16": Function.prototype.call.bind(Buffer.prototype.writeInt16LE),
-		"32": Function.prototype.call.bind(Buffer.prototype.writeInt32LE)
+		'8': Function.prototype.call.bind(Buffer.prototype.writeInt8),
+		'16': Function.prototype.call.bind(Buffer.prototype.writeInt16LE),
+		'32': Function.prototype.call.bind(Buffer.prototype.writeInt32LE)
 	},
 };
 

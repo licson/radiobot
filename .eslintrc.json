@@ -1,0 +1,46 @@
+{
+  "env": {
+    "es6": false,
+    "node": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "rules": {
+    "prefer-const": "warn",
+    "no-const-assign": "warn",
+    "no-new-object": "error",
+    "quote-props": "off",
+    "no-unused-vars": "warn",
+    "no-array-constructor": "error",
+    "template-curly-spacing": "error",
+    "no-useless-escape": "error",
+    "wrap-iife": "warn",
+    "no-loop-func": "error",
+    "no-param-reassign": "warn",
+    "no-console": "off",
+    "linebreak-style": ["warn", "unix"],
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
+    "no-useless-constructor": "error",
+    "no-dupe-class-members": "error",
+    "dot-notation": "error",
+    "one-var": ["warn", "never"],
+    "no-unneeded-ternary": "error",
+    "no-undef": "warn",
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+    "space-before-blocks": ["error", "always"],
+    "keyword-spacing": "error",
+    "space-infix-ops": "error",
+    "newline-per-chained-call": "warn",
+    "padded-blocks": ["warn", "never"],
+    "space-in-parens": "error",
+    "array-bracket-spacing": "error",
+    "max-len": ["warn", 120],
+    "comma-style": "error",
+    "camelcase": "warn",
+    "new-cap": "warn",
+    "no-extra-boolean-cast": "off"
+  }
+}
