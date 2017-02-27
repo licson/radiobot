@@ -32,7 +32,6 @@
 	},
 	"discord": {
 		"debug": false,
-		"reducePacketLoss": false,
 		"token": "YOUR_DISCORD_TOKEN",
 		"startMessage": "",
 		"admin": [ "DISCORD_USER_ID"],
