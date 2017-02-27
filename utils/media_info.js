@@ -4,13 +4,12 @@ const fixPathname = require('../utils/fix_pathname');
 
 function parse(url) {
 	return new Promise(function (resolve, reject) {
-		execFile('ffprobe',
-		['-v', 'error',
-		'-of', 'default=nw=1',
-		'-show_entries', 'stream_tags=title,artist:format_tags=title,artist:format=duration',
-		fixPathname(url)],
-		{timeout: 10000},
-		function(error, stdout, stderr) {
+		execFile('ffprobe', [
+			'-v', 'error',
+			'-of', 'default=nw=1',
+			'-show_entries', 'stream_tags=title,artist:format_tags=title,artist:format=duration',
+			fixPathname(url)
+		], {timeout: 10000}, function(error, stdout, stderr) {
 			if (error) {
 				if (error.code === 1) {
 					console.log('[MediaInfo] Error: Can\'t parse file ' + fixPathname(url));
