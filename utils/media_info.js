@@ -6,7 +6,10 @@ function parse(url) {
 	url = fixPathname(url);
 	return new Promise(function (resolve, reject) {
 		execFile('ffprobe',
-		['-v', 'error','-of', 'default=nw=1', '-show_entries', 'stream_tags=title,artist:format_tags=title,artist:format=duration', url],
+		['-v', 'error',
+		'-of', 'default=nw=1',
+		'-show_entries', 'stream_tags=title,artist:format_tags=title,artist:format=duration',
+		url],
 		{timeout: 10000},
 		function(error, stdout, stderr) {
 			if (error) {
