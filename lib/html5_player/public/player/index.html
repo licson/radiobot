@@ -14,13 +14,15 @@
 				font-family: "Segoe UI", san-serif;
 				font-size: 14px;
 				background: #3F51B5;
+				margin: 0;
+				padding: 0;
 			}
 			
 			.container {
 				width: 60%;
 				max-width: 1000px;
 				min-width: 300px;
-				margin: 30px auto;
+				margin: 0 auto;
 			}
 			
 			.section {
@@ -30,14 +32,21 @@
 			}
 			
 			.section.volume-slider {
-				position: absolute;
+				position: fixed;
 				padding: 0.5em 1em;
 				box-shadow: rgba(50, 50, 50, 0.3) 0px 4px 4px 2px;
+				z-index: 1001;
 				display: none;
 			}
 			
 			#player {
-				position: relative;
+				position: fixed;
+				z-index: 1000;
+				top: 5px;
+				width: 60%;
+				max-width: 1000px;
+				min-width: 300px;
+				box-shadow: rgba(50, 50, 50, 0.3) 0px 4px 4px 2px;
 				height: 100px;
 			}
 			
@@ -103,6 +112,11 @@
 				display: none;
 			}
 			
+			#playlist {
+				position: relative;
+				top: 130px;
+			}
+			
 			#playlist p.title {
 				width: 100%;
 				margin: 0;
@@ -139,7 +153,7 @@
 			}
 			
 			.rangeslider--vertical .rangeslider__handle {
-				left: -5.75px;
+				left: -6px;
 				width: 15px;
 				height: 15px;
 				box-shadow: none;
