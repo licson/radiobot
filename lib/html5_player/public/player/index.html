@@ -114,7 +114,7 @@
 			
 			#playlist {
 				position: relative;
-				top: 140px;
+				margin-top: 140px;
 			}
 			
 			#playlist p.title {
@@ -168,6 +168,24 @@
 			.rangeslider__fill {
 				background: #65c393;
 				box-shadow: none;
+			}
+			
+			@media screen and (max-width: 481px) {
+				.container {
+					width: auto;
+				}
+				
+				#player {
+					top: 10px;
+					width: auto;
+					left: 10px;
+					right: 10px;
+					min-width: 0px;
+				}
+				
+				#playlist {
+					margin: 120px 10px 10px 10px;
+				}
 			}
 		</style>
 	</head>
