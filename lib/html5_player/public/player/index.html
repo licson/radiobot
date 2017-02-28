@@ -308,7 +308,7 @@
 		
 			server.addEventListener("title", function(e) {
 				retryInterval = 10;
-				$('#player .title').text(e.data);
+				$('#player .title').text(e.data == "" ? "Title" : e.data);
 				
 				$('#cover').attr('src', '/title/cover?_=' + Date.now());
 			});
