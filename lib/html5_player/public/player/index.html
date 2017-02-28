@@ -175,7 +175,7 @@
 		<div class="container">
 			<div class="section" id="player">
 			<div class="cover">
-				<img src="//placehold.it/120x120" />
+				<img src="/title/cover" id="cover" />
 			</div>
 			<div class="interface">
 				<p class="title">Title</p>
@@ -309,6 +309,8 @@
 			server.addEventListener("title", function(e) {
 				retryInterval = 10;
 				$('#player .title').text(e.data);
+				
+				$('#cover').attr('src', '/title/cover?_=' + Date.now());
 			});
 		
 			server.addEventListener("songList", function(e) {
@@ -319,7 +321,7 @@
 				obj.nexts.forEach(function(task) {
 					$('#playlist-list').append(
 						$('<li>').text(task.title)
-					)
+					);
 				});
 			});
 		
