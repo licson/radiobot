@@ -14,7 +14,7 @@
 			body {
 				font-family: "Segoe UI", san-serif;
 				font-size: 14px;
-				background: #2B3A6D;
+				background: #E0E0E0;
 				margin: 0;
 				padding: 0;
 			}
@@ -28,14 +28,14 @@
 			
 			.section {
 				background: #fff;
-				box-shadow: rgba(50, 50, 50, 0.5) 4px 4px 4px;
+				box-shadow: rgba(50, 50, 50, 0.5) 0px 2px 4px;
 				margin-bottom: 1.5em;
 			}
 			
 			.section.volume-slider {
 				position: fixed;
 				padding: 0.5em 1em;
-				box-shadow: rgba(50, 50, 50, 0.3) 0px 4px 4px 2px;
+				box-shadow: rgba(50, 50, 50, 0.3) 0px 8px 8px 2px;
 				z-index: 1001;
 				display: none;
 			}
@@ -115,7 +115,7 @@
 			
 			#playlist {
 				position: relative;
-				top: 140px;
+				margin-top: 140px;
 			}
 			
 			#playlist p.title {
@@ -185,8 +185,7 @@
 				}
 				
 				#playlist {
-					margin: 0 10px 10px 10px;
-					top: 120px;
+					margin: 120px 10px 10px 10px;
 				}
 			}
 		</style>
@@ -306,7 +305,7 @@
 		
 		$('#volume').click(function() {
 			$('#volume-slider').css({
-				top: $(this).offset().top + $(this).outerHeight() + 5,
+				top: $(this).offset().top + $(this).outerHeight() - $("#el").offset().top - $(document).scrollTop() + 5,
 				left: $(this).offset().left
 			}).fadeToggle(500);
 		});
