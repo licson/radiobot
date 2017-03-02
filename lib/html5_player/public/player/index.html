@@ -14,7 +14,7 @@
 			body {
 				font-family: "Segoe UI", san-serif;
 				font-size: 14px;
-				background: #E0E0E0;
+				background: #BDBDBD;
 				margin: 0;
 				padding: 0;
 			}
@@ -47,7 +47,7 @@
 				width: 60%;
 				max-width: 1000px;
 				min-width: 300px;
-				box-shadow: rgba(50, 50, 50, 0.3) 0px 4px 4px 2px;
+				box-shadow: rgba(50, 50, 50, 0.3) 0px 4px 4px 1px;
 				height: 100px;
 			}
 			
@@ -305,7 +305,7 @@
 		
 		$('#volume').click(function() {
 			$('#volume-slider').css({
-				top: $(this).offset().top + $(this).outerHeight() - $("#el").offset().top - $(document).scrollTop() + 5,
+				top: $(this).offset().top + $(this).outerHeight() - $(document).scrollTop() + 5,
 				left: $(this).offset().left
 			}).fadeToggle(500);
 		});
