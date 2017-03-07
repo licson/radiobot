@@ -72,6 +72,7 @@
 	"queueSize": 20,
 	"loopSize": 20,
 	"debug": {
+		"logMemoryUsage": false,
 		"useJavascriptMixer": false
 	}
 }
