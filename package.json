@@ -30,8 +30,6 @@
     "album-art": "^1.0.2",
     "bluebird": "^3.4.7",
     "bluebird-retry": "^0.10.1",
-    "discord.js": "^11.0.0",
-    "erlpack": "github:hammerandchisel/erlpack#master",
     "express": "^4.14.0",
     "fs-extra": "^2.0.0",
     "get-youtube-id": "^1.0.0",
@@ -40,13 +38,17 @@
     "moment": "^2.17.1",
     "nan": "^2.5.0",
     "node-cron": "^1.1.2",
-    "node-opus": "^0.2.4",
     "queue": "^4.0.0",
     "request": "^2.79.0",
     "socket.io": "^1.7.2",
     "telegram-bot-api": "^1.2.0",
     "url-regex": "^4.0.0",
-    "uws": "^0.12.0",
     "ytdl-core": "^0.9.1"
+  },
+  "optionalDependencies": {
+    "discord.js": "^11.0.0",
+    "erlpack": "github:hammerandchisel/erlpack#master",
+    "node-opus": "^0.2.4",
+    "uws": "^0.12.0"
   }
 }
