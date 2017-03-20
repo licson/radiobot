@@ -31,6 +31,7 @@
     "bluebird": "^3.4.7",
     "bluebird-retry": "^0.10.1",
     "express": "^4.14.0",
+    "ffmpeg-static": "^2.0.0",
     "fs-extra": "^2.0.0",
     "get-youtube-id": "^1.0.0",
     "icy": "^2.1.0",
