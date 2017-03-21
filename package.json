@@ -46,5 +46,11 @@
     "telegram-bot-api": "^1.2.0",
     "url-regex": "^4.0.0",
     "ytdl-core": "^0.9.1"
+  },
+  "optionalDependencies": {
+    "discord.js": "^11.0.0",
+    "erlpack": "github:hammerandchisel/erlpack#master",
+    "node-opus": "^0.2.4",
+    "uws": "^0.12.0"
   }
 }
