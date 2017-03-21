@@ -42,7 +42,7 @@
     "node-opus": "^0.2.4",
     "queue": "^4.0.0",
     "request": "^2.79.0",
-    "socket.io": "^1.7.2",
+    "socket.io": "^1.7.3",
     "telegram-bot-api": "^1.2.0",
     "url-regex": "^4.0.0",
     "uws": "^0.12.0",
