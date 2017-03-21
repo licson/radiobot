@@ -30,6 +30,7 @@
     "album-art": "^1.0.2",
     "bluebird": "^3.4.7",
     "bluebird-retry": "^0.10.1",
+    "buffer-v6-polyfill": "^1.0.3",
     "express": "^4.14.0",
     "ffmpeg-static": "^2.0.0",
     "fs-extra": "^2.0.0",
@@ -45,11 +46,5 @@
     "telegram-bot-api": "^1.2.0",
     "url-regex": "^4.0.0",
     "ytdl-core": "^0.9.1"
-  },
-  "optionalDependencies": {
-    "discord.js": "^11.0.0",
-    "erlpack": "github:hammerandchisel/erlpack#master",
-    "node-opus": "^0.2.4",
-    "uws": "^0.12.0"
   }
 }
