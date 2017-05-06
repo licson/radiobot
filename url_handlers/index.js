@@ -1,21 +1,21 @@
-const fs = require("fs");
+const fs = require('fs');
 
 var files = fs.readdirSync(__dirname).filter(function (name) {
-	return name.match(/\.js$/) && name !== "index.js";
+	return name.match(/\.js$/) && name !== 'index.js';
 });
 
 module.exports = function (requiredList) {
 	var modules = [];
 	
 	for (var i = 0; i < requiredList.length; i++) {
-		if (files.indexOf(requiredList[i] + ".js") < 0) {
-			throw new Error("handle module " + requiredList[i] + " does not exist.");
+		if (files.indexOf(requiredList[i] + '.js') < 0) {
+			throw new Error('handle module ' + requiredList[i] + ' does not exist.');
 		}
 		
-		modules.push(require("./" + requiredList[i] + ".js"));
+		modules.push(require('./' + requiredList[i] + '.js'));
 	}
 	
-	modules.push(require("./_default.js"));
+	modules.push(require('./_default.js'));
 	
 	modules.find = function find(url) {
 		var handle = modules.filter(function (handle) {

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Listen to the Radio!</title>
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+		<link href="//cdnjs.cloudflare.com/ajax/libs/rangeslider.js/2.3.0/rangeslider.min.css" rel="stylesheet" type="text/css" />
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+			
+			body {
+				font-family: "Segoe UI", san-serif;
+				font-size: 14px;
+				background: #BDBDBD;
+				margin: 0;
+				padding: 0;
+			}
+			
+			.container {
+				width: 60%;
+				max-width: 1000px;
+				min-width: 300px;
+				margin: 0 auto;
+			}
+			
+			.section {
+				background: #fff;
+				box-shadow: rgba(50, 50, 50, 0.5) 0px 2px 4px;
+				margin-bottom: 1.5em;
+			}
+			
+			.section.volume-slider {
+				position: fixed;
+				padding: 0.5em 1em;
+				box-shadow: rgba(50, 50, 50, 0.3) 0px 8px 8px 2px;
+				z-index: 1001;
+				display: none;
+			}
+			
+			#player {
+				position: fixed;
+				z-index: 1000;
+				top: 20px;
+				width: 60%;
+				max-width: 1000px;
+				min-width: 300px;
+				box-shadow: rgba(50, 50, 50, 0.3) 0px 4px 4px 1px;
+				height: 100px;
+			}
+			
+			#player .cover {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100px;
+				height: 100px;
+			}
+			
+			#player .cover img {
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			
+			#player .interface {
+				margin-left: 100px;
+				padding: 0.5em 0.7em;
+			}
+			
+			#player .interface p.title {
+				width: 100%;
+				margin: 0.25em 0;
+				padding: 0.3em;
+				font-size: 1.2em;
+				border-bottom: #eee 1px solid;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			
+			#player .interface .controls {
+				font-size: 1.2em;
+				margin-top: 0.8em;
+				margin-left: 0.3em;
+			}
+			
+			#player .interface .controls span.fa {
+				display: inline-block;
+				margin-right: 0.7em;
+				color: #37474F;
+				cursor: pointer;
+				transition: all ease-in 0.25s;
+			}
+			
+			#player .interface .controls span.fa:hover {
+				color: #263238;
+				transform: scale(0.9);
+			}
+			
+			#player .interface .controls span.tooltip {
+				background: #37474F;
+				color: #fff;
+				font-size: 0.8em;
+				line-height: 1.2em;
+				padding-top: 0.1em;
+				padding-bottom: 0.4em;
+				padding-left: 0.5em;
+				padding-right: 0.5em;
+				border-radius: 0.8em;
+				display: none;
+			}
+			
+			#playlist {
+				position: relative;
+				margin-top: 140px;
+			}
+			
+			#playlist p.title {
+				width: 100%;
+				margin: 0;
+				padding: 0.5em 0.7em;
+				font-size: 1.2em;
+				border-bottom: #eee 1px solid;
+			}
+			
+			#playlist ul.list {
+				list-style: none;
+				list-style-type: none;
+				padding: 0;
+				margin: 0;
+			}
+			
+			#playlist ul.list li {
+				display: block;
+				padding: 0.35em 1em;
+				transition: all ease-in 0.25s;
+			}
+			
+			#playlist ul.list li:last-of-type {
+				padding-bottom: 0.55em;
+			}
+			
+			#playlist ul.list li:hover {
+				background: #eee;
+			}
+			
+			.rangeslider--vertical {
+				width: 3px;
+				display: inline-block;
+				box-shadow: none;
+			}
+			
+			.rangeslider--vertical .rangeslider__handle {
+				left: -6px;
+				width: 15px;
+				height: 15px;
+				box-shadow: none;
+				background: #65c393;
+				border: none;
+			}
+			
+			.rangeslider--vertical .rangeslider__handle:after {
+				background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=);
+			}
+			
+			.rangeslider__fill {
+				background: #65c393;
+				box-shadow: none;
+			}
+			
+			@media screen and (max-width: 481px) {
+				.container {
+					width: auto;
+				}
+				
+				#player {
+					top: 10px;
+					width: auto;
+					left: 10px;
+					right: 10px;
+					min-width: 0px;
+				}
+				
+				#playlist {
+					margin: 120px 10px 10px 10px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="section" id="player">
+			<div class="cover">
+				<img src="/title/cover" id="cover" />
+			</div>
+			<div class="interface">
+				<p class="title">Title</p>
+				<div class="controls">
+				<span class="fa fa-play" title="Play" id="play"></span>
+				<span class="fa fa-pause" title="Pause" id="pause"></span>
+				<span class="fa fa-volume-up" title="Volume adjust" id="volume"></span>
+				<span class="fa fa-list" title="Show/hide playlist" id="list"></span>
+				<span class="tooltip" id="tooltip"></span>
+				</div>
+			</div>
+			</div>
+			<div class="section" id="playlist">
+			<p class="title">Playlist</p>
+			<ul class="list" id="playlist-list">
+				<li> - </li>
+			</ul>
+			</div>
+		</div>
+		<div class="section volume-slider" id="volume-slider">
+			<input type="range" min="-36" max="0" ste="2" value="0" data-orientation="vertical" />
+		</div>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/rangeslider.js/2.3.0/rangeslider.min.js"></script>
+		<script type="text/javascript" src="//cdn.rawgit.com/Yaffle/EventSource/master/eventsource.js"></script>
+		<script type="text/javascript">
+		/* global $, EventSource */
+		
+		// call this when the audio is progressing, and it will fire a reload when it is not called
+		var keepAlive = function(idleTimeout, reconnectInterval) {
+			var nextCheckId = null;
+			var reconnectId = null;
+		
+			return function() {
+				function reconnect() {
+					if (!playing) {
+						clearInterval(reconnectId);
+						return;
+					}
+		
+					player.src = "/live.mp3?_=" + Date.now();
+					player.load();
+					player.play();
+				}
+		
+				if (nextCheckId) {
+					clearTimeout(nextCheckId);
+					nextCheckId = null;
+				}
+		
+				if (reconnectId) {
+					clearInterval(reconnectId);
+					reconnectId = null;
+				}
+		
+				if (playing) {
+					nextCheckId = setTimeout(function() {
+						console.log('network disconencted, reconnecting');
+						reconnect();
+						reconnectId = setInterval(reconnect, reconnectInterval);
+					}, idleTimeout);
+				}
+			};
+		}(10000, 10000);
+		
+		var playing = false;
+		var player = new Audio();
+		player.src = "/live.mp3?_=" + Date.now();
+		player.addEventListener('timeupdate', keepAlive);
+		
+		$('input[type="range"]').rangeslider({
+			polyfill: false,
+			onSlide: function(pos, val) {
+				player.volume = Math.pow(10, val / 20);
+		
+				if (val > -12) {
+					$('#volume').attr('class', 'fa fa-volume-up');
+				} else if (val > -24) {
+					$('#volume').attr('class', 'fa fa-volume-down');
+				} else {
+					$('#volume').attr('class', 'fa fa-volume-off');
+				}
+			}
+		});
+		
+		$('#play').click(function() {
+			if (!playing) {
+				playing = true;
+		
+				// in order to prevent cache issue
+				player.src = "/live.mp3?_=" + Date.now();
+		
+				player.load();
+				player.play();
+			}
+		});
+		
+		$('#pause').click(function() {
+			if (playing) {
+				playing = false;
+				player.pause();
+			}
+		});
+		
+		$('#list').click(function() {
+			$('#playlist-list').slideToggle(1000);
+		});
+		
+		$('#volume').click(function() {
+			$('#volume-slider').css({
+				top: $(this).offset().top + $(this).outerHeight() - $(document).scrollTop() + 5,
+				left: $(this).offset().left
+			}).fadeToggle(500);
+		});
+		
+		$('#play, #pause, #volume, #list').mouseover(function() {
+			$('#tooltip')
+				.text($(this).attr('title'))
+				.fadeIn(500);
+		});
+		
+		$('#play, #pause, #volume, #list').mouseout(function() {
+			$('#tooltip').fadeOut(500);
+		});
+		
+		var retryInterval = 10;
+		
+		function poll() {
+			var server = new EventSource("/title/sse");
+		
+			server.addEventListener("title", function(e) {
+				retryInterval = 10;
+				$('#player .title').text(e.data == "" ? "Title" : e.data);
+				
+				$('#cover').attr('src', '/title/cover?_=' + Date.now());
+			});
+		
+			server.addEventListener("songList", function(e) {
+				retryInterval = 10;
+				console.log(e.data);
+				var obj = JSON.parse(e.data);
+				$('#playlist-list').empty();
+				obj.nexts.forEach(function(task) {
+					$('#playlist-list').append(
+						$('<li>').text(task.title)
+					);
+				});
+			});
+		
+			server.addEventListener("error", function(event) {
+				var txt;
+				switch (event.target.readyState) {
+					case EventSource.CLOSED:
+						txt = 'Force Reconnecting...';
+						setTimeout(poll, retryInterval);
+		
+						// in order to prevent it from accidently ddos the server
+						retryInterval *= 2;
+						if (retryInterval > 10000) {
+							retryInterval = 10000;
+						}
+						break;
+				}
+				console.log(txt);
+			});
+		}
+		
+		poll();
+		</script>
+	</body>
+</html>

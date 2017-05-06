@@ -1,87 +1,47 @@
 const Promise = require('bluebird');
-const url = require('url');
-const Parser = require('musicmetadata');
-const request = require('request');
-const fixPathname = require("../utils/fix_pathname");
-const MAX_SIZE = 100 * 1000 * 1000;
-
-const streamWhiteList = [
-	"ak.cdn.licson.net"
-];
-
-function isStreamWhiteListed (str) {
-	var parsed = url.parse(str);
-	return streamWhiteList.indexOf(parsed.hostname) >= 0;
-}
-
-function arrayToString(arr) {
-	if (Array.isArray(arr)) return arr.join(', ');
-	return arr;
-}
+const execFile = require('child_process').execFile;
+const fixPathname = require('../utils/fix_pathname');
 
 function parse(url) {
-	url = fixPathname(url);
 	return new Promise(function (resolve, reject) {
-		var urlStream = request(url);
-		var all = 0
-		
-		urlStream.on('error', function() {
-			resolve({});
-		});
-		
-		urlStream.on('response', function(response) {
-			if (response.statusCode !== 200) {
-				urlStream.abort();
-				return reject(new Error(`unexpect status code ${response.statusCode}`));
-			}
-			
-			if (
-				!response.headers['content-type'] ||
-				(!response.headers['content-type'].match(/^audio/) && response.headers['content-type'] != 'application/octet-stream')
-			) {
-				urlStream.abort();
-				return reject(new Error(`unexpected content-type: ${response.headers['content-type']}`));
-			}
-			
-			if (!response.headers['content-length'] && !isStreamWhiteListed(url)) {
-				urlStream.abort();
-				return reject(new Error("streaming source is not supported"));
-			}
-			
-			if (parseInt(response.headers['content-length'], 10) > MAX_SIZE) {
-				urlStream.abort();
+		execFile('ffprobe', [
+			'-v', 'error',
+			'-of', 'default=nw=1',
+			'-show_entries', 'stream_tags=title,artist:format_tags=title,artist:format=duration',
+			fixPathname(url)
+		], { timeout: 10000 }, function (error, stdout, stderr) {
+			if (error) {
+				if (error.code === 1) {
+					console.log('[MediaInfo] Error: Can\'t parse file ' + fixPathname(url));
+					return reject(new Error(stderr));
+				} else if (error.code === 130) {
+					console.log('[MediaInfo] Error: Fetch timeout ' + fixPathname(url));
+					return reject(new Error('Fetch timeout'));
+				}
 				return resolve({});
 			}
-		});
-		
-		urlStream.on('data', function (data) {
-			all += data.length;
-			if (all > MAX_SIZE) {
-				urlStream.abort();
-				resolve({});
+
+			if (stdout.match(/duration=(.*)/i)[1] == 'N/A') {
+				return reject(new Error('streaming source is not supported'));
 			}
-		});
-		
-		Parser(urlStream, function (e, metadata) {
-			urlStream.resume();
-			urlStream.abort();
-			
-			if (e) {
-				if (e.message === "Could not find metadata header") {
-					resolve({});
-				} else {
-					reject(e);
-				}
-			} else if (metadata.artist && metadata.title) {
+
+			var title;
+			var artist;
+			if (stdout.match(/TAG:title=(.*)/i) && stdout.match(/TAG:artist=(.*)/i)) {
+				title = stdout.match(/TAG:title=(.*)/i)[1];
+				artist = stdout.match(/TAG:artist=(.*)/i)[1];
+			}
+
+			if (artist && title) {
 				resolve({
-					title: arrayToString(metadata.title),
-					artist: arrayToString(metadata.artist)
+					title: title,
+					artist: artist
 				});
 			} else {
 				resolve({});
 			}
 		});
 	});
-};
+}
 
 module.exports = parse;

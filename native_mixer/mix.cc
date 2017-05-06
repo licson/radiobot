@@ -30,17 +30,18 @@ namespace NativeMixingOperation {
 	};
 	
 	// Max value lookup map to speed up GetMaxSampleValue
-	std::vector<uint32_t> maxValueLookup = {
+	uint32_t maxValues[4] = {
 		(1U << 7) - 1,
 		(1U << 15) - 1,
 		(1U << 23) - 1,
 		(1U << 31) - 1
 	};
+	std::vector<uint32_t> maxValueLookup(&maxValues[0], &maxValues[0] + 4);
 	
 	// Lookup tables
 	const size_t TableSize = 4000;
-	std::vector<double> EasingLookup = {};
-	std::vector<double> VolumeMapping = {};
+	std::vector<double> EasingLookup;
+	std::vector<double> VolumeMapping;
 	
 	double MixSample(double a, double b) {
 		return (1.0 - fabs(a * b)) * (a + b);
@@ -84,19 +85,19 @@ namespace NativeMixingOperation {
 		// Assuming signed little-endian for all types
 		switch (byteSize) {
 			case 1:
-				rawValue = !(*p & 0x80) ? (int32_t)*p : (int32_t)((0xff - *p + 1) * -1);
+				rawValue = !(*p & 0x80) ? (int32_t)*p : (int32_t)(0xff - *p + 1) * -1;
 			break;
 			
 			case 2:
-				rawValue = (int32_t)((int16_t)(*p & 0xff | *(p + 1) << 8 & 0xff00));
+				rawValue = (int32_t)((int16_t)((*p & 0xff) | (*(p + 1) << 8 & 0xff00)));
 			break;
 			
 			case 4:
 				rawValue = (int32_t)(
-					*p & 0xff |
-					*(p + 1) << 8 & 0xff00 |
-					*(p + 2) << 16 & 0xff0000 |
-					*(p + 3) << 24 & 0xff000000
+					(*p & 0xff) |
+					(*(p + 1) << 8 & 0xff00) |
+					(*(p + 2) << 16 & 0xff0000) |
+					(*(p + 3) << 24 & 0xff000000)
 				);
 			break;
 		}
@@ -207,7 +208,7 @@ namespace NativeMixingOperation {
 			sources.push_back(source);
 		}
 		
-		for (uint32_t offset = 0; offset < length; offset += byteSize){
+		for (uint32_t offset = 0; offset < length; offset += byteSize) {
 			double value = 0.0;
 			for (uint32_t i = 0; i < sources.size(); i++) {
 				// Process fading

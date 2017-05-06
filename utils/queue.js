@@ -10,7 +10,7 @@ function TaskWrapper(taskFactory, info, initTime, execCount) {
 TaskWrapper.prototype.run = function () {
 	var args = [].slice.call(arguments, 0);
 	return this.taskFactory.apply(this, args);
-}
+};
 
 // wrapper function to prevent duplicate call to callback
 function callOnce(fn) {
@@ -22,7 +22,7 @@ function callOnce(fn) {
 		}
 		called = true;
 		return fn.apply(null, [].slice.call(arguments, 0));
-	}
+	};
 }
 
 function Queue(loopSize, option) {
@@ -38,10 +38,10 @@ function Queue(loopSize, option) {
 	
 	option = option || {};
 	if ('function' === typeof option.taskToJSON) {
-		this._taskToJSON = option.taskToJSON
+		this._taskToJSON = option.taskToJSON;
 	}
 	if ('function' === typeof option.JSONToTask) {
-		this._JSONToTask = option.JSONToTask
+		this._JSONToTask = option.JSONToTask;
 	}
 }
 
@@ -49,14 +49,14 @@ util.inherits(Queue, EventEmitter);
 
 Queue.prototype._updateLength = function _updateLength() {
 	this.length = this.items.length - this.old + this.exceedItems.length + this.prependList.length;
-}
+};
 
 Queue.prototype._updateQueue = function _updateQueue() {
 	while (this.exceedItems.length > 0 && 
 			(this.old > 0 || this.max > this.items.length)) {
 		this.push(this.exceedItems.shift());
 	}
-}
+};
 
 // info(optional) {uid: ....[, otherProperty]}
 Queue.prototype.push = function push(task, info) {
@@ -74,10 +74,10 @@ Queue.prototype.push = function push(task, info) {
 	if (this.max > this.items.length) {
 		this.items.splice(this.items.length - this.old, 0, item);
 		this._updateLength();
-		return true
+		return true;
 	}
 	
-	if(this.old > 0) {
+	if (this.old > 0) {
 		var oldest = this.items.filter(function (item) {
 			return item.execCount > 0;
 		}).sort(function (a, b) {
@@ -86,7 +86,6 @@ Queue.prototype.push = function push(task, info) {
 		
 		this.remove(oldest);
 		this.items.splice(this.items.length - this.old, 0, item);
-		this.old--;
 		this._updateLength();
 		return true;
 	}
@@ -96,7 +95,7 @@ Queue.prototype.push = function push(task, info) {
 	this._updateLength();
 	
 	return false;
-}
+};
 
 // these task only run once
 Queue.prototype.unshift = function unshift(task, info) {
@@ -112,7 +111,7 @@ Queue.prototype.unshift = function unshift(task, info) {
 	process.nextTick(function () {
 		this.emit('unshift', item.taskFactory, item.info);
 	}.bind(this));
-}
+};
 
 Queue.prototype.shift = function shift() {
 	var item;
@@ -120,7 +119,7 @@ Queue.prototype.shift = function shift() {
 	if (this.prependList.length > 0) {
 		item = this.prependList.shift();
 		this._updateLength();
-		return item
+		return item;
 	}
 	
 	if (this.items.length === 0) {
@@ -137,7 +136,7 @@ Queue.prototype.shift = function shift() {
 	this._updateLength();
 	this.emit('repeat', item.taskFactory, item.info);
 	return item;
-}
+};
 
 Queue.prototype.remove = function remove(item, error) {
 	if (!item) return;
@@ -168,7 +167,7 @@ Queue.prototype.remove = function remove(item, error) {
 	
 	this._updateQueue();
 	this._updateLength();
-}
+};
 
 Queue.prototype.findTask = function findTask(info) {
 	info = info || {};
@@ -176,17 +175,17 @@ Queue.prototype.findTask = function findTask(info) {
 		return [];
 	}
 	return 	this.exceedItems.filter(function(item) {
-	    return item.info.uid === info.uid
+		return item.info.uid === info.uid;
 	}).concat(this.items.filter(function(item) {
-	    return item.info.uid === info.uid
+		return item.info.uid === info.uid;
 	})).concat(this.prependList.filter(function(item) {
-	    return item.info.uid === info.uid
+		return item.info.uid === info.uid;
 	}));
-}
+};
 
 Queue.prototype.toString = function toString() {
 	return `[${this.exceedItems.join(',')}][${this.items.join(',')}] ${this.length}`;
-}
+};
 
 Queue.prototype._next = function start() {
 	var self = this;
@@ -213,7 +212,7 @@ Queue.prototype._next = function start() {
 				self.emit('success', data, task.taskFactory, task.info);
 			}
 			self._next();
-		}))
+		}));
 	} catch (err) {
 		this.taskHandle = null;
 		this.currentTask = null;
@@ -221,7 +220,7 @@ Queue.prototype._next = function start() {
 		this.emit('error', err, task.taskFactory, task.info);
 		this._next();
 	}
-}
+};
 
 Queue.prototype.start = function start() {
 	if (this.running) return false;
@@ -229,13 +228,13 @@ Queue.prototype.start = function start() {
 	this.running = true;
 	this._next();
 	return true;
-}
+};
 
 Queue.prototype.signal = function signal(data) {
 	if ('function' === typeof this.taskHandle) {
 		this.taskHandle(data);
 	}
-}
+};
 
 Queue.prototype.toJSON = function toJSON() {
 	var self = this;
@@ -249,13 +248,12 @@ Queue.prototype.toJSON = function toJSON() {
 	}
 	
 	return {
-		max: this.max,
 		old: this.old,
 		items: this.items.map(encodeTask),
 		exceedItems: this.exceedItems.map(encodeTask),
 		prependList: this.prependList.map(encodeTask)
 	};
-}
+};
 
 Queue.prototype.loadFromObject = function fromObject(obj) {
 	var self = this;
@@ -265,27 +263,26 @@ Queue.prototype.loadFromObject = function fromObject(obj) {
 		return new TaskWrapper(temp.task, temp.info, info.initTime, info.execCount);
 	}
 	
-	this.max = obj.max;
 	this.old = obj.old;
 	this.items = obj.items.map(decodeTask);
 	this.exceedItems = obj.exceedItems.map(decodeTask);
 	this.prependList = obj.prependList.map(decodeTask);
 	this._updateLength();
-}
+};
 
 Queue.prototype._taskToJSON = function _taskToJSON(task, info) {
 	console.warn('queue does not implement a toJSON option');
 	return info;
-}
+};
 
 Queue.prototype._JSONToTask = function _JSONToTask(json) {
-	throw new Error("_JSONToTask does not implement");
+	throw new Error('_JSONToTask does not implement');
 	// return {task, info}
-}
+};
 
 Queue.prototype.getAllTasks = function getAllTasks() {
 	return this.prependList.concat(this.items).concat(this.exceedItems);
-}
+};
 
 Queue.helpers = {
 	mergeTask: function(task1, task2) {
@@ -319,9 +316,9 @@ Queue.helpers = {
 				if ('function' === typeof handle) {
 					handle(data);
 				}
-			}
-		}
+			};
+		};
 	}
-}
+};
 
 module.exports = Queue;
