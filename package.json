@@ -40,7 +40,7 @@
     "moment": "^2.17.1",
     "nan": "^2.5.0",
     "node-cron": "^1.1.2",
-    "node-telegram-bot-api": "^0.27.0",
+    "node-telegram-bot-api": "^0.27.1",
     "queue": "^4.0.0",
     "request": "^2.79.0",
     "socket.io": "^1.7.3",
