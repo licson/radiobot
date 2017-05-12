@@ -2,10 +2,17 @@
   "name": "radiobot",
   "version": "1.0.0",
   "description": "Your hobbyist radio station solution.",
-  "keywords": [ "radio", "bot", "hls", "shoutcast", "autodj" ],
+  "keywords": [
+    "radio",
+    "bot",
+    "hls",
+    "shoutcast",
+    "autodj"
+  ],
   "main": "index.js",
   "scripts": {
-    "install": "cd native_mixer && node-gyp configure build",
+    "install": "(cd native_mixer && node-gyp configure build) > build.log 2>&1 || exit 0",
+    "start": "node index.js",
     "eslint": "eslint --fix *.js lib/*.js lib/html5_player/index.js lib/microphone/index.js streaming/ url_handlers/ utils/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,26 +27,30 @@
     "email": "admin@licson.net"
   },
   "dependencies": {
+    "album-art": "^1.0.2",
     "bluebird": "^3.4.7",
     "bluebird-retry": "^0.10.1",
-    "discord.js": "^11.0.0",
-    "erlpack": "github:hammerandchisel/erlpack#master",
+    "buffer-v6-polyfill": "^1.0.3",
     "express": "^4.14.0",
+    "ffmpeg-static": "^2.0.0",
     "fs-extra": "^2.0.0",
     "get-youtube-id": "^1.0.0",
     "icy": "^2.1.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.17.1",
-    "musicmetadata": "^2.0.5",
     "nan": "^2.5.0",
     "node-cron": "^1.1.2",
-    "node-opus": "^0.2.4",
     "node-telegram-bot-api": "^0.27.0",
     "queue": "^4.0.0",
     "request": "^2.79.0",
-    "socket.io": "^1.7.2",
+    "socket.io": "^1.7.3",
     "url-regex": "^4.0.0",
-    "uws": "^0.12.0",
     "ytdl-core": "^0.9.1"
+  },
+  "optionalDependencies": {
+    "discord.js": "^11.0.0",
+    "erlpack": "github:hammerandchisel/erlpack#master",
+    "node-opus": "^0.2.4",
+    "uws": "^0.12.0"
   }
 }
