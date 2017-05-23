@@ -20,7 +20,7 @@
     "no-loop-func": "error",
     "no-param-reassign": "warn",
     "no-console": "off",
-    "linebreak-style": ["warn", "unix"],
+    "linebreak-style": "off",
     "quotes": ["error", "single"],
     "semi": ["error", "always"],
     "no-useless-constructor": "error",
