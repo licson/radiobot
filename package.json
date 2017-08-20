@@ -48,9 +48,11 @@
     "ytdl-core": "^0.14.0"
   },
   "optionalDependencies": {
+    "bufferutil": "^3.0.0",
     "discord.js": "^11.1.0",
-    "erlpack": "github:hammerandchisel/erlpack#master",
-    "node-opus": "^0.2.6",
-    "uws": "^0.14.5"
+    "erlpack": "github:hammerandchisel/erlpack",
+    "libsodium-wrappers": "^0.5.1",
+    "node-opus": "^0.2.4",
+    "sodium": "^2.0.1"
   }
 }

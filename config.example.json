@@ -14,8 +14,15 @@
 	},
 	"output": {
 		"samplerate": 44100,
-		"channels": 2,
+		"channels": 2
+	},
+	"mp3": {
+		"enabled": true,
 		"bitrate": 192,
+		"normalize": false
+	},
+	"opus": {
+		"enabled": true,
 		"normalize": false
 	},
 	"hls": {
