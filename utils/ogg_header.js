@@ -28,8 +28,6 @@ function rewriteOpusPreSkip(buffer, newPreSkip) {
     
     const newCRC = crc32(newBuffer);
     
-    console.log(newCRC);
-    
     newBuffer.writeInt32LE(newCRC, CRCPosition);
     
     return newBuffer; 
