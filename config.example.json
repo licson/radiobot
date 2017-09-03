@@ -22,7 +22,8 @@
 		"normalize": false
 	},
 	"opus": {
-		"enabled": true
+		"enabled": true,
+		"bitrate": 256
 	},
 	"hls": {
 		"enabled": false,
@@ -36,11 +37,9 @@
 		"logForward": "@log_channel_here",
 		"playList": "@play_list_channel_here"
 	},
-	"httpOpus": {
-		"enabled": true,
-		"bitrate": 256
-	},
 	"discord": {
+		"enabled": false,
+		"bitrate": 256,
 		"debug": false,
 		"token": "YOUR_DISCORD_TOKEN",
 		"startMessage": "",
