@@ -36,6 +36,10 @@
 		"logForward": "@log_channel_here",
 		"playList": "@play_list_channel_here"
 	},
+	"httpOpus": {
+		"enabled": true,
+		"bitrate": 256
+	},
 	"discord": {
 		"debug": false,
 		"token": "YOUR_DISCORD_TOKEN",
