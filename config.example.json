@@ -23,7 +23,7 @@
 	},
 	"opus": {
 		"enabled": true,
-		"normalize": false
+		"bitrate": 256
 	},
 	"hls": {
 		"enabled": false,
@@ -38,6 +38,8 @@
 		"playList": "@play_list_channel_here"
 	},
 	"discord": {
+		"enabled": false,
+		"bitrate": 256,
 		"debug": false,
 		"token": "YOUR_DISCORD_TOKEN",
 		"startMessage": "",
