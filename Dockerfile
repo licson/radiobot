@@ -5,7 +5,7 @@ FROM mhart/alpine-node:6
 # Taken from https://github.com/opencoconut/ffmpeg/ for minimal Alpine build
 WORKDIR /tmp/ffmpeg
 ENV FFMPEG_VERSION=3.3.3
-RUN apk add --update build-base python make gcc g++ curl nasm tar bzip2 \
+RUN apk add --update build-base python make gcc g++ git curl nasm tar bzip2 libsodium-dev \
 	zlib-dev openssl-dev yasm-dev lame-dev libogg-dev x264-dev libvpx-dev libvorbis-dev x265-dev freetype-dev libass-dev libwebp-dev rtmpdump-dev libtheora-dev opus-dev && \
 
 	DIR=$(mktemp -d) && cd ${DIR} && \
