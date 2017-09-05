@@ -2,7 +2,8 @@
 const stream = require('stream');
 const EventEmitter = require('events').EventEmitter;
 const util = require('util');
-const config = require('../config');
+const deepAssign = require('deep-assign');
+const config = deepAssign(require('../config.example.json'), require('../config.json'));
 
 function Source(obj) {
 	var self = this;
