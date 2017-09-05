@@ -31,6 +31,7 @@
     "bluebird": "^3.5.0",
     "bluebird-retry": "^0.10.1",
     "buffer-v6-polyfill": "^1.0.3",
+    "deep-assign": "^2.0.0",
     "express": "^4.15.2",
     "ffmpeg-static": "^2.0.0",
     "fs-extra": "^3.0.1",
