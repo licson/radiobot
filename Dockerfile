@@ -37,4 +37,5 @@ EXPOSE 8080
 EXPOSE 5000
 
 # Specify endpoint
-CMD ["node", "/app/index.js"]
+WORKDIR /app
+CMD ["node", "index.js"]
