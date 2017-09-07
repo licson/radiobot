@@ -29,8 +29,10 @@ RUN apk add --update build-base python git curl nasm tar bzip2 libsodium-dev \
 	npm install --production --force && \
 	npm cache clean --force && \
 	npm run install && \
-
-	apk del build-base curl tar bzip2 x264 openssl nasm python git && rm -rf /var/cache/apk/*
+    
+	apk del build-base curl tar bzip2 x264 openssl nasm python git && \
+	rm -rf /var/cache/apk/* && \
+	rm -rf /tmp/*
 
 # Expose ports
 EXPOSE 8080
