@@ -1,6 +1,9 @@
 # Use a minimal Alpine Linux image
 FROM mhart/alpine-node:6
 
+# Jobs used in make command
+ARG JOBS=4
+
 # Starts our installs
 WORKDIR /app
 COPY . .
@@ -20,7 +23,7 @@ RUN apk add --update build-base python git curl nasm tar bzip2 libsodium-dev \
 	cd ffmpeg-${FFMPEG_VERSION} && \
 	./configure \
 	--enable-version3 --enable-gpl --enable-nonfree --enable-small --enable-libmp3lame --enable-libx264 --enable-libx265 --enable-libvpx --enable-libtheora --enable-libvorbis --enable-libopus --enable-libass --enable-libwebp --enable-librtmp --enable-postproc --enable-avresample --enable-libfreetype --enable-openssl --disable-debug && \
-	make -j 4 && \
+	make -j $JOBS && \
 	make install && \
 	make distclean && \
 	rm -rf ${DIR} && \
