@@ -245,9 +245,9 @@ namespace NativeMixingOperation {
 			src->Set(Nan::New("transitionTo").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionTo));
 
 			free(sources[i]);
-			sources.erase(sources.begin() + i);
 		}
 		
+		sources.erase(sources.begin(), sources.end());
 		args.GetReturnValue().Set(output.ToLocalChecked());
 	}
 	
