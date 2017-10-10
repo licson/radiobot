@@ -193,18 +193,18 @@ namespace NativeMixingOperation {
 		
 		Nan::MaybeLocal<Object> output = Nan::NewBuffer(outputBuffer, length);
 		
-		std::vector<SourceInfo*> sources;
+		std::vector<struct SourceInfo> sources;
+		struct SourceInfo source;
 		
 		for (uint32_t i = 0; i < bufArray->Length(); i++) {
 			Local<Object> src = Local<Object>::Cast(srcArray->Get(i));
 			Local<Object> buf = Local<Object>::Cast(bufArray->Get(i));
-			SourceInfo* source = new SourceInfo;
-			source->volume = src->Get(Nan::New("volume").ToLocalChecked())->NumberValue();
-			source->transitionLength = src->Get(Nan::New("transitionLength").ToLocalChecked())->IntegerValue();
-			source->transitionCurrent = src->Get(Nan::New("transitionCurrent").ToLocalChecked())->IntegerValue();
-			source->transitionFrom = src->Get(Nan::New("transitionFrom").ToLocalChecked())->NumberValue();
-			source->transitionTo = src->Get(Nan::New("transitionTo").ToLocalChecked())->NumberValue();
-			source->buffer = node::Buffer::Data(buf);
+			source.volume = src->Get(Nan::New("volume").ToLocalChecked())->NumberValue();
+			source.transitionLength = src->Get(Nan::New("transitionLength").ToLocalChecked())->IntegerValue();
+			source.transitionCurrent = src->Get(Nan::New("transitionCurrent").ToLocalChecked())->IntegerValue();
+			source.transitionFrom = src->Get(Nan::New("transitionFrom").ToLocalChecked())->NumberValue();
+			source.transitionTo = src->Get(Nan::New("transitionTo").ToLocalChecked())->NumberValue();
+			source.buffer = node::Buffer::Data(buf);
 			sources.push_back(source);
 		}
 		
@@ -212,22 +212,22 @@ namespace NativeMixingOperation {
 			double value = 0.0;
 			for (uint32_t i = 0; i < sources.size(); i++) {
 				// Process fading
-				if (offset % sampleSize == 0 && sources[i]->transitionLength >= 0) {
-					sources[i]->transitionCurrent++;
-					sources[i]->volume = Easing(
-						(double)(sources[i]->transitionCurrent) / (double)(sources[i]->transitionLength),
-						sources[i]->transitionFrom,
-						sources[i]->transitionTo
+				if (offset % sampleSize == 0 && sources[i].transitionLength >= 0) {
+					sources[i].transitionCurrent++;
+					sources[i].volume = Easing(
+						(double)(sources[i].transitionCurrent) / (double)(sources[i].transitionLength),
+						sources[i].transitionFrom,
+						sources[i].transitionTo
 					);
 					
-					if (sources[i]->transitionCurrent >= sources[i]->transitionLength) {
-						sources[i]->volume = sources[i]->transitionTo;
-						sources[i]->transitionLength = -1;
+					if (sources[i].transitionCurrent >= sources[i].transitionLength) {
+						sources[i].volume = sources[i].transitionTo;
+						sources[i].transitionLength = -1;
 					}
 				}
 				
-				char* buffer = sources[i]->buffer;
-				double sample = ReadSample(buffer + offset, byteSize) * Volume(sources[i]->volume);
+				char* buffer = sources[i].buffer;
+				double sample = ReadSample(buffer + offset, byteSize) * Volume(sources[i].volume);
 				value = MixSample(value, sample);
 			}
 			
@@ -238,11 +238,11 @@ namespace NativeMixingOperation {
 		
 		for (uint32_t i = 0; i < sources.size(); i++) {
 			Local<Object> src = Local<Object>::Cast(srcArray->Get(i));
-			src->Set(Nan::New("volume").ToLocalChecked(), Nan::New<Number>(sources[i]->volume));
-			src->Set(Nan::New("transitionLength").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionLength));
-			src->Set(Nan::New("transitionCurrent").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionCurrent));
-			src->Set(Nan::New("transitionFrom").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionFrom));
-			src->Set(Nan::New("transitionTo").ToLocalChecked(), Nan::New<Number>(sources[i]->transitionTo));
+			src->Set(Nan::New("volume").ToLocalChecked(), Nan::New<Number>(sources[i].volume));
+			src->Set(Nan::New("transitionLength").ToLocalChecked(), Nan::New<Number>(sources[i].transitionLength));
+			src->Set(Nan::New("transitionCurrent").ToLocalChecked(), Nan::New<Number>(sources[i].transitionCurrent));
+			src->Set(Nan::New("transitionFrom").ToLocalChecked(), Nan::New<Number>(sources[i].transitionFrom));
+			src->Set(Nan::New("transitionTo").ToLocalChecked(), Nan::New<Number>(sources[i].transitionTo));
 		}
 		
 		args.GetReturnValue().Set(output.ToLocalChecked());
