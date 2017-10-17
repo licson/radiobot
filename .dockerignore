@@ -1,0 +1,9 @@
+# dirs to ignore
+.git
+node_modules
+native_mixer/build
+
+# files to ignore
+config.json
+song_queue.json
+*.log
