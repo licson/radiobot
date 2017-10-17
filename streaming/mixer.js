@@ -372,15 +372,28 @@ MixerStream.prototype.count = function () {
 	return this.sources.length;
 };
 
+var read24LE = function (buf, offset) {
+	var [b1, b2, b3] = [buf[offset], buf[offset + 1], buf[offset + 2]];
+	return (b3 & 0x80) << 24 | b3 << 16 & 0x7fffff | b2 << 8 & 0xffff | b1 & 0xff;
+};
+
+var write24LE = function (buf, v, offset) {
+	buf[offset] = v & 0xff;
+	buf[offset + 1] = v >> 8 & 0xff;
+	buf[offset + 2] = v >> 16 & 0xff | (v < 0 ? 0x80 : 0);
+};
+
 MixerStream.helpers = {
 	readValue: {
 		'8': Function.prototype.call.bind(Buffer.prototype.readInt8),
 		'16': Function.prototype.call.bind(Buffer.prototype.readInt16LE),
+		'24': read24LE,
 		'32': Function.prototype.call.bind(Buffer.prototype.readInt32LE)
 	},
 	writeValue: {
 		'8': Function.prototype.call.bind(Buffer.prototype.writeInt8),
 		'16': Function.prototype.call.bind(Buffer.prototype.writeInt16LE),
+		'24': write24LE,
 		'32': Function.prototype.call.bind(Buffer.prototype.writeInt32LE)
 	},
 };

@@ -92,6 +92,10 @@ namespace NativeMixingOperation {
 				rawValue = (int32_t)((int16_t)((*p & 0xff) | (*(p + 1) << 8 & 0xff00)));
 			break;
 			
+			case 3:
+				rawValue = (int32_t)((*(p + 2) & 0x80) << 24 | *(p + 2) << 16 & 0x7fffff | *(p + 1) << 8 & 0xffff | *p & 0xff);
+			break;
+
 			case 4:
 				rawValue = (int32_t)(
 					(*p & 0xff) |
@@ -125,6 +129,12 @@ namespace NativeMixingOperation {
 				*(p + 1) = val >> 8 & 0xff;
 			break;
 			
+			case 3:
+				*p = val & 0xff;
+				*(p + 1) = val >> 8 & 0xff;
+				*(p + 2) = val >> 16 & 0xff | (val < 0 ? 0x80 : 0);
+			break;
+
 			case 4:
 				*p = val & 0xff;
 				*(p + 1) = val >> 8 & 0xff;
