@@ -14,7 +14,7 @@ COPY . .
 # native code, we need running that manually
 WORKDIR /tmp/ffmpeg
 ENV FFMPEG_VERSION=3.3.3
-RUN apk add --update build-base python git curl nasm tar bzip2 libsodium-dev \
+RUN apk add --update build-base openssh-client python git curl nasm tar bzip2 libsodium-dev \
 	zlib-dev openssl-dev yasm-dev lame-dev libogg-dev x264-dev libvpx-dev libvorbis-dev x265-dev freetype-dev libass-dev libwebp-dev rtmpdump-dev libtheora-dev opus-dev && \
 
 	DIR=$(mktemp -d) && cd ${DIR} && \
@@ -33,7 +33,7 @@ RUN apk add --update build-base python git curl nasm tar bzip2 libsodium-dev \
 	npm cache clean --force && \
 	npm run install && \
     
-	apk del build-base curl tar bzip2 x264 openssl nasm python git && \
+	apk del build-base curl tar bzip2 x264 openssh-client openssl nasm python git && \
 	rm -rf /var/cache/apk/* && \
 	rm -rf /tmp/*
 
