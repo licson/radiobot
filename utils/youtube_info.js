@@ -16,7 +16,7 @@ function parse(url) {
 				return i.bitrate == null && i.audioBitrate;
 			});
 			
-			let opusFilter = res.formats.filter(function (i) {
+			var opusFilter = res.formats.filter(function (i) {
 				return i.audioEncoding === 'opus';
 			});
 
