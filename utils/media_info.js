@@ -37,6 +37,8 @@ function parse(url) {
 					title: title,
 					artist: artist
 				});
+			} else if (title) {
+				resolve({ title: title });
 			} else {
 				resolve({});
 			}

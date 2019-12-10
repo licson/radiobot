@@ -188,7 +188,7 @@ namespace NativeMixingOperation {
 			return;
 		}
 		
-		if (byteSize > 4 || byteSize == 3) {
+		if (byteSize > 4) {
 			Nan::ThrowError("Unsupported bit depth!");
 			return;
 		}
