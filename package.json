@@ -27,7 +27,7 @@
     "email": "admin@licson.net"
   },
   "dependencies": {
-    "album-art": "^2.0.1",
+    "album-cover": "*",
     "bluebird": "^3.5.0",
     "bluebird-retry": "^0.10.1",
     "buffer-v6-polyfill": "^1.0.3",

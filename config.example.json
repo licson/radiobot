@@ -83,5 +83,8 @@
 	"debug": {
 		"logMemoryUsage": false,
 		"useJavascriptMixer": false
+	},
+	"albumArt": {
+		"key": "12eb93b01d6313cd01b756768ffb3f0d"
 	}
 }
