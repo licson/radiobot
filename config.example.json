@@ -32,6 +32,7 @@
 	},
 	"telegram": {
 		"token": "YOUR_TELEGRAM_TOKEN",
+		"apiServer": "https://api.telegram.org",
 		"startMessage": "Bot Startup Message",
 		"admin": [ "YOUR_TELEGRAM_USERNAME" ],
 		"logForward": "@log_channel_here",

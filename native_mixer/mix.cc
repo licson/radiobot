@@ -12,13 +12,12 @@
 namespace NativeMixingOperation {
 	using Nan::FunctionCallbackInfo;
 	using v8::Local;
-	using v8::Handle;
 	using v8::Number;
 	using v8::Object;
 	using v8::Array;
-	using v8::String;
-	using v8::Function;
 	using v8::Value;
+	using v8::Isolate;
+	using v8::Context;
 	
 	struct SourceInfo {
 		double volume;
@@ -145,6 +144,9 @@ namespace NativeMixingOperation {
 	}
 
 	void Mix(const FunctionCallbackInfo<Value> &args) {
+		Isolate* isolate = args.GetIsolate();
+		Local<Context> context = Context::New(isolate);
+
 		if (args.Length() < 5) {
 			Nan::ThrowError("Usage: mix(buf[], src[], length, bitdepth, channels)");
 			return;
@@ -175,11 +177,11 @@ namespace NativeMixingOperation {
 			return;
 		}
 		
-		Handle<Array> bufArray = Handle<Array>::Cast(args[0]);
-		Handle<Array> srcArray = Handle<Array>::Cast(args[1]);
-		unsigned int length = args[2]->Uint32Value();
-		unsigned int bitdepth = args[3]->Uint32Value();
-		unsigned int channels = args[4]->Uint32Value();
+		Local<Array> bufArray = Local<Array>::Cast(args[0]);
+		Local<Array> srcArray = Local<Array>::Cast(args[1]);
+		unsigned int length = args[2]->Uint32Value(context).ToChecked();
+		unsigned int bitdepth = args[3]->Uint32Value(context).ToChecked();
+		unsigned int channels = args[4]->Uint32Value(context).ToChecked();
 		unsigned int sampleSize = bitdepth / 8 * channels;
 		unsigned int byteSize = bitdepth / 8;
 		
@@ -209,11 +211,11 @@ namespace NativeMixingOperation {
 			Local<Object> src = Local<Object>::Cast(srcArray->Get(i));
 			Local<Object> buf = Local<Object>::Cast(bufArray->Get(i));
 			SourceInfo* source = new SourceInfo;
-			source->volume = src->Get(Nan::New("volume").ToLocalChecked())->NumberValue();
-			source->transitionLength = src->Get(Nan::New("transitionLength").ToLocalChecked())->IntegerValue();
-			source->transitionCurrent = src->Get(Nan::New("transitionCurrent").ToLocalChecked())->IntegerValue();
-			source->transitionFrom = src->Get(Nan::New("transitionFrom").ToLocalChecked())->NumberValue();
-			source->transitionTo = src->Get(Nan::New("transitionTo").ToLocalChecked())->NumberValue();
+			source->volume = src->Get(Nan::New("volume").ToLocalChecked())->NumberValue(context).ToChecked();
+			source->transitionLength = src->Get(Nan::New("transitionLength").ToLocalChecked())->IntegerValue(context).ToChecked();
+			source->transitionCurrent = src->Get(Nan::New("transitionCurrent").ToLocalChecked())->IntegerValue(context).ToChecked();
+			source->transitionFrom = src->Get(Nan::New("transitionFrom").ToLocalChecked())->NumberValue(context).ToChecked();
+			source->transitionTo = src->Get(Nan::New("transitionTo").ToLocalChecked())->NumberValue(context).ToChecked();
 			source->buffer = node::Buffer::Data(buf);
 			sources.push_back(source);
 		}
@@ -237,7 +239,7 @@ namespace NativeMixingOperation {
 				}
 				
 				char* buffer = sources[i]->buffer;
-				double sample = ReadSample(buffer + offset, byteSize) * Volume(sources[i]->volume);
+				double sample = ReadSample(buffer + offset, byteSize) * sources[i]->volume;
 				value = MixSample(value, sample);
 			}
 			
