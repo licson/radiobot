@@ -1,22 +1,14 @@
 {
-	"targets": [
-		{
-			"target_name": "mix",
-			"sources": [ "mix.cc" ],
-			"include_dirs": [
-				"<!(node -e \"require('nan')\")"
-			],
-			"conditions": [
-				[
-					"OS==\"linux\"",
-					{
-						"cflags": [
-							"-O3",
-							"-Wall"
-						]
-					}
-				]
-			]
-		}
-	]
+  "targets": [
+    {
+      "target_name": "mix",
+      "cflags!": [ "-fno-exceptions", "-O3" ],
+      "cflags_cc!": [ "-fno-exceptions", "-O3" ],
+      "sources": [ "mix.cc" ],
+      "include_dirs": [
+        "<!@(node -p \"require('node-addon-api').include\")"
+      ],
+      'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
+    }
+  ]
 }
