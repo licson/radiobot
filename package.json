@@ -33,7 +33,7 @@
     "bluebird-retry": "^0.10.1",
     "cookie": "^0.3.1",
     "deep-assign": "^2.0.0",
-    "express": "^4.15.2",
+    "express": "^4.17.3",
     "fs-extra": "^3.0.1",
     "get-youtube-id": "^1.0.0",
     "icy": "^2.1.0",
