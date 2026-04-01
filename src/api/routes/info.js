@@ -23,7 +23,7 @@ uptime=${process.uptime()}`);
         'station-name': config.station.name,
         url: config.station.url,
         description: config.station.description,
-        bitrate: config.output.bitrate,
+        bitrate: config.mp3?.bitrate || 192,
         title: currentTitle
       });
     })
