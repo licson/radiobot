@@ -18,7 +18,8 @@ const REQUIRED_FIELDS = [
   'hls.segmentListLength',
   'icy.metaInt',
   'queueSize',
-  'loopSize'
+  'loopSize',
+  'timedBroadcast.enabled'
 ];
 
 function getNestedValue(obj, path) {
@@ -120,6 +121,17 @@ function applyDefaults(config) {
     analytics: {
       enabled: false,
       ...config.analytics
+    },
+    timedBroadcast: {
+      enabled: false,
+      timeFormat: 'h:mm A',
+      advertisement: 'This is a test advertisement.',
+      advertisementTrack: null,
+      ...config.timedBroadcast
+    },
+    debug: {
+      logMemoryUsage: false,
+      ...config.debug
     },
     queueSize: 20,
     loopSize: 20,

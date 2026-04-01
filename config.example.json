@@ -55,5 +55,14 @@
     }
   },
   "queueSize": 20,
-  "loopSize": 20
+  "loopSize": 20,
+  "timedBroadcast": {
+    "enabled": false,
+    "timeFormat": "h:mm A",
+    "advertisement": "This is a test advertisement.",
+    "advertisementTrack": null
+  },
+  "debug": {
+    "logMemoryUsage": false
+  }
 }

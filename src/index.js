@@ -5,6 +5,7 @@ import { RadioBot } from './core/radio.js';
 import { FFmpegEncoder } from './core/stream/mp3.js';
 import { OpusEncoder } from './core/stream/opus.js';
 import { HLSSegmenter } from './core/stream/hls.js';
+import { TimedBroadcast } from './core/timed-broadcast.js';
 import { createLogger } from './utils/logger.js';
 
 let config;
@@ -13,6 +14,7 @@ let radio;
 let encoders;
 let apiServer;
 let platformLoader;
+let timedBroadcast;
 let isShuttingtingDown = false;
 
 async function createEncoders(mixer, cfg) {
@@ -70,6 +72,10 @@ function setupGracefulShutdown() {
         encoders.hls.stop();
       }
 
+      if (timedBroadcast) {
+        timedBroadcast.stop();
+      }
+
       if (radio?.events) {
         radio.events.emit('shutdown');
       }
@@ -125,6 +131,9 @@ async function main() {
   await radio.loadPersistedQueue();
 
   radio.startQueue();
+
+  timedBroadcast = new TimedBroadcast(radio.getRadioContext(), config, logger);
+  timedBroadcast.start();
 
   setupGracefulShutdown();
 
