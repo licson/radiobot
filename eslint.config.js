@@ -1,0 +1,70 @@
+import globals from "globals";
+import pluginJs from "@eslint/js";
+
+export default [
+  {
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.es2021,
+      },
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+    },
+  },
+  pluginJs.configs.recommended,
+  {
+    rules: {
+      "prefer-const": "warn",
+      "no-const-assign": "warn",
+      "no-new-object": "error",
+      "quote-props": "off",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-array-constructor": "error",
+      "template-curly-spacing": "error",
+      "no-useless-escape": "error",
+      "wrap-iife": "warn",
+      "no-loop-func": "error",
+      "no-param-reassign": "warn",
+      "no-console": "off",
+      quotes: ["error", "single"],
+      semi: ["error", "always"],
+      "no-useless-constructor": "error",
+      "no-dupe-class-members": "error",
+      "dot-notation": "error",
+      "one-var": ["warn", "never"],
+      "no-unneeded-ternary": "error",
+      "brace-style": ["error", "1tbs", { allowSingleLine: true }],
+      "space-before-blocks": ["error", "always"],
+      "keyword-spacing": "error",
+      "space-infix-ops": "error",
+      "newline-per-chained-call": "warn",
+      "padded-blocks": ["warn", "never"],
+      "space-in-parens": "error",
+      "array-bracket-spacing": "error",
+      "max-len": ["warn", { code: 120 }],
+      "comma-style": "error",
+      camelcase: "warn",
+      "new-cap": "warn",
+      "no-extra-boolean-cast": "off",
+    },
+  },
+  {
+    ignores: [
+      "node_modules/**",
+      "prebuilds/**",
+      "build/**",
+      "coverage/**",
+      "lib/**",
+      "streaming/**",
+      "url_handlers/**",
+      "utils/**",
+      "native_mixer/**",
+      "*.js",
+      "!eslint.config.js",
+      "!vitest.config.js",
+    ],
+  },
+];

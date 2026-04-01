@@ -1,0 +1,10 @@
+node_modules/
+coverage/
+prebuilds/
+build/
+lib/
+streaming/
+url_handlers/
+utils/
+native_mixer/
+*.md
