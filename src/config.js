@@ -129,6 +129,10 @@ function applyDefaults(config) {
       advertisementTrack: null,
       ...config.timedBroadcast
     },
+    tcp: {
+      port: 0,
+      ...config.tcp
+    },
     debug: {
       logMemoryUsage: false,
       ...config.debug

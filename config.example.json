@@ -62,6 +62,9 @@
     "advertisement": "This is a test advertisement.",
     "advertisementTrack": null
   },
+  "tcp": {
+    "port": 0
+  },
   "debug": {
     "logMemoryUsage": false
   }

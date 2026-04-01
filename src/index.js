@@ -6,6 +6,7 @@ import { FFmpegEncoder } from './core/stream/mp3.js';
 import { OpusEncoder } from './core/stream/opus.js';
 import { HLSSegmenter } from './core/stream/hls.js';
 import { TimedBroadcast } from './core/timed-broadcast.js';
+import { TCPServer } from './core/tcp-server.js';
 import { createLogger } from './utils/logger.js';
 
 let config;
@@ -15,6 +16,7 @@ let encoders;
 let apiServer;
 let platformLoader;
 let timedBroadcast;
+let tcpServer;
 let isShuttingtingDown = false;
 
 async function createEncoders(mixer, cfg) {
@@ -76,6 +78,10 @@ function setupGracefulShutdown() {
         timedBroadcast.stop();
       }
 
+      if (tcpServer) {
+        tcpServer.stop();
+      }
+
       if (radio?.events) {
         radio.events.emit('shutdown');
       }
@@ -134,6 +140,9 @@ async function main() {
 
   timedBroadcast = new TimedBroadcast(radio.getRadioContext(), config, logger);
   timedBroadcast.start();
+
+  tcpServer = new TCPServer(radio.mixer, config, logger);
+  tcpServer.start();
 
   setupGracefulShutdown();
 
