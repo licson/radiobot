@@ -2,12 +2,14 @@ import { YouTubeSource } from './youtube/index.js';
 import { SoundCloudSource } from './soundcloud/index.js';
 import { HTTPSource } from './http/index.js';
 import { TelegramSource } from './telegram/index.js';
+import { DefaultSource } from './default/index.js';
 
 const BUILTIN_SOURCES = {
   youtube: YouTubeSource,
   soundcloud: SoundCloudSource,
   http: HTTPSource,
-  telegram: TelegramSource
+  telegram: TelegramSource,
+  default: DefaultSource
 };
 
 const DEFAULT_ORDER = ['telegram', 'youtube', 'soundcloud', 'http'];
@@ -58,6 +60,7 @@ export class SourceManager {
   }
 
   find(url) {
+    // First try all configured sources
     for (const { name, instance } of this.sources) {
       try {
         if (instance.canHandle(url)) {
@@ -72,6 +75,22 @@ export class SourceManager {
       } catch (err) {
         this.logger.warn(`[SourceManager] Error checking ${name}: ${err.message}`);
       }
+    }
+
+    // Fallback to default handler for HTTP URLs
+    try {
+      const defaultSource = new DefaultSource(this.config, this.logger);
+      if (defaultSource.canHandle(url)) {
+        this.logger.debug(`[SourceManager] Using default handler for ${url}`);
+        return {
+          name: 'default',
+          getInfo: () => defaultSource.getInfo(url),
+          getStream: () => defaultSource.getStream(url),
+          getStreamURL: () => defaultSource.getStreamURL(url)
+        };
+      }
+    } catch (err) {
+      this.logger.warn(`[SourceManager] Error with default handler: ${err.message}`);
     }
 
     return null;
