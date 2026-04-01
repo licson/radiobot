@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 import { ICYWriter } from '../../core/stream/icy.js';
+import { findOggPage } from '../../core/stream/ogg-helpers.js';
 
 function createStreamRoutes(context) {
   const router = Router();
@@ -160,6 +161,144 @@ function createStreamRoutes(context) {
     });
   });
 
+  router.get('/stream.ogg', (req, res) => {
+    if (!encoders?.opus?.stream) {
+      return res.status(503).json({ error: 'Opus encoder not available' });
+    }
+
+    const metaInt = config.icy?.metaInt || 2048;
+
+    req.setTimeout(0);
+    res.connection?.setTimeout?.(0);
+    res.socket?.setTimeout?.(0);
+
+    res.setHeader('Content-Type', 'audio/ogg');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Connection', 'keep-alive');
+
+    if (config.station?.name) {
+      res.setHeader('icy-name', config.station.name);
+    }
+    if (config.station?.description) {
+      res.setHeader('icy-description', config.station.description);
+    }
+    if (config.station?.url) {
+      res.setHeader('icy-url', config.station.url);
+    }
+    res.setHeader('icy-pub', config.station?.public ? '1' : '0');
+    res.setHeader('icy-br', String(config.opus?.bitrate || 256));
+
+    // Handle ICY metadata for OGG stream
+    let icyWriter = null;
+    let lastTitle = null;
+
+    const setupIcy = () => {
+      if (req.headers['icy-metadata'] === '1') {
+        res.setHeader('icy-metaint', String(metaInt));
+        icyWriter = new ICYWriter(metaInt);
+      }
+    };
+
+    const sendHeaders = () => {
+      if (encoders.opus.idHeader) {
+        if (icyWriter) {
+          icyWriter.write(encoders.opus.idHeader);
+        } else {
+          res.write(encoders.opus.idHeader);
+        }
+      }
+      if (encoders.opus.commentHeader) {
+        if (icyWriter) {
+          icyWriter.write(encoders.opus.commentHeader);
+        } else {
+          res.write(encoders.opus.commentHeader);
+        }
+      }
+    };
+
+    const waitForFrame = cb => {
+      const checkFrame = () => {
+        const stream = encoders.opus.stream;
+        const onData = data => {
+          const pos = findOggPage(data);
+          if (pos >= 0) {
+            stream.pause();
+            stream.off('data', onData);
+            cb(data.subarray(pos));
+          }
+        };
+        stream.on('data', onData);
+        stream.resume();
+      };
+      checkFrame();
+    };
+
+    let currentTitle = config.station?.name || 'RadioBot';
+
+    const updateMetadata = title => {
+      currentTitle = title;
+      if (icyWriter && title !== lastTitle) {
+        icyWriter.queue(title);
+        lastTitle = title;
+      }
+    };
+
+    setupIcy();
+
+    if (events) {
+      events.on('metadata', updateMetadata);
+    }
+
+    const stream = encoders.opus.stream;
+
+    if (encoders.opus.headersReady) {
+      sendHeaders();
+      if (icyWriter) {
+        icyWriter.pipe(res);
+        stream.pipe(icyWriter);
+        icyWriter.queue(currentTitle);
+      } else {
+        stream.pipe(res);
+      }
+    } else {
+      encoders.opus.onHeadersReady(() => {
+        waitForFrame(frameData => {
+          sendHeaders();
+          if (icyWriter) {
+            icyWriter.write(frameData);
+            icyWriter.pipe(res);
+            stream.pipe(icyWriter);
+            icyWriter.queue(currentTitle);
+          } else {
+            res.write(frameData);
+            stream.pipe(res);
+          }
+        });
+      });
+    }
+
+    req.on('close', () => {
+      if (events) {
+        events.off('metadata', updateMetadata);
+      }
+      stream.unpipe(icyWriter || res);
+      if (icyWriter) {
+        icyWriter.unpipe(res);
+      }
+    });
+
+    res.on('error', err => {
+      console.error('[Stream] Ogg ICY response error:', err.message);
+      if (events) {
+        events.off('metadata', updateMetadata);
+      }
+      stream.unpipe(icyWriter || res);
+      if (icyWriter) {
+        icyWriter.unpipe(res);
+      }
+    });
+  });
+
   router.get('/live.m3u8', (req, res) => {
     const segmentDir = encoders?.hls?.segmentDir;
 
@@ -217,6 +356,34 @@ function createStreamRoutes(context) {
       if (!res.headersSent) {
         res.status(500).json({ error: 'Failed to read segment' });
       }
+    });
+  });
+
+  router.get('/live.raw', (req, res) => {
+    if (!mixer) {
+      return res.status(503).json({ error: 'Mixer not available' });
+    }
+
+    req.setTimeout(0);
+    res.connection?.setTimeout?.(0);
+    res.socket?.setTimeout?.(0);
+
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Radio-SampleSize', '16');
+    res.setHeader('X-Radio-SampleRate', String(config.mixer?.sampleRate || 44100));
+    res.setHeader('X-Radio-Channels', String(config.mixer?.channels || 2));
+
+    mixer.pipe(res, { end: false });
+
+    req.on('close', () => {
+      mixer.unpipe(res);
+    });
+
+    res.on('error', err => {
+      console.error('[Stream] Raw PCM response error:', err.message);
+      mixer.unpipe(res);
     });
   });
 
