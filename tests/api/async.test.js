@@ -1,10 +1,18 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import http from 'http';
 import express from 'express';
 import { asyncHandler } from '../../src/api/middleware/async.js';
 
 describe('Async Handler Middleware', () => {
+  let server;
+
+  afterEach(() => {
+    if (server) {
+      server.close();
+      server = null;
+    }
+  });
+
   it('should pass through successful async handlers', async () => {
     const app = express();
 
@@ -16,11 +24,11 @@ describe('Async Handler Middleware', () => {
       })
     );
 
-    const server = app.listen(0);
+    server = app.listen(0);
     const port = server.address().port;
 
-    const res = await new Promise(resolve => {
-      http.get(`http://localhost:${port}/test`, resolve);
+    const res = await new Promise((resolve, reject) => {
+      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
     });
 
     let body = '';
@@ -28,10 +36,8 @@ describe('Async Handler Middleware', () => {
       body += chunk;
     }
 
-    assert.strictEqual(res.statusCode, 200);
-    assert.strictEqual(JSON.parse(body).success, true);
-
-    server.close();
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(body).success).toBe(true);
   });
 
   it('should catch errors from async handlers', async () => {
@@ -48,11 +54,11 @@ describe('Async Handler Middleware', () => {
       res.status(500).json({ error: err.message });
     });
 
-    const server = app.listen(0);
+    server = app.listen(0);
     const port = server.address().port;
 
-    const res = await new Promise(resolve => {
-      http.get(`http://localhost:${port}/test`, resolve);
+    const res = await new Promise((resolve, reject) => {
+      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
     });
 
     let body = '';
@@ -60,9 +66,63 @@ describe('Async Handler Middleware', () => {
       body += chunk;
     }
 
-    assert.strictEqual(res.statusCode, 500);
-    assert.strictEqual(JSON.parse(body).error, 'Test error');
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(body).error).toBe('Test error');
+  });
 
-    server.close();
+  it('should handle rejected promises', async () => {
+    const app = express();
+
+    app.get(
+      '/test',
+      asyncHandler(async () => {
+        return Promise.reject(new Error('Promise rejected'));
+      })
+    );
+
+    app.use((err, req, res, next) => {
+      res.status(500).json({ error: err.message });
+    });
+
+    server = app.listen(0);
+    const port = server.address().port;
+
+    const res = await new Promise((resolve, reject) => {
+      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
+    });
+
+    let body = '';
+    for await (const chunk of res) {
+      body += chunk;
+    }
+
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(body).error).toBe('Promise rejected');
+  });
+
+  it('should work with synchronous handlers', async () => {
+    const app = express();
+
+    app.get(
+      '/test',
+      asyncHandler((req, res) => {
+        res.json({ sync: true });
+      })
+    );
+
+    server = app.listen(0);
+    const port = server.address().port;
+
+    const res = await new Promise((resolve, reject) => {
+      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
+    });
+
+    let body = '';
+    for await (const chunk of res) {
+      body += chunk;
+    }
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(body).sync).toBe(true);
   });
 });

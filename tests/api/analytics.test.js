@@ -1,5 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Analytics } from '../../src/api/analytics.js';
 
 describe('Analytics', () => {
@@ -10,27 +9,27 @@ describe('Analytics', () => {
   });
 
   it('should start with zero listeners', () => {
-    assert.strictEqual(analytics.getTotalListeners(), 0);
+    expect(analytics.getTotalListeners()).toBe(0);
   });
 
   it('should track listeners by origin', () => {
     analytics.updateListenerCount('mp3', 5);
-    assert.strictEqual(analytics.getTotalListeners(), 5);
+    expect(analytics.getTotalListeners()).toBe(5);
 
     analytics.updateListenerCount('hls', 3);
-    assert.strictEqual(analytics.getTotalListeners(), 8);
+    expect(analytics.getTotalListeners()).toBe(8);
   });
 
   it('should update listener count', () => {
     analytics.updateListenerCount('mp3', 10);
     analytics.updateListenerCount('mp3', 5);
-    assert.strictEqual(analytics.getTotalListeners(), 5);
+    expect(analytics.getTotalListeners()).toBe(5);
   });
 
   it('should handle listener leaving', () => {
     analytics.updateListenerCount('mp3', 10);
     analytics.updateListenerCount('mp3', 9);
-    assert.strictEqual(analytics.getTotalListeners(), 9);
+    expect(analytics.getTotalListeners()).toBe(9);
   });
 
   it('should return listener stats', () => {
@@ -38,7 +37,7 @@ describe('Analytics', () => {
     analytics.updateListenerCount('hls', 3);
 
     const stats = analytics.getListenerStats();
-    assert.deepStrictEqual(stats, { mp3: 5, hls: 3 });
+    expect(stats).toEqual({ mp3: 5, hls: 3 });
   });
 
   it('should call onUpdate callback', () => {
@@ -48,6 +47,25 @@ describe('Analytics', () => {
     });
 
     analytics.updateListenerCount('mp3', 5);
-    assert.strictEqual(calledWith, 5);
+    expect(calledWith).toBe(5);
+  });
+
+  it('should not allow negative listener counts', () => {
+    analytics.updateListenerCount('mp3', 5);
+    analytics.updateListenerCount('mp3', -10);
+    expect(analytics.getTotalListeners()).toBe(0);
+  });
+
+  it('should track multiple origins independently', () => {
+    analytics.updateListenerCount('mp3', 10);
+    analytics.updateListenerCount('opus', 5);
+    analytics.updateListenerCount('hls', 3);
+
+    expect(analytics.getTotalListeners()).toBe(18);
+    expect(analytics.getListenerStats()).toEqual({
+      mp3: 10,
+      opus: 5,
+      hls: 3
+    });
   });
 });
