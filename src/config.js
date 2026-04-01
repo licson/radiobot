@@ -4,7 +4,22 @@ import { resolve } from 'path';
 
 const CONFIG_PATH = process.env.RADIOBOT_CONFIG || 'config.json';
 
-const REQUIRED_FIELDS = ['http.port', 'mixer.sampleRate', 'mixer.bitDepth', 'mixer.channels'];
+const REQUIRED_FIELDS = [
+  'http.port',
+  'mixer.sampleRate',
+  'mixer.bitDepth',
+  'mixer.channels',
+  'station.name',
+  'station.url',
+  'station.description',
+  'mp3.bitrate',
+  'opus.bitrate',
+  'hls.segmentLength',
+  'hls.segmentListLength',
+  'icy.metaInt',
+  'queueSize',
+  'loopSize'
+];
 
 function getNestedValue(obj, path) {
   return path.split('.').reduce((acc, part) => acc?.[part], obj);
@@ -53,6 +68,8 @@ function applyDefaults(config) {
     http: {
       port: 3000,
       host: '0.0.0.0',
+      allowCrossOrigin: false,
+      originWhitelist: [],
       ...config.http
     },
     mixer: {
@@ -62,9 +79,35 @@ function applyDefaults(config) {
       useNative: true,
       ...config.mixer
     },
+    station: {
+      name: 'RadioBot',
+      description: 'Internet Radio Station',
+      url: '',
+      public: false,
+      ...config.station
+    },
     ffmpeg: {
       path: 'ffmpeg',
       ...config.ffmpeg
+    },
+    mp3: {
+      bitrate: 192,
+      normalize: false,
+      ...config.mp3
+    },
+    opus: {
+      bitrate: 256,
+      ...config.opus
+    },
+    hls: {
+      enabled: false,
+      segmentLength: 5,
+      segmentListLength: 6,
+      ...config.hls
+    },
+    icy: {
+      metaInt: 2048,
+      ...config.icy
     },
     telegram: {
       enabled: false,
@@ -78,6 +121,8 @@ function applyDefaults(config) {
       enabled: false,
       ...config.analytics
     },
+    queueSize: 20,
+    loopSize: 20,
     ...config
   };
 }

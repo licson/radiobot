@@ -373,6 +373,11 @@ export class DiscordPlatform extends PlatformInterface {
     connection.on(VoiceConnectionStatus.Ready, () => {
       this.logger.log(`[Discord] Connected to voice channel ${channel.name} (${channel.id})`);
       connection.subscribe(this.audioPlayer);
+
+      if (this.radio.opusStream) {
+        this.playOpusStream(this.radio.opusStream);
+        this.logger.log(`[Discord] Started streaming to voice channel ${channel.name}`);
+      }
     });
 
     connection.on(VoiceConnectionStatus.Disconnected, async () => {

@@ -1,91 +1,59 @@
 {
-	"ports": {
-		"http": 8080,
-		"helper": 5000
-	},
-	"station": {
-		"name": "Radio Name Here",
-		"description": "Your Description",
-		"url": "Give him a website",
-		"public": false
-	},
-	"icy": {
-		"meta_int": 2048
-	},
-	"output": {
-		"samplerate": 44100,
-		"channels": 2
-	},
-	"mp3": {
-		"enabled": true,
-		"bitrate": 192,
-		"normalize": false
-	},
-	"opus": {
-		"enabled": true,
-		"bitrate": 256
-	},
-	"hls": {
-		"enabled": false,
-		"segment_length": 5,
-		"segment_list_length": 6
-	},
-	"telegram": {
-		"token": "YOUR_TELEGRAM_TOKEN",
-		"apiServer": "https://api.telegram.org",
-		"startMessage": "Bot Startup Message",
-		"admin": [ "YOUR_TELEGRAM_USERNAME" ],
-		"logForward": "@log_channel_here",
-		"playList": "@play_list_channel_here"
-	},
-	"discord": {
-		"enabled": false,
-		"bitrate": 256,
-		"debug": false,
-		"token": "YOUR_DISCORD_TOKEN",
-		"startMessage": "",
-		"admin": [ "DISCORD_USER_ID"],
-		"streamOptions": {
-			"seek": 0,
-			"volume": 1,
-			"passes": 1
-		},
-		"guild": {
-			"ROOM_ID_HERE" : {
-				"logForward": "CHATROOM_ID",
-				"audioChannel": "VOICECHANNEL_ID",
-				"playList": "CHATROOM_ID"
-			}
-		}
-	},
-	"timed_broadcast": {
-		"enabled": true,
-		"advertisment_track": false,
-		"advertisment": "Your advertisment message",
-		"timeFormat": "h A"
-	},
-	"http": {
-		"host": "example.com",
-		"allowCrossOrigin": true,
-		"originWhiteList": [
-			"http://output.jsbin.com",
-			"https://output.jsbin.com",
-			"http://fiddle.jshell.net",
-			"https://fiddle.jshell.net"
-		],
-		"__comment__": "empty list means allow all origin"
-	},
-	"url_handles": [
-		"soundcloud",
-		"youtube"
-	],
-	"queueSize": 20,
-	"loopSize": 20,
-	"debug": {
-		"logMemoryUsage": false,
-		"useJavascriptMixer": false
-	},
-	"albumArt": {
-		"key": "12eb93b01d6313cd01b756768ffb3f0d"
-	}
+  "http": {
+    "port": 8080,
+    "host": "0.0.0.0",
+    "allowCrossOrigin": false,
+    "originWhitelist": []
+  },
+  "mixer": {
+    "sampleRate": 44100,
+    "bitDepth": 16,
+    "channels": 2,
+    "useNative": true
+  },
+  "station": {
+    "name": "Radio Name Here",
+    "description": "Your Description",
+    "url": "https://example.com",
+    "public": false
+  },
+  "mp3": {
+    "bitrate": 192,
+    "normalize": false
+  },
+  "opus": {
+    "bitrate": 256
+  },
+  "hls": {
+    "enabled": false,
+    "segmentLength": 5,
+    "segmentListLength": 6
+  },
+  "icy": {
+    "metaInt": 2048
+  },
+  "telegram": {
+    "enabled": true,
+    "token": "YOUR_TELEGRAM_TOKEN",
+    "apiServer": "https://api.telegram.org",
+    "startMessage": "Bot Startup Message",
+    "admin": ["YOUR_TELEGRAM_USERNAME"],
+    "logForward": "@log_channel_here",
+    "playList": "@play_list_channel_here"
+  },
+  "discord": {
+    "enabled": false,
+    "token": "YOUR_DISCORD_TOKEN",
+    "startMessage": "",
+    "admin": ["DISCORD_USER_ID"],
+    "guild": {
+      "GUILD_ID_HERE": {
+        "logForward": "CHANNEL_ID",
+        "audioChannel": "VOICE_CHANNEL_ID",
+        "playList": "CHANNEL_ID"
+      }
+    }
+  },
+  "queueSize": 20,
+  "loopSize": 20
 }

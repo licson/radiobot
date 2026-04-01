@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Player customizer</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<style type="text/css">
+			.preview {
+				text-align: center;
+				overflow: auto;
+			}
+			
+			.iframe-wrapper {
+				display: inline-block;
+				font-size: 0px;
+				line-height: 0px;
+			}
+			
+			.wrapped {
+				border: #fff 2px solid;
+				border-radius: 3px;
+				box-shadow: #000 0 0 5px;
+			}
+			
+			.sp-container {
+				border: none !important;
+				background-color: #fff !important;
+				box-shadow: #ccc 0 4px 5px;
+			}
+			
+			.sp-replacer {
+				position: absolute;
+				top: 10px;
+				right: 15px;
+				border: 0px !important;
+				background: transparent !important;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col s12">
+					<h1>Player Customizer</h1>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<div class="preview card blue-grey darken-1">
+						<div class="card-content white-text">
+							<div class="iframe-wrapper wrapped">
+								<iframe class="embeded-player" src="/player/embed.html?ui-test=1" frameborder="0" style="width: 300px; height: 50px"></iframe>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<h5>Dimensions</h5>
+				</div>
+				<div class="input-field col s12 m4">
+					<input id="width" type="number" class="validate" placeholder="300" value="300">
+					<label for="width">Width</label>
+				</div>
+				<div class="input-field col s12 m4">
+					<input id="height" type="number" class="validate" placeholder="50" value="50">
+					<label for="height">Height</label>
+				</div>
+				<div class="col s12 m4">
+					<input type="checkbox" id="use-wrapper" checked/>
+					<label for="use-wrapper">Wrapped</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<h5>Colour Schemes (Player)</h5>
+				</div>
+				<div class="input-field col s12 m6 l3">
+					<!-- pattern="#[\da-f]{3}|#[\da-f]{6}" -->
+					<input id="control-top" type="text" class="validate" placeholder="#45484d">
+					<label for="control-top">Gradient Top</label>
+				</div>
+				<div class="input-field col s12 m6 l3">
+					<input id="control-bottom" type="text" class="validate" placeholder="#000000">
+					<label for="control-bottom">Gradient Bottom</label>
+				</div>
+				<div class="input-field col s12 m6 l3">
+					<input id="control-text" type="text" class="validate" placeholder="#ffffff">
+					<label for="control-text">Text Colour</label>
+				</div>
+				<div class="input-field col s12 m6 l3">
+					<input id="control-hover" type="text" class="validate" placeholder="#eeeeee">
+					<label for="control-hover">Hover Colour</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<h5>Colour Schemes (Marquee Text Area)</h5>
+				</div>
+				<div class="input-field col s12 m6 l4">
+					<input id="marquee-top" type="text" class="validate" placeholder="#3f4c6b">
+					<label for="marquee-top">Gradient Top</label>
+				</div>
+				<div class="input-field col s12 m6 l4">
+					<input id="marquee-bottom" type="text" class="validate" placeholder="#172d66">
+					<label for="marquee-bottom">Gradient Bottom</label>
+				</div>
+				<div class="input-field col s12 m6 l4">
+					<input id="marquee-text" type="text" class="validate" placeholder="#eeeeee">
+					<label for="marquee-text">Text Colour</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<h5>Colour Schemes (List)</h5>
+				</div>
+				<div class="input-field col s12">
+					<input id="list-border" type="text" class="validate" placeholder="#172d66">
+					<label for="list-border">Border Colour</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<h5>Player Modes</h5>
+				</div>
+				<div class="input-field col s4">
+					<input name="mode" type="radio" id="auto" checked/>
+					<label for="auto">Auto</label>
+				</div>
+				<div class="input-field col s4">
+					<input name="mode" type="radio" id="player-only" />
+					<label for="player-only">Player Only</label>
+				</div>
+				<div class="input-field col s4">
+					<input name="mode" type="radio" id="list-only" />
+					<label for="list-only">List Only</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<textarea id="result" class="result materialize-textarea" readonly></textarea>
+					<label for="result">Embed code</label>
+				</div>
+			</div>
+		</div>
+		
+		<div id="templete-with-wrapper" style="display:none">
+			 <div style=" position: relative; display: inline-block; border: #fff 2px solid; border-radius: 3px; box-shadow: #000 0 0 5px; padding: 0px; width: auto; height: auto; line-height: 0px; font-size: 0px; ">
+				<iframe src="" frameborder="0" style="margin: 0px;height: 30px;width: 300px;"></iframe>
+			</div>
+		</div>
+		
+		<div id="templete-without-wrapper" style="display:none">
+			<iframe src="" frameborder="0" style="margin: 0px;height: 30px;width: 300px;"></iframe>
+		</div>
+		
+		<link href="//cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css" rel="stylesheet" type="text/css" />
+		<link href="/components/spectrum/spectrum.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+		<script type="text/javascript" src="/components/spectrum/spectrum.js"></script>
+		<script type="text/javascript">
+			/* global $, location */
+			var keys = [
+				"width",
+				"height",
+				"use-wrapper",
+				
+				"control-top",
+				"control-bottom",
+				"control-text",
+				"control-hover",
+				
+				"marquee-top",
+				"marquee-bottom",
+				"marquee-text",
+				
+				"list-border",
+				
+				"auto",
+				"player-only",
+				"list-only"
+			];
+			
+			var templeteWithWrapper = $('#templete-with-wrapper').clone();
+			var templeteWithoutWrapper = $('#templete-without-wrapper').clone();
+			
+			function readValue() {
+				return keys.map(function (key) {
+					var item = $('#' + key);
+					var value = item.val();
+					
+					if (item.is('[type=radio], [type=checkbox]')) {
+						value = item.is(':checked');
+					}
+					
+					return [key, value];
+				})
+				.reduce(function (prev, next) {
+					prev[next[0]] = next[1];
+					return prev;
+				}, {});
+			}
+			
+			var oldTestURL = "";
+			
+			function throttle(fn, time) {
+				var id = null;
+				return function throttled() {
+					if (id) {
+						clearTimeout(id)
+					};
+					var args = [].slice.call(arguments, 0);
+					id = setTimeout(function () {
+						id = null;
+						return fn.apply(this, args);
+					}, time)
+				}
+			}
+			
+			function doUpdate_() {
+				var newValue = readValue();
+				console.log(newValue);
+				var url = location.protocol + '//' + location.host + "/player/embed.html";
+				var query = {};
+				if (newValue['control-top']) query.controlTop = newValue['control-top'];
+				if (newValue['control-bottom']) query.controlBottom = newValue['control-bottom'];
+				if (newValue['control-text']) query.controlText = newValue['control-text'];
+				if (newValue['control-hover']) query.controlHover = newValue['control-hover'];
+				if (newValue['marquee-top']) query.marqueeTop = newValue['marquee-top'];
+				if (newValue['marquee-bottom']) query.marqueeBottom = newValue['marquee-bottom'];
+				if (newValue['marquee-text']) query.marqueeText = newValue['marquee-text'];
+				if (newValue['list-border']) query.listBorder = newValue['list-border'];
+				if (newValue['player-only']) query.playerOnly = 1;
+				if (newValue['list-only']) query.listOnly = 1;
+				
+				var testURL = url + "?ui-test=1&" + Object.keys(query).map(function (key) {
+					return encodeURIComponent(key) + '=' + encodeURIComponent(query[key]);
+				}).join('&');
+				
+				if (testURL !== oldTestURL) {
+					$('.embeded-player').attr('src', testURL);
+					oldTestURL = testURL;
+				}
+				
+				if (!isNaN(parseInt(newValue.height, 10))) {
+					$('.embeded-player').css('height', parseInt(newValue.height, 10) + 'px');
+				}
+				
+				if (!isNaN(parseInt(newValue.width, 10))) {
+					$('.embeded-player').css('width', parseInt(newValue.width, 10) + 'px');
+				}
+				
+				if (newValue["use-wrapper"]) {
+					$('.iframe-wrapper').addClass('wrapped');
+				} else {
+					$('.iframe-wrapper').removeClass('wrapped');
+				}
+				
+				if (newValue["use-wrapper"]) {
+					var templete = templeteWithWrapper;
+				} else {
+					var templete = templeteWithoutWrapper;
+				}
+				
+				var realQuery = Object.keys(query).map(function (key) {
+					return encodeURIComponent(key) + '=' + encodeURIComponent(query[key]);
+				}).join('&');
+				
+				if (realQuery) {
+					var realURL = url + '?' + realQuery;
+				} else {
+					var realURL = url;
+				}
+				
+				templete.find('iframe').attr('src', realURL);
+				if (!isNaN(parseInt(newValue.height, 10))) {
+					templete.find('iframe').css('height', parseInt(newValue.height, 10) + 'px');
+				} else {
+					templete.find('iframe').css('height', '50px');
+				}
+				
+				if (!isNaN(parseInt(newValue.width, 10))) {
+					templete.find('iframe').css('width', parseInt(newValue.width, 10) + 'px');
+				} else {
+					templete.find('iframe').css('width', '300px');
+				}
+				
+				$('.result').val($.trim(templete.html().replace(/\s+/g, ' '))).trigger('autoresize');
+			}
+			
+			var doUpdate = throttle(doUpdate_, 500);
+			
+			keys.forEach(function (key) {
+				$('#' + key).on('change', doUpdate).on('mouseup', doUpdate);
+			});
+			
+			doUpdate();
+			
+			var colorFields = [
+				"control-top",
+				"control-bottom",
+				"control-text",
+				"control-hover",
+				
+				"marquee-top",
+				"marquee-bottom",
+				"marquee-text",
+				
+				"list-border"
+			]
+			
+			colorFields.forEach(function(key) {
+				var _ = $('#' + key);
+				_.spectrum({
+					color: _.val() || _.attr('placeholder'),
+					preferredFormat: "hex"
+				});
+				
+				_.show();
+				_.on('change', function () {
+					if (_.val()) {
+						_.spectrum("set", _.val());
+					} else {
+						_.spectrum("set", _.attr('placeholder'));
+						_.val("");
+					}
+				});
+			});
+		</script>
+	</body>
+</html>
