@@ -7,6 +7,7 @@ import { OpusEncoder } from './core/stream/opus.js';
 import { HLSSegmenter } from './core/stream/hls.js';
 import { TimedBroadcast } from './core/timed-broadcast.js';
 import { TCPServer } from './core/tcp-server.js';
+import { MemoryLogger } from './utils/memory-logger.js';
 import { createLogger } from './utils/logger.js';
 
 let config;
@@ -17,6 +18,7 @@ let apiServer;
 let platformLoader;
 let timedBroadcast;
 let tcpServer;
+let memoryLogger;
 let isShuttingtingDown = false;
 
 async function createEncoders(mixer, cfg) {
@@ -82,6 +84,10 @@ function setupGracefulShutdown() {
         tcpServer.stop();
       }
 
+      if (memoryLogger) {
+        memoryLogger.stop();
+      }
+
       if (radio?.events) {
         radio.events.emit('shutdown');
       }
@@ -143,6 +149,9 @@ async function main() {
 
   tcpServer = new TCPServer(radio.mixer, config, logger);
   tcpServer.start();
+
+  memoryLogger = new MemoryLogger(config, logger);
+  memoryLogger.start();
 
   setupGracefulShutdown();
 
