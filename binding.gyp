@@ -5,7 +5,7 @@
       "cflags!": ["-fno-exceptions"],
       "cflags_cc!": ["-fno-exceptions"],
       "cflags_cc": ["-std=c++17", "-fexceptions"],
-      "sources": ["mix.cc"],
+      "sources": ["native/mix.cc"],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
       ],
