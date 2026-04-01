@@ -6,12 +6,28 @@ import { findOggPage } from '../../core/stream/ogg-helpers.js';
 
 function createStreamRoutes(context) {
   const router = Router();
-  const { config, encoders, mixer, events } = context;
+  const { config, encoders, mixer, events, analytics } = context;
+
+  // Listener counters for analytics
+  const mp3Listeners = { count: 0 };
+  const oggListeners = { count: 0 };
+  const streamListeners = { count: 0 };
+  const streamOggListeners = { count: 0 };
+  const rawListeners = { count: 0 };
+
+  function updateListenerCount(type, counter, delta) {
+    counter.count += delta;
+    if (analytics) {
+      analytics.updateListenerCount(type, Math.max(0, counter.count));
+    }
+  }
 
   router.get('/live.mp3', (req, res) => {
     if (!encoders?.mp3?.stream) {
       return res.status(503).json({ error: 'MP3 encoder not available' });
     }
+
+    updateListenerCount('mp3', mp3Listeners, 1);
 
     req.setTimeout(0);
     res.connection?.setTimeout?.(0);
@@ -38,6 +54,7 @@ function createStreamRoutes(context) {
     stream.pipe(res);
 
     req.on('close', () => {
+      updateListenerCount('mp3', mp3Listeners, -1);
       stream.unpipe(res);
     });
 
@@ -51,6 +68,8 @@ function createStreamRoutes(context) {
     if (!encoders?.opus?.stream) {
       return res.status(503).json({ error: 'Opus encoder not available' });
     }
+
+    updateListenerCount('ogg', oggListeners, 1);
 
     req.setTimeout(0);
     res.connection?.setTimeout?.(0);
@@ -90,6 +109,7 @@ function createStreamRoutes(context) {
     stream.pipe(res);
 
     req.on('close', () => {
+      updateListenerCount('ogg', oggListeners, -1);
       stream.unpipe(res);
     });
 
@@ -103,6 +123,8 @@ function createStreamRoutes(context) {
     if (!encoders?.mp3?.stream) {
       return res.status(503).json({ error: 'MP3 encoder not available' });
     }
+
+    updateListenerCount('shoutcast', streamListeners, 1);
 
     const metaInt = config.icy?.metaInt || 2048;
 
@@ -144,6 +166,7 @@ function createStreamRoutes(context) {
     }
 
     req.on('close', () => {
+      updateListenerCount('shoutcast', streamListeners, -1);
       if (events) {
         events.off('metadata', updateMetadata);
       }
@@ -165,6 +188,8 @@ function createStreamRoutes(context) {
     if (!encoders?.opus?.stream) {
       return res.status(503).json({ error: 'Opus encoder not available' });
     }
+
+    updateListenerCount('ogg-icy', streamOggListeners, 1);
 
     const metaInt = config.icy?.metaInt || 2048;
 
@@ -278,6 +303,7 @@ function createStreamRoutes(context) {
     }
 
     req.on('close', () => {
+      updateListenerCount('ogg-icy', streamOggListeners, -1);
       if (events) {
         events.off('metadata', updateMetadata);
       }
@@ -364,6 +390,8 @@ function createStreamRoutes(context) {
       return res.status(503).json({ error: 'Mixer not available' });
     }
 
+    updateListenerCount('raw-pcm', rawListeners, 1);
+
     req.setTimeout(0);
     res.connection?.setTimeout?.(0);
     res.socket?.setTimeout?.(0);
@@ -378,6 +406,7 @@ function createStreamRoutes(context) {
     mixer.pipe(res, { end: false });
 
     req.on('close', () => {
+      updateListenerCount('raw-pcm', rawListeners, -1);
       mixer.unpipe(res);
     });
 

@@ -84,7 +84,8 @@ class APIServer {
       config: this.#config,
       encoders: this.#encoders,
       mixer: this.#mixer,
-      events: this.#events
+      events: this.#events,
+      analytics: this.#analytics
     };
     const streamRouter = createStreamRoutes(streamContext);
     this.#app.use('/', streamRouter);
