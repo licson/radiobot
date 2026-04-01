@@ -44,7 +44,6 @@
     "express": "^4.21.0",
     "fs-extra": "^11.3.0",
     "grammy": "^1.41.0",
-    "icy": "^2.1.0",
     "node-addon-api": "^8.0.0",
     "node-cron": "^3.0.3",
     "node-gyp-build": "^4.8.0",
