@@ -1,13 +1,13 @@
-import { writeFile, unlink } from 'fs/promises';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { request } from 'undici';
-import { SourceInterface } from '../interface.js';
+import { writeFile, unlink } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+import { request } from "undici";
+import { SourceInterface } from "../interface.js";
 
 const TELEGRAM_REGEX = /^telegram:(.+)$/;
 
 export class TelegramSource extends SourceInterface {
-  static name = 'telegram';
+  static name = "telegram";
 
   constructor(config, logger, bot) {
     super(config, logger);
@@ -18,7 +18,7 @@ export class TelegramSource extends SourceInterface {
   }
 
   canHandle(url) {
-    if (!url || typeof url !== 'string') return false;
+    if (!url || typeof url !== "string") return false;
     return TELEGRAM_REGEX.test(url);
   }
 
@@ -29,12 +29,12 @@ export class TelegramSource extends SourceInterface {
 
   async getFileURL(fileId) {
     if (!this.bot) {
-      throw new Error('Telegram bot not configured');
+      throw new Error("Telegram bot not configured");
     }
 
     try {
       const file = await this.bot.api.getFile(fileId);
-      const basePath = this.config.telegram?.apiServer || 'https://api.telegram.org';
+      const basePath = this.config.telegram?.apiServer || "https://api.telegram.org";
       return `${basePath}/file/bot${this.config.telegram.token}/${file.file_path}`;
     } catch (err) {
       this.logger.error(`[Telegram] Failed to get file URL: ${err.message}`);
@@ -45,7 +45,7 @@ export class TelegramSource extends SourceInterface {
   async getInfo(url) {
     const fileId = this.extractFileId(url);
     if (!fileId) {
-      throw new Error('Invalid Telegram file URL');
+      throw new Error("Invalid Telegram file URL");
     }
 
     return {
@@ -56,24 +56,24 @@ export class TelegramSource extends SourceInterface {
 
   async getStream(url) {
     const cachePath = await this.getCachePath(url);
-    const { createReadStream } = await import('fs');
+    const { createReadStream } = await import("fs");
     return createReadStream(cachePath);
   }
 
   async getStreamURL(url) {
     const fileId = this.extractFileId(url);
     if (!fileId) {
-      throw new Error('Invalid Telegram file URL');
+      throw new Error("Invalid Telegram file URL");
     }
 
     const fileUrl = await this.getFileURL(fileId);
-    return { url: fileUrl, format: 'audio/mpeg' };
+    return { url: fileUrl, format: "audio/mpeg" };
   }
 
   async getCachePath(url) {
     const fileId = this.extractFileId(url);
     if (!fileId) {
-      throw new Error('Invalid Telegram file URL');
+      throw new Error("Invalid Telegram file URL");
     }
 
     if (this.fileCache.has(fileId)) {

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import http from 'http';
-import express from 'express';
-import { asyncHandler } from '../../src/api/middleware/async.js';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import http from "http";
+import express from "express";
+import { asyncHandler } from "../../src/api/middleware/async.js";
 
-describe('Async Handler Middleware', () => {
+describe("Async Handler Middleware", () => {
   let server;
 
   afterEach(() => {
@@ -13,11 +13,11 @@ describe('Async Handler Middleware', () => {
     }
   });
 
-  it('should pass through successful async handlers', async () => {
+  it("should pass through successful async handlers", async () => {
     const app = express();
 
     app.get(
-      '/test',
+      "/test",
       asyncHandler(async (req, res) => {
         await new Promise(resolve => setTimeout(resolve, 10));
         res.json({ success: true });
@@ -28,10 +28,10 @@ describe('Async Handler Middleware', () => {
     const port = server.address().port;
 
     const res = await new Promise((resolve, reject) => {
-      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
+      http.get(`http://localhost:${port}/test`, resolve).on("error", reject);
     });
 
-    let body = '';
+    let body = "";
     for await (const chunk of res) {
       body += chunk;
     }
@@ -40,13 +40,13 @@ describe('Async Handler Middleware', () => {
     expect(JSON.parse(body).success).toBe(true);
   });
 
-  it('should catch errors from async handlers', async () => {
+  it("should catch errors from async handlers", async () => {
     const app = express();
 
     app.get(
-      '/test',
+      "/test",
       asyncHandler(async () => {
-        throw new Error('Test error');
+        throw new Error("Test error");
       })
     );
 
@@ -58,25 +58,25 @@ describe('Async Handler Middleware', () => {
     const port = server.address().port;
 
     const res = await new Promise((resolve, reject) => {
-      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
+      http.get(`http://localhost:${port}/test`, resolve).on("error", reject);
     });
 
-    let body = '';
+    let body = "";
     for await (const chunk of res) {
       body += chunk;
     }
 
     expect(res.statusCode).toBe(500);
-    expect(JSON.parse(body).error).toBe('Test error');
+    expect(JSON.parse(body).error).toBe("Test error");
   });
 
-  it('should handle rejected promises', async () => {
+  it("should handle rejected promises", async () => {
     const app = express();
 
     app.get(
-      '/test',
+      "/test",
       asyncHandler(async () => {
-        return Promise.reject(new Error('Promise rejected'));
+        return Promise.reject(new Error("Promise rejected"));
       })
     );
 
@@ -88,23 +88,23 @@ describe('Async Handler Middleware', () => {
     const port = server.address().port;
 
     const res = await new Promise((resolve, reject) => {
-      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
+      http.get(`http://localhost:${port}/test`, resolve).on("error", reject);
     });
 
-    let body = '';
+    let body = "";
     for await (const chunk of res) {
       body += chunk;
     }
 
     expect(res.statusCode).toBe(500);
-    expect(JSON.parse(body).error).toBe('Promise rejected');
+    expect(JSON.parse(body).error).toBe("Promise rejected");
   });
 
-  it('should work with synchronous handlers', async () => {
+  it("should work with synchronous handlers", async () => {
     const app = express();
 
     app.get(
-      '/test',
+      "/test",
       asyncHandler((req, res) => {
         res.json({ sync: true });
       })
@@ -114,10 +114,10 @@ describe('Async Handler Middleware', () => {
     const port = server.address().port;
 
     const res = await new Promise((resolve, reject) => {
-      http.get(`http://localhost:${port}/test`, resolve).on('error', reject);
+      http.get(`http://localhost:${port}/test`, resolve).on("error", reject);
     });
 
-    let body = '';
+    let body = "";
     for await (const chunk of res) {
       body += chunk;
     }

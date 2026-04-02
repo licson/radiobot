@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { PlatformLoader, BUILTIN_PLATFORMS } from '../../src/platforms/loader.js';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { PlatformLoader, BUILTIN_PLATFORMS } from "../../src/platforms/loader.js";
 
-describe('PlatformLoader', () => {
+describe("PlatformLoader", () => {
   let loader;
   let mockRadio;
   let mockConfig;
@@ -27,42 +27,42 @@ describe('PlatformLoader', () => {
     loader = new PlatformLoader(mockRadio, mockConfig, mockLogger);
   });
 
-  it('should have builtin platforms registered', () => {
+  it("should have builtin platforms registered", () => {
     expect(BUILTIN_PLATFORMS.telegram).toBeDefined();
     expect(BUILTIN_PLATFORMS.discord).toBeDefined();
   });
 
-  it('should register custom platforms', () => {
+  it("should register custom platforms", () => {
     class CustomPlatform {
-      static name = 'custom';
+      static name = "custom";
     }
 
-    loader.register('custom', CustomPlatform);
-    expect(loader.customPlatforms.has('custom')).toBe(true);
+    loader.register("custom", CustomPlatform);
+    expect(loader.customPlatforms.has("custom")).toBe(true);
   });
 
-  it('should throw when registering duplicate platform', () => {
+  it("should throw when registering duplicate platform", () => {
     class CustomPlatform {
-      static name = 'custom';
+      static name = "custom";
     }
 
-    loader.register('custom', CustomPlatform);
+    loader.register("custom", CustomPlatform);
 
     expect(() => {
-      loader.register('custom', CustomPlatform);
-    }).toThrow('already registered');
+      loader.register("custom", CustomPlatform);
+    }).toThrow("already registered");
   });
 
-  it('should throw when loading unknown platform', async () => {
-    await expect(loader.loadPlatform('unknown')).rejects.toThrow('Unknown platform');
+  it("should throw when loading unknown platform", async () => {
+    await expect(loader.loadPlatform("unknown")).rejects.toThrow("Unknown platform");
   });
 
-  it('should load no platforms when none enabled', async () => {
+  it("should load no platforms when none enabled", async () => {
     const loaded = await loader.loadEnabledPlatforms();
     expect(loaded).toEqual([]);
   });
 
-  it('should load enabled platforms', async () => {
+  it("should load enabled platforms", async () => {
     mockConfig.telegram = { enabled: true, token: null };
     mockConfig.discord = { enabled: true, token: null };
 
@@ -71,7 +71,7 @@ describe('PlatformLoader', () => {
     expect(loaded.length).toBeLessThanOrEqual(2);
   });
 
-  it('should stop all platforms', async () => {
+  it("should stop all platforms", async () => {
     mockConfig.telegram = { enabled: true, token: null };
 
     await loader.loadEnabledPlatforms();
@@ -80,21 +80,21 @@ describe('PlatformLoader', () => {
     expect(loader.platforms.size).toBe(0);
   });
 
-  it('should get loaded platform', async () => {
+  it("should get loaded platform", async () => {
     mockConfig.telegram = { enabled: true, token: null };
 
     await loader.loadEnabledPlatforms();
-    const platform = loader.getPlatform('telegram');
+    const platform = loader.getPlatform("telegram");
 
     expect(platform).toBeDefined();
   });
 
-  it('should return list of loaded platforms', async () => {
+  it("should return list of loaded platforms", async () => {
     mockConfig.telegram = { enabled: true, token: null };
 
     await loader.loadEnabledPlatforms();
     const loaded = loader.getLoadedPlatforms();
 
-    expect(loaded).toContain('telegram');
+    expect(loaded).toContain("telegram");
   });
 });

@@ -1,29 +1,29 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RadioBot } from '../../src/core/radio.js';
-import EventEmitter from 'events';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { RadioBot } from "../../src/core/radio.js";
+import EventEmitter from "events";
 
 // Mock dependencies
-vi.mock('child_process', () => ({
+vi.mock("child_process", () => ({
   spawn: vi.fn()
 }));
 
-vi.mock('../../src/core/persistence.js', () => ({
+vi.mock("../../src/core/persistence.js", () => ({
   saveQueue: vi.fn(),
   loadQueue: vi.fn(),
   createFileAppender: vi.fn().mockReturnValue(vi.fn())
 }));
 
-vi.mock('../../src/sources/manager.js', () => ({
+vi.mock("../../src/sources/manager.js", () => ({
   SourceManager: vi.fn().mockImplementation(() => ({
     init: vi.fn().mockResolvedValue(4),
     find: vi.fn()
   }))
 }));
 
-import { spawn } from 'child_process';
-import { loadQueue } from '../../src/core/persistence.js';
+import { spawn } from "child_process";
+import { loadQueue } from "../../src/core/persistence.js";
 
-describe('RadioBot', () => {
+describe("RadioBot", () => {
   let mockConfig;
   let mockLogger;
   let mockProcess;
@@ -33,8 +33,8 @@ describe('RadioBot', () => {
 
     mockConfig = {
       station: {
-        name: 'Test Radio',
-        description: 'A test station'
+        name: "Test Radio",
+        description: "A test station"
       },
       mixer: {
         sampleRate: 44100,
@@ -66,13 +66,13 @@ describe('RadioBot', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Constructor', () => {
-    it('should create RadioBot instance', () => {
+  describe("Constructor", () => {
+    it("should create RadioBot instance", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       expect(radio).toBeDefined();
     });
 
-    it('should create mixer with config options', () => {
+    it("should create mixer with config options", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const mixer = radio.mixer;
 
@@ -82,7 +82,7 @@ describe('RadioBot', () => {
       expect(mixer.channels).toBe(2);
     });
 
-    it('should create queue with loopSize', () => {
+    it("should create queue with loopSize", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const queue = radio.queue;
 
@@ -90,7 +90,7 @@ describe('RadioBot', () => {
       expect(queue.length).toBe(0);
     });
 
-    it('should create event emitter', () => {
+    it("should create event emitter", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const events = radio.events;
 
@@ -98,14 +98,14 @@ describe('RadioBot', () => {
       expect(events).toBeInstanceOf(EventEmitter);
     });
 
-    it('should create source manager', () => {
+    it("should create source manager", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const sourceManager = radio.sourceManager;
 
       expect(sourceManager).toBeDefined();
     });
 
-    it('should initialize volume object', () => {
+    it("should initialize volume object", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const volume = radio.volume;
 
@@ -116,87 +116,87 @@ describe('RadioBot', () => {
       });
     });
 
-    it('should create empty song list', () => {
+    it("should create empty song list", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
 
       expect(radio.songList).toEqual([]);
     });
   });
 
-  describe('Mixer Handlers', () => {
-    it('should set up new_track handler', () => {
+  describe("Mixer Handlers", () => {
+    it("should set up new_track handler", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const mixer = radio.mixer;
 
       // Emit new_track event
       const mockTrack = {
-        labels: ['song'],
+        labels: ["song"],
         setVolume: vi.fn(),
         fadeTo: vi.fn()
       };
 
-      mixer.emit('new_track', mockTrack);
+      mixer.emit("new_track", mockTrack);
 
       expect(mockTrack.setVolume).toHaveBeenCalledWith(0);
       expect(mockTrack.fadeTo).toHaveBeenCalledWith(1, 1000);
     });
 
-    it('should handle tcp tracks', () => {
+    it("should handle tcp tracks", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const mixer = radio.mixer;
 
       const mockTrack = {
-        labels: ['tcp'],
+        labels: ["tcp"],
         setVolume: vi.fn(),
         fadeTo: vi.fn()
       };
 
-      mixer.emit('new_track', mockTrack);
+      mixer.emit("new_track", mockTrack);
 
       expect(mockTrack.fadeTo).toHaveBeenCalledWith(1, 1000);
     });
 
-    it('should handle microphone tracks', () => {
+    it("should handle microphone tracks", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const mixer = radio.mixer;
 
       const mockTrack = {
-        labels: ['microphone'],
+        labels: ["microphone"],
         setVolume: vi.fn(),
         fadeTo: vi.fn()
       };
 
-      mixer.emit('new_track', mockTrack);
+      mixer.emit("new_track", mockTrack);
 
       expect(mockTrack.fadeTo).toHaveBeenCalledWith(1, 1000);
     });
 
-    it('should handle unknown track types', () => {
+    it("should handle unknown track types", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const mixer = radio.mixer;
 
       const mockTrack = {
-        labels: ['unknown'],
+        labels: ["unknown"],
         setVolume: vi.fn(),
         fadeTo: vi.fn()
       };
 
-      mixer.emit('new_track', mockTrack);
+      mixer.emit("new_track", mockTrack);
 
       expect(mockTrack.setVolume).toHaveBeenCalledWith(1);
       expect(mockLogger.warn).toHaveBeenCalled();
     });
   });
 
-  describe('Queue Handlers', () => {
-    it('should emit queue_push event on push', async () => {
+  describe("Queue Handlers", () => {
+    it("should emit queue_push event on push", async () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const events = radio.events;
 
       const pushHandler = vi.fn();
-      events.on('queue_push', pushHandler);
+      events.on("queue_push", pushHandler);
 
-      radio.queue.push(async () => {}, { uid: '1', title: 'Test' });
+      radio.queue.push(async () => {}, { uid: "1", title: "Test" });
 
       // Wait for queueMicrotask
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -204,29 +204,29 @@ describe('RadioBot', () => {
       expect(pushHandler).toHaveBeenCalled();
     });
 
-    it('should emit queue_next event on next', () => {
+    it("should emit queue_next event on next", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const events = radio.events;
 
       const nextHandler = vi.fn();
-      events.on('queue_next', nextHandler);
+      events.on("queue_next", nextHandler);
 
       // Manually emit the queue event
-      radio.queue.emit('next', async () => {}, { title: 'Test' });
+      radio.queue.emit("next", async () => {}, { title: "Test" });
 
       expect(nextHandler).toHaveBeenCalled();
     });
   });
 
-  describe('Methods', () => {
-    it('should init sources', async () => {
+  describe("Methods", () => {
+    it("should init sources", async () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const count = await radio.initSources();
 
       expect(count).toBe(4);
     });
 
-    it('should load persisted queue', async () => {
+    it("should load persisted queue", async () => {
       loadQueue.mockResolvedValueOnce(true);
 
       const radio = new RadioBot(mockConfig, mockLogger);
@@ -236,16 +236,16 @@ describe('RadioBot', () => {
       expect(result).toBe(true);
     });
 
-    it('should start queue', () => {
+    it("should start queue", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
-      radio.queue.push(async () => {}, { uid: '1', title: 'Test' });
+      radio.queue.push(async () => {}, { uid: "1", title: "Test" });
 
       const result = radio.startQueue();
 
       expect(result).toBe(true);
     });
 
-    it('should not start empty queue', () => {
+    it("should not start empty queue", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
 
       const result = radio.startQueue();
@@ -253,76 +253,76 @@ describe('RadioBot', () => {
       expect(result).toBe(false);
     });
 
-    it('should add to song list', () => {
+    it("should add to song list", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
 
-      radio.addToSongList('file.mp3', 'User', 'Title', 'Artist', null);
+      radio.addToSongList("file.mp3", "User", "Title", "Artist", null);
 
       expect(radio.songList).toHaveLength(1);
       expect(radio.songList[0]).toMatchObject({
-        file: 'file.mp3',
-        name: 'User',
-        title: 'Title',
-        artist: 'Artist'
+        file: "file.mp3",
+        name: "User",
+        title: "Title",
+        artist: "Artist"
       });
     });
 
-    it('should respect song list max size', () => {
+    it("should respect song list max size", () => {
       mockConfig.queueSize = 2;
       const radio = new RadioBot(mockConfig, mockLogger);
 
-      radio.addToSongList('file1.mp3', 'User1', 'Title1', 'Artist1', null);
-      radio.addToSongList('file2.mp3', 'User2', 'Title2', 'Artist2', null);
-      radio.addToSongList('file3.mp3', 'User3', 'Title3', 'Artist3', null);
+      radio.addToSongList("file1.mp3", "User1", "Title1", "Artist1", null);
+      radio.addToSongList("file2.mp3", "User2", "Title2", "Artist2", null);
+      radio.addToSongList("file3.mp3", "User3", "Title3", "Artist3", null);
 
       expect(radio.songList).toHaveLength(2);
-      expect(radio.songList[0].file).toBe('file2.mp3');
-      expect(radio.songList[1].file).toBe('file3.mp3');
+      expect(radio.songList[0].file).toBe("file2.mp3");
+      expect(radio.songList[1].file).toBe("file3.mp3");
     });
   });
 
-  describe('getRadioContext', () => {
-    it('should return context object', () => {
+  describe("getRadioContext", () => {
+    it("should return context object", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const context = radio.getRadioContext();
 
-      expect(context).toHaveProperty('queue');
-      expect(context).toHaveProperty('mixer');
-      expect(context).toHaveProperty('events');
-      expect(context).toHaveProperty('urlHandlers');
-      expect(context).toHaveProperty('songList');
-      expect(context).toHaveProperty('volume');
-      expect(context).toHaveProperty('doQueueSong');
-      expect(context).toHaveProperty('doTTS');
-      expect(context).toHaveProperty('addToSongList');
-      expect(context).toHaveProperty('getMediaInfo');
+      expect(context).toHaveProperty("queue");
+      expect(context).toHaveProperty("mixer");
+      expect(context).toHaveProperty("events");
+      expect(context).toHaveProperty("urlHandlers");
+      expect(context).toHaveProperty("songList");
+      expect(context).toHaveProperty("volume");
+      expect(context).toHaveProperty("doQueueSong");
+      expect(context).toHaveProperty("doTTS");
+      expect(context).toHaveProperty("addToSongList");
+      expect(context).toHaveProperty("getMediaInfo");
     });
 
-    it('should have callable methods in context', () => {
+    it("should have callable methods in context", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const context = radio.getRadioContext();
 
-      expect(typeof context.doQueueSong).toBe('function');
-      expect(typeof context.doTTS).toBe('function');
-      expect(typeof context.addToSongList).toBe('function');
-      expect(typeof context.getMediaInfo).toBe('function');
+      expect(typeof context.doQueueSong).toBe("function");
+      expect(typeof context.doTTS).toBe("function");
+      expect(typeof context.addToSongList).toBe("function");
+      expect(typeof context.getMediaInfo).toBe("function");
     });
 
-    it('should return same queue instance', () => {
+    it("should return same queue instance", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const context = radio.getRadioContext();
 
       expect(context.queue).toBe(radio.queue);
     });
 
-    it('should return same mixer instance', () => {
+    it("should return same mixer instance", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const context = radio.getRadioContext();
 
       expect(context.mixer).toBe(radio.mixer);
     });
 
-    it('should return same events instance', () => {
+    it("should return same events instance", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
       const context = radio.getRadioContext();
 
@@ -330,12 +330,12 @@ describe('RadioBot', () => {
     });
   });
 
-  describe('getMediaInfo', () => {
-    it('should call ffprobe', async () => {
+  describe("getMediaInfo", () => {
+    it("should call ffprobe", async () => {
       const mockStdout = {
         on: vi.fn((event, handler) => {
-          if (event === 'data') {
-            handler(JSON.stringify({ format: { duration: '180' } }));
+          if (event === "data") {
+            handler(JSON.stringify({ format: { duration: "180" } }));
           }
         })
       };
@@ -345,40 +345,40 @@ describe('RadioBot', () => {
         stdout: mockStdout,
         stderr: mockStderr,
         on: vi.fn((event, handler) => {
-          if (event === 'close') {
+          if (event === "close") {
             setTimeout(() => handler(0), 10);
           }
         })
       });
 
       const radio = new RadioBot(mockConfig, mockLogger);
-      const info = await radio.getMediaInfo('http://example.com/audio.mp3');
+      const info = await radio.getMediaInfo("http://example.com/audio.mp3");
 
-      expect(spawn).toHaveBeenCalledWith('ffprobe', [
-        '-v',
-        'quiet',
-        '-print_format',
-        'json',
-        '-show_format',
-        '-show_streams',
-        'http://example.com/audio.mp3'
+      expect(spawn).toHaveBeenCalledWith("ffprobe", [
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+        "http://example.com/audio.mp3"
       ]);
 
-      expect(info).toEqual({ format: { duration: '180' } });
+      expect(info).toEqual({ format: { duration: "180" } });
     });
 
-    it('should reject on ffprobe error', async () => {
+    it("should reject on ffprobe error", async () => {
       spawn.mockReturnValue({
         stdout: { on: vi.fn() },
         stderr: {
           on: vi.fn((event, handler) => {
-            if (event === 'data') {
-              handler('Error message');
+            if (event === "data") {
+              handler("Error message");
             }
           })
         },
         on: vi.fn((event, handler) => {
-          if (event === 'close') {
+          if (event === "close") {
             setTimeout(() => handler(1), 10);
           }
         })
@@ -386,32 +386,32 @@ describe('RadioBot', () => {
 
       const radio = new RadioBot(mockConfig, mockLogger);
 
-      await expect(radio.getMediaInfo('http://example.com/audio.mp3')).rejects.toThrow();
+      await expect(radio.getMediaInfo("http://example.com/audio.mp3")).rejects.toThrow();
     });
   });
 
-  describe('doTTS', () => {
-    it('should add TTS task to queue', () => {
+  describe("doTTS", () => {
+    it("should add TTS task to queue", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
 
-      radio.doTTS('Hello world');
+      radio.doTTS("Hello world");
 
       expect(radio.queue.length).toBe(1);
     });
 
-    it('should create task with tts type', () => {
+    it("should create task with tts type", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
 
-      radio.doTTS('Hello world');
+      radio.doTTS("Hello world");
 
       const tasks = radio.queue.getAllTasks();
-      expect(tasks[0].info.type).toBe('tts');
-      expect(tasks[0].info.text).toBe('Hello world');
+      expect(tasks[0].info.type).toBe("tts");
+      expect(tasks[0].info.text).toBe("Hello world");
     });
   });
 
-  describe('urlHandlers alias', () => {
-    it('should return sourceManager as urlHandlers', () => {
+  describe("urlHandlers alias", () => {
+    it("should return sourceManager as urlHandlers", () => {
       const radio = new RadioBot(mockConfig, mockLogger);
 
       expect(radio.urlHandlers).toBe(radio.sourceManager);

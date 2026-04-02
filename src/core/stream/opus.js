@@ -1,5 +1,5 @@
-import { spawn } from 'child_process';
-import { crc32, findOggPage, rewriteOpusPreSkip } from './ogg-helpers.js';
+import { spawn } from "child_process";
+import { crc32, findOggPage, rewriteOpusPreSkip } from "./ogg-helpers.js";
 
 class OpusEncoder {
   #process = null;
@@ -14,40 +14,40 @@ class OpusEncoder {
   start(mixerStream, config) {
     const { sampleRate, channels, bitrate } = config;
 
-    this.#process = spawn('ffmpeg', [
-      '-v',
-      '8',
-      '-f',
-      's16le',
-      '-ac',
+    this.#process = spawn("ffmpeg", [
+      "-v",
+      "8",
+      "-f",
+      "s16le",
+      "-ac",
       String(channels),
-      '-ar',
+      "-ar",
       String(sampleRate),
-      '-i',
-      '-',
-      '-ab',
+      "-i",
+      "-",
+      "-ab",
       `${bitrate}k`,
-      '-acodec',
-      'libopus',
-      '-f',
-      'ogg',
-      '-'
+      "-acodec",
+      "libopus",
+      "-f",
+      "ogg",
+      "-"
     ]);
 
     this.#stdin = this.#process.stdin;
     this.#stdout = this.#process.stdout;
 
     this.#stdout.pause();
-    this.#stdout.on('data', this.#captureHeaders.bind(this));
+    this.#stdout.on("data", this.#captureHeaders.bind(this));
     this.#process.stderr.pipe(process.stderr);
 
     mixerStream.pipe(this.#stdin);
 
-    this.#process.on('error', err => {
-      console.error('[Opus Encoder] Process error:', err);
+    this.#process.on("error", err => {
+      console.error("[Opus Encoder] Process error:", err);
     });
 
-    this.#process.on('exit', (code, signal) => {
+    this.#process.on("exit", (code, signal) => {
       if (code !== 0 && code !== null) {
         console.error(`[Opus Encoder] Process exited with code ${code}, signal ${signal}`);
       }
@@ -71,7 +71,7 @@ class OpusEncoder {
     this.#cachedCommentHeader = this.#headerBuffer.subarray(commentHeaderPos, firstAudioPos);
 
     this.#headersReady = true;
-    this.#stdout.off('data', this.#captureHeaders);
+    this.#stdout.off("data", this.#captureHeaders);
     this.#stdout.resume();
 
     const pending = this.#headerListeners;
@@ -80,7 +80,7 @@ class OpusEncoder {
       fn();
     }
 
-    console.log('[Opus Encoder] Headers captured and cached');
+    console.log("[Opus Encoder] Headers captured and cached");
   }
 
   get idHeader() {
@@ -109,7 +109,7 @@ class OpusEncoder {
 
   stop() {
     if (this.#process) {
-      this.#process.kill('SIGTERM');
+      this.#process.kill("SIGTERM");
       this.#process = null;
     }
   }

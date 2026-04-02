@@ -1,6 +1,6 @@
-import { vi } from 'vitest';
-import { Readable } from 'stream';
-import EventEmitter from 'events';
+import { vi } from "vitest";
+import { Readable } from "stream";
+import EventEmitter from "events";
 
 /**
  * Creates a mock configuration object for tests
@@ -10,15 +10,15 @@ import EventEmitter from 'events';
 export function createMockConfig(overrides = {}) {
   return {
     station: {
-      name: 'Test Radio',
-      description: 'A test radio station',
-      url: 'https://example.com',
+      name: "Test Radio",
+      description: "A test radio station",
+      url: "https://example.com",
       public: true,
       ...overrides.station
     },
     http: {
       port: 8080,
-      host: 'localhost',
+      host: "localhost",
       allowCrossOrigin: false,
       originWhitelist: [],
       ...overrides.http
@@ -87,24 +87,24 @@ export function createMockQueue(overrides = {}) {
   const tasks = overrides.tasks || [];
   const events = new EventEmitter();
 
-  return {
+  const queue = {
     length: tasks.length,
     isRunning: false,
     currentTask: null,
     push: vi.fn((task, info) => {
       tasks.push({ task, info });
-      queueMicrotask(() => events.emit('push', task, info));
+      queueMicrotask(() => events.emit("push", task, info));
       return true;
     }),
     unshift: vi.fn((task, info) => {
       tasks.unshift({ task, info });
-      queueMicrotask(() => events.emit('unshift', task, info));
+      queueMicrotask(() => events.emit("unshift", task, info));
     }),
     remove: vi.fn(task => {
       const index = tasks.indexOf(task);
       if (index > -1) {
         tasks.splice(index, 1);
-        events.emit('remove', task.taskFactory, task.info);
+        events.emit("remove", task.taskFactory, task.info);
       }
     }),
     findTask: vi.fn(info => {
@@ -114,11 +114,11 @@ export function createMockQueue(overrides = {}) {
     getAllTasks: vi.fn(() => tasks),
     start: vi.fn(() => {
       if (tasks.length === 0) return false;
-      mockQueue.isRunning = true;
+      queue.isRunning = true;
       return true;
     }),
     stop: vi.fn(() => {
-      mockQueue.isRunning = false;
+      queue.isRunning = false;
     }),
     signal: vi.fn(),
     toJSON: vi.fn(() => ({
@@ -133,6 +133,8 @@ export function createMockQueue(overrides = {}) {
     emit: events.emit.bind(events),
     ...overrides
   };
+
+  return queue;
 }
 
 /**
@@ -168,7 +170,7 @@ export function createMockMixer(overrides = {}) {
         emit: vi.fn()
       };
       sources.push(source);
-      events.emit('new_track', source);
+      events.emit("new_track", source);
       return source;
     }),
     getSources: vi.fn(labels => {
@@ -227,8 +229,8 @@ export function createMockRadio(overrides = {}) {
       songList.push({ file, name, title, artist, chatOrigin });
     }),
     getMediaInfo: vi.fn().mockResolvedValue({
-      format: { duration: '180.5' },
-      streams: [{ codec_type: 'audio' }]
+      format: { duration: "180.5" },
+      streams: [{ codec_type: "audio" }]
     }),
     initSources: vi.fn().mockResolvedValue(4),
     loadPersistedQueue: vi.fn().mockResolvedValue(false),
@@ -266,15 +268,15 @@ export function createMockEncoders(overrides = {}) {
     opus: {
       stream: opusStream,
       headersReady: true,
-      idHeader: Buffer.from('id header'),
-      commentHeader: Buffer.from('comment header'),
+      idHeader: Buffer.from("id header"),
+      commentHeader: Buffer.from("comment header"),
       onHeadersReady: vi.fn(cb => {
         if (cb) cb();
       }),
       stop: vi.fn()
     },
     hls: {
-      segmentDir: '/tmp/hls',
+      segmentDir: "/tmp/hls",
       stop: vi.fn()
     },
     icy: {
@@ -339,14 +341,14 @@ export function createMockStream(chunks = []) {
  */
 export function createMockSpawn(mocks = {}) {
   const defaultMock = {
-    stdout: createMockStream([Buffer.from('mock output')]),
+    stdout: createMockStream([Buffer.from("mock output")]),
     stderr: createMockStream([]),
     stdin: {
       write: vi.fn(),
       end: vi.fn()
     },
     on: vi.fn((event, handler) => {
-      if (event === 'exit') {
+      if (event === "exit") {
         setTimeout(() => handler(0, null), 10);
       }
     }),
@@ -354,7 +356,7 @@ export function createMockSpawn(mocks = {}) {
   };
 
   return vi.fn((command, args) => {
-    const key = `${command} ${args?.join(' ')}`;
+    const key = `${command} ${args?.join(" ")}`;
     return mocks[key] || defaultMock;
   });
 }

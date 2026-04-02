@@ -1,4 +1,4 @@
-import { PassThrough } from 'stream';
+import { PassThrough } from "stream";
 
 export function createSocketHandler({ mixer, config }) {
   let ioUsers = 0;
@@ -10,34 +10,34 @@ export function createSocketHandler({ mixer, config }) {
 
     console.log(`[Socket.io] User connected, total ${ioUsers} users, ${microUsers} microphones active`);
 
-    socket.emit('info', {
+    socket.emit("info", {
       sampleRate: mixer.sampleRate,
       channel: mixer.channels
     });
 
-    socket.on('microphone_take', () => {
+    socket.on("microphone_take", () => {
       if (source) return;
 
       microUsers++;
       console.log(`[Socket.io] Microphone taken, total ${ioUsers} users, ${microUsers} microphones active`);
 
       source = new PassThrough();
-      mixer.addSource(source, ['microphone']);
-      socket.emit('microphone_ready');
+      mixer.addSource(source, ["microphone"]);
+      socket.emit("microphone_ready");
     });
 
-    socket.on('PCM', (pcmData, id) => {
+    socket.on("PCM", (pcmData, id) => {
       if (!source) return;
       if (!(pcmData instanceof Buffer)) {
-        console.warn('[Socket.io] Received non-buffer PCM data');
+        console.warn("[Socket.io] Received non-buffer PCM data");
         return;
       }
 
       source.write(pcmData);
-      socket.emit('ACK', id);
+      socket.emit("ACK", id);
     });
 
-    socket.on('microphone_drop', () => {
+    socket.on("microphone_drop", () => {
       if (!source) return;
 
       microUsers--;
@@ -45,10 +45,10 @@ export function createSocketHandler({ mixer, config }) {
 
       source.end();
       source = null;
-      socket.emit('microphone_dropped');
+      socket.emit("microphone_dropped");
     });
 
-    socket.on('disconnect', () => {
+    socket.on("disconnect", () => {
       ioUsers--;
 
       if (source) {

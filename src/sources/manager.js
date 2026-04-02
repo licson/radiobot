@@ -1,8 +1,8 @@
-import { YouTubeSource } from './youtube/index.js';
-import { SoundCloudSource } from './soundcloud/index.js';
-import { HTTPSource } from './http/index.js';
-import { TelegramSource } from './telegram/index.js';
-import { DefaultSource } from './default/index.js';
+import { YouTubeSource } from "./youtube/index.js";
+import { SoundCloudSource } from "./soundcloud/index.js";
+import { HTTPSource } from "./http/index.js";
+import { TelegramSource } from "./telegram/index.js";
+import { DefaultSource } from "./default/index.js";
 
 const BUILTIN_SOURCES = {
   youtube: YouTubeSource,
@@ -12,7 +12,7 @@ const BUILTIN_SOURCES = {
   default: DefaultSource
 };
 
-const DEFAULT_ORDER = ['telegram', 'youtube', 'soundcloud', 'http'];
+const DEFAULT_ORDER = ["telegram", "youtube", "soundcloud", "http"];
 
 export class SourceManager {
   constructor(config, logger, bot = null) {
@@ -83,7 +83,7 @@ export class SourceManager {
       if (defaultSource.canHandle(url)) {
         this.logger.debug(`[SourceManager] Using default handler for ${url}`);
         return {
-          name: 'default',
+          name: "default",
           getInfo: () => defaultSource.getInfo(url),
           getStream: () => defaultSource.getStream(url),
           getStreamURL: () => defaultSource.getStreamURL(url)

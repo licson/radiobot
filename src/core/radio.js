@@ -1,9 +1,9 @@
-import { spawn } from 'child_process';
-import EventEmitter from 'events';
-import { MixerStream } from './mixer/index.js';
-import { Queue, mergeTasks } from './queue/index.js';
-import { SourceManager } from '../sources/manager.js';
-import { saveQueue, loadQueue, createFileAppender } from './persistence.js';
+import { spawn } from "child_process";
+import EventEmitter from "events";
+import { MixerStream } from "./mixer/index.js";
+import { Queue, mergeTasks } from "./queue/index.js";
+import { SourceManager } from "../sources/manager.js";
+import { saveQueue, loadQueue, createFileAppender } from "./persistence.js";
 
 const MAX_RETRIES = 10;
 const RETRY_INTERVAL = 10000;
@@ -50,73 +50,73 @@ class RadioBot {
 
     this.#songList = [];
 
-    this.#playerLog = createFileAppender('player.log');
+    this.#playerLog = createFileAppender("player.log");
 
     this.#setupMixerHandlers();
     this.#setupQueueHandlers();
   }
 
   #setupMixerHandlers() {
-    this.#mixer.on('new_track', track => {
+    this.#mixer.on("new_track", track => {
       track.setVolume(0);
 
-      if (track.is('song')) {
+      if (track.is("song")) {
         track.fadeTo(this.#volume.song, 1000);
-      } else if (track.is('tcp')) {
+      } else if (track.is("tcp")) {
         track.fadeTo(this.#volume.tcp, 1000);
-      } else if (track.is('microphone')) {
+      } else if (track.is("microphone")) {
         track.fadeTo(this.#volume.microphone, 1000);
       } else {
         track.setVolume(1);
-        this.#logger.warn(`[Mixer] Unknown track type: ${track.labels.join(', ')}`);
+        this.#logger.warn(`[Mixer] Unknown track type: ${track.labels.join(", ")}`);
       }
     });
   }
 
   #setupQueueHandlers() {
-    this.#queue.on('error', (err, task, info) => {
+    this.#queue.on("error", (err, task, info) => {
       this.#logger.error(`[Queue] Item '${info?.title}' removed:`, err.message || err);
     });
 
-    this.#queue.on('next', (task, info) => {
+    this.#queue.on("next", (task, info) => {
       saveQueue(this.#queue);
-      this.#playerLog(`${new Date().toLocaleTimeString()}: playing ${info?.title || 'unknown'}`);
-      this.#events.emit('queue_next', info);
+      this.#playerLog(`${new Date().toLocaleTimeString()}: playing ${info?.title || "unknown"}`);
+      this.#events.emit("queue_next", info);
     });
 
-    this.#queue.on('remove', (task, info, error) => {
+    this.#queue.on("remove", (task, info, error) => {
       if (error) {
         this.#playerLog(
-          `${new Date().toLocaleTimeString()}: removing ${info?.title || 'unknown'} due to ${error.toString()}`
+          `${new Date().toLocaleTimeString()}: removing ${info?.title || "unknown"} due to ${error.toString()}`
         );
       }
-      this.#events.emit('queue_remove', info, error);
+      this.#events.emit("queue_remove", info, error);
     });
 
-    this.#queue.on('push', (task, info) => {
+    this.#queue.on("push", (task, info) => {
       saveQueue(this.#queue);
-      this.#playerLog(`${new Date().toLocaleTimeString()}: adding ${info?.title || 'unknown'}`);
-      this.#events.emit('queue_push', info);
+      this.#playerLog(`${new Date().toLocaleTimeString()}: adding ${info?.title || "unknown"}`);
+      this.#events.emit("queue_push", info);
     });
 
-    this.#queue.on('unshift', () => {
+    this.#queue.on("unshift", () => {
       saveQueue(this.#queue);
-      this.#events.emit('queue_unshift');
+      this.#events.emit("queue_unshift");
     });
   }
 
   #jsonToTask(info) {
-    if (info.type === 'doQueueSong') {
+    if (info.type === "doQueueSong") {
       return {
         task: mergeTasks(this.#doTTS(info.ttsText), this.#doBroadcast(info.file, info.chatOrigin, info.title)),
         info
       };
     }
 
-    if (info.type === 'Advertisment') {
+    if (info.type === "Advertisment") {
       return {
         task: async cb => {
-          this.#events.emit('metadata', info.title);
+          this.#events.emit("metadata", info.title);
           return this.#doTTS(info.text)(cb);
         },
         info
@@ -138,7 +138,7 @@ class RadioBot {
       try {
         const handler = this.#sourceManager.find(file);
         if (!handler) {
-          throw new Error('No handler found for file');
+          throw new Error("No handler found for file");
         }
         return await handler.getStreamURL();
       } catch (err) {
@@ -172,53 +172,53 @@ class RadioBot {
             return;
           }
 
-          ffmpeg = spawn('ffmpeg', [
-            '-v',
-            '-8',
-            '-re',
-            '-i',
+          ffmpeg = spawn("ffmpeg", [
+            "-v",
+            "-8",
+            "-re",
+            "-i",
             url,
-            '-ac',
+            "-ac",
             String(this.#config.mixer.channels),
-            '-ar',
+            "-ar",
             String(this.#config.mixer.sampleRate),
-            '-c:a',
-            'pcm_s16le',
-            '-t',
+            "-c:a",
+            "pcm_s16le",
+            "-t",
             String(MAX_SONG_DURATION),
-            '-f',
-            's16le',
-            '-'
+            "-f",
+            "s16le",
+            "-"
           ]);
 
           ffmpeg.stderr.pipe(process.stderr, { end: false });
 
-          source = this.#mixer.addSource(ffmpeg.stdout, ['song']);
+          source = this.#mixer.addSource(ffmpeg.stdout, ["song"]);
 
           if (title) {
-            this.#events.emit('metadata', title);
+            this.#events.emit("metadata", title);
           }
 
-          source.on('remove', err => {
+          source.on("remove", err => {
             if (err && chatOrigin) {
-              this.#events.emit('text_message', chatOrigin, "Oops! There are errors and your song isn't played.");
+              this.#events.emit("text_message", chatOrigin, "Oops! There are errors and your song isn't played.");
             }
 
             process.nextTick(() => {
               if (title) {
-                this.#events.emit('metadata', this.#config.station?.name || 'RadioBot');
+                this.#events.emit("metadata", this.#config.station?.name || "RadioBot");
               }
               cleanup();
               cb(err);
             });
           });
 
-          ffmpeg.on('error', e => {
+          ffmpeg.on("error", e => {
             cleanup();
             source.setError(e);
           });
 
-          ffmpeg.on('exit', code => {
+          ffmpeg.on("exit", code => {
             cleanup();
             if (code !== 0 && !cancelled) {
               source.setError(new Error(`ffmpeg exited with code ${code}`));
@@ -228,13 +228,13 @@ class RadioBot {
         .catch(e => {
           cleanup();
 
-          if (e?.message?.includes('ENOMEM')) {
-            this.#logger.error('[Fatal error] Potential memory leak, suiciding...');
+          if (e?.message?.includes("ENOMEM")) {
+            this.#logger.error("[Fatal error] Potential memory leak, suiciding...");
             process.exit(1);
           }
 
           if (chatOrigin) {
-            this.#events.emit('text_message', chatOrigin, "Oops! I can't get the file from origin.");
+            this.#events.emit("text_message", chatOrigin, "Oops! I can't get the file from origin.");
           }
 
           this.#logger.error(`[Queue] Cannot fetch file: ${e.message}`);
@@ -249,7 +249,7 @@ class RadioBot {
           return;
         }
 
-        ffmpeg.kill('SIGTERM');
+        ffmpeg.kill("SIGTERM");
       };
     };
   }
@@ -262,7 +262,7 @@ class RadioBot {
   doQueueSong(file, title, ttsText, chatOrigin) {
     this.#queue.push(mergeTasks(this.#doTTS(ttsText), this.#doBroadcast(file, chatOrigin, title)), {
       uid: file,
-      type: 'doQueueSong',
+      type: "doQueueSong",
       file,
       title,
       ttsText,
@@ -271,15 +271,15 @@ class RadioBot {
 
     this.#queue.start();
 
-    this.#events.emit('do_queue_song', chatOrigin, file, title, ttsText);
-    this.#events.emit('song_order_success', chatOrigin, file, title, ttsText);
+    this.#events.emit("do_queue_song", chatOrigin, file, title, ttsText);
+    this.#events.emit("song_order_success", chatOrigin, file, title, ttsText);
   }
 
   doTTS(text) {
     const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=en-GB&client=tw-ob`;
     this.#queue.push(this.#doBroadcast(url), {
       uid: `tts_${Date.now()}`,
-      type: 'tts',
+      type: "tts",
       text
     });
     this.#queue.start();
@@ -303,20 +303,20 @@ class RadioBot {
 
   async getMediaInfo(url) {
     return new Promise((resolve, reject) => {
-      const ffprobe = spawn('ffprobe', ['-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', url]);
+      const ffprobe = spawn("ffprobe", ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", url]);
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = "";
+      let stderr = "";
 
-      ffprobe.stdout.on('data', data => {
+      ffprobe.stdout.on("data", data => {
         stdout += data;
       });
 
-      ffprobe.stderr.on('data', data => {
+      ffprobe.stderr.on("data", data => {
         stderr += data;
       });
 
-      ffprobe.on('close', code => {
+      ffprobe.on("close", code => {
         if (code !== 0) {
           reject(new Error(`ffprobe exited with code ${code}: ${stderr}`));
           return;
@@ -330,7 +330,7 @@ class RadioBot {
         }
       });
 
-      ffprobe.on('error', reject);
+      ffprobe.on("error", reject);
     });
   }
 

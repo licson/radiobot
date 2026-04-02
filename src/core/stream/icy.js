@@ -1,4 +1,4 @@
-import { Transform } from 'stream';
+import { Transform } from "stream";
 
 const META_MAX_SIZE = 4080;
 
@@ -25,8 +25,8 @@ class ICYWriter extends Transform {
       return 1;
     }
 
-    const metaStr = `StreamTitle='${title.replace(/'/g, '')}';`;
-    const metaBytes = Buffer.byteLength(metaStr, 'ascii');
+    const metaStr = `StreamTitle='${title.replace(/'/g, "")}';`;
+    const metaBytes = Buffer.byteLength(metaStr, "ascii");
 
     const paddedLen = Math.ceil(metaBytes / 16) * 16;
 
@@ -36,7 +36,7 @@ class ICYWriter extends Transform {
     }
 
     this.#metaBuffer[0] = paddedLen / 16;
-    this.#metaBuffer.write(metaStr, 1, 'ascii');
+    this.#metaBuffer.write(metaStr, 1, "ascii");
 
     for (let i = metaBytes + 1; i <= paddedLen; i++) {
       this.#metaBuffer[i] = 0;

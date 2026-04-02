@@ -1,12 +1,12 @@
-import { Bot, GrammyError } from 'grammy';
-import { PlatformInterface } from '../interface.js';
-import { ChatSource } from '../../utils/chat-source.js';
+import { Bot, GrammyError } from "grammy";
+import { PlatformInterface } from "../interface.js";
+import { ChatSource } from "../../utils/chat-source.js";
 
 const AUDIO_EXTENSIONS = /\.(mp3|aac|m4a|ogg|flac|asf|wma|opus)$/i;
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
 
 export class TelegramPlatform extends PlatformInterface {
-  static name = 'telegram';
+  static name = "telegram";
 
   constructor(radio, config, logger) {
     super(radio, config, logger);
@@ -18,13 +18,13 @@ export class TelegramPlatform extends PlatformInterface {
 
   async start() {
     if (!this.config.telegram?.token) {
-      this.logger.warn('[Telegram] Missing bot token. Module will not load.');
+      this.logger.warn("[Telegram] Missing bot token. Module will not load.");
       return;
     }
 
     const token = this.config.telegram.token;
     if (!/^\d+:[a-zA-Z0-9\-_]+$/.test(token)) {
-      this.logger.warn('[Telegram] Invalid token format. Module will not load.');
+      this.logger.warn("[Telegram] Invalid token format. Module will not load.");
       return;
     }
 
@@ -43,7 +43,7 @@ export class TelegramPlatform extends PlatformInterface {
     await this.bot.start({
       onStart: () => {
         this.connected = true;
-        this.logger.log('[Telegram] Bot started successfully');
+        this.logger.log("[Telegram] Bot started successfully");
       }
     });
 
@@ -66,25 +66,25 @@ export class TelegramPlatform extends PlatformInterface {
   }
 
   setupHandlers() {
-    this.bot.command('start', async ctx => {
-      const message = this.config.telegram.startMessage || 'Welcome to RadioBot!';
+    this.bot.command("start", async ctx => {
+      const message = this.config.telegram.startMessage || "Welcome to RadioBot!";
       await ctx.reply(message, { reply_parameters: { message_id: ctx.message.message_id } });
     });
 
-    this.bot.command('queue', async ctx => {
+    this.bot.command("queue", async ctx => {
       const queueLength = this.radio.queue?.length || 0;
       const busy = queueLength >= (this.config.queueSize || 10);
-      const text = `There are ${queueLength} songs in the queue. ${busy ? "I'm quite busy right now, please find me again after, like, 30 minutes." : ''}`;
+      const text = `There are ${queueLength} songs in the queue. ${busy ? "I'm quite busy right now, please find me again after, like, 30 minutes." : ""}`;
       await ctx.reply(text, { reply_parameters: { message_id: ctx.message.message_id } });
     });
 
-    this.bot.command('list', async ctx => {
+    this.bot.command("list", async ctx => {
       const songList = this.radio.songList || [];
       const text = this.getSongListText(songList);
       await ctx.reply(text, { reply_parameters: { message_id: ctx.message.message_id } });
     });
 
-    this.bot.command('play_list', async ctx => {
+    this.bot.command("play_list", async ctx => {
       let text = this.getPlayListText();
       if (text.length >= 3966) {
         text = `${text.substring(0, 3965)}...\nThe playlist is longer than what Telegram is allowed to show.`;
@@ -92,55 +92,56 @@ export class TelegramPlatform extends PlatformInterface {
       await ctx.reply(text, { reply_parameters: { message_id: ctx.message.message_id } });
     });
 
-    this.bot.command('skip', async ctx => {
+    this.bot.command("skip", async ctx => {
       if (!this.isAdminTelegram(ctx.from?.username)) return;
 
       const queue = this.radio.queue;
       if (queue?.currentTask) {
         queue.remove(queue.currentTask);
       }
-      queue?.signal('stop');
-      await ctx.reply('The current song will stop and be removed shortly.', {
+      queue?.signal("stop");
+      await ctx.reply("The current song will stop and be removed shortly.", {
         reply_parameters: { message_id: ctx.message.message_id }
       });
     });
 
-    this.bot.command('next', async ctx => {
+    this.bot.command("next", async ctx => {
       if (!this.isAdminTelegram(ctx.from?.username)) return;
 
-      this.radio.queue?.signal('stop');
-      await ctx.reply('The next song will start shortly.', {
+      this.radio.queue?.signal("stop");
+      await ctx.reply("The next song will start shortly.", {
         reply_parameters: { message_id: ctx.message.message_id }
       });
     });
 
-    this.bot.command('tts', async ctx => {
+    this.bot.command("tts", async ctx => {
       if (!this.isAdminTelegram(ctx.from?.username)) return;
 
-      const speech = ctx.message.text.split(/\s/).slice(1).join(' ');
+      const speech = ctx.message.text.split(/\s/).slice(1)
+.join(" ");
       if (speech) {
         this.radio.doTTS?.(speech);
-        await ctx.reply('The text will be played shortly.', {
+        await ctx.reply("The text will be played shortly.", {
           reply_parameters: { message_id: ctx.message.message_id }
         });
       }
     });
 
-    this.bot.command('volume', async ctx => {
+    this.bot.command("volume", async ctx => {
       if (!this.isAdminTelegram(ctx.from?.username)) return;
 
       const args = ctx.message.text.split(/\s/);
       const volume = this.radio.volume || {};
 
       if (args.length !== 3 || volume[args[1]] === undefined) {
-        return ctx.reply(`usage: /volume ${Object.keys(volume).join('|')} {newVolume}`, {
+        return ctx.reply(`usage: /volume ${Object.keys(volume).join("|")} {newVolume}`, {
           reply_parameters: { message_id: ctx.message.message_id }
         });
       }
 
       const newVolume = parseFloat(args[2]);
       if (isNaN(newVolume) || newVolume > 1 || newVolume < 0) {
-        return ctx.reply('Volume must be a number between 0 and 1', {
+        return ctx.reply("Volume must be a number between 0 and 1", {
           reply_parameters: { message_id: ctx.message.message_id }
         });
       }
@@ -187,7 +188,7 @@ export class TelegramPlatform extends PlatformInterface {
       }
 
       const chatOrigin = ChatSource.create({
-        type: 'telegram',
+        type: "telegram",
         generalName: `${name} on Telegram`,
         chatId: ctx.chat.id,
         messageId: ctx.message.message_id
@@ -199,10 +200,10 @@ export class TelegramPlatform extends PlatformInterface {
         chatOrigin.original = song.chatOrigin;
       }
 
-      this.radio.doQueueSong?.('telegram:' + song.file, title, ttsText, chatOrigin);
+      this.radio.doQueueSong?.("telegram:" + song.file, title, ttsText, chatOrigin);
     });
 
-    this.bot.on('message:audio', async ctx => {
+    this.bot.on("message:audio", async ctx => {
       if (this.isQueueFull()) {
         return ctx.reply("I'm quite busy playing songs right now, please find me again after, like, 30 minutes.", {
           reply_parameters: { message_id: ctx.message.message_id }
@@ -233,17 +234,17 @@ export class TelegramPlatform extends PlatformInterface {
       }
 
       const chatOrigin = ChatSource.create({
-        type: 'telegram',
+        type: "telegram",
         generalName: `${name} on Telegram`,
         chatId: ctx.chat.id,
         messageId: ctx.message.message_id
       });
 
-      this.radio.doQueueSong?.('telegram:' + audio.file_id, titleText, ttsText, chatOrigin);
-      this.radio.addToSongList?.('telegram:' + audio.file_id, name, title, artist, chatOrigin);
+      this.radio.doQueueSong?.("telegram:" + audio.file_id, titleText, ttsText, chatOrigin);
+      this.radio.addToSongList?.("telegram:" + audio.file_id, name, title, artist, chatOrigin);
     });
 
-    this.bot.on('message:document', async ctx => {
+    this.bot.on("message:document", async ctx => {
       const doc = ctx.message.document;
       if (!AUDIO_EXTENSIONS.test(doc.file_name)) {
         return ctx.reply("I don't know these formats.", { reply_parameters: { message_id: ctx.message.message_id } });
@@ -278,7 +279,7 @@ export class TelegramPlatform extends PlatformInterface {
         }
 
         const chatOrigin = ChatSource.create({
-          type: 'telegram',
+          type: "telegram",
           generalName: `${name} on Telegram`,
           chatId: ctx.chat.id,
           messageId: ctx.message.message_id
@@ -290,9 +291,9 @@ export class TelegramPlatform extends PlatformInterface {
           });
         }
 
-        this.radio.doQueueSong?.('telegram:' + doc.file_id, titleText, ttsText, chatOrigin);
+        this.radio.doQueueSong?.("telegram:" + doc.file_id, titleText, ttsText, chatOrigin);
         this.radio.addToSongList?.(
-          'telegram:' + doc.file_id,
+          "telegram:" + doc.file_id,
           name,
           info.title || null,
           info.artist || null,
@@ -340,7 +341,7 @@ export class TelegramPlatform extends PlatformInterface {
         }
 
         const chatOrigin = ChatSource.create({
-          type: 'telegram',
+          type: "telegram",
           generalName: `${name} on Telegram`,
           chatId: ctx.chat.id,
           messageId: ctx.message.message_id
@@ -356,7 +357,7 @@ export class TelegramPlatform extends PlatformInterface {
         this.radio.addToSongList?.(url, name, info.title || null, info.artist || null, chatOrigin);
       } catch (err) {
         this.logger.error(`[Telegram] Error fetching URL: ${err.message}`);
-        await ctx.reply('Problems encountered when trying to fetch your song. Please try again later.', {
+        await ctx.reply("Problems encountered when trying to fetch your song. Please try again later.", {
           reply_parameters: { message_id: ctx.message.message_id }
         });
       }
@@ -365,29 +366,29 @@ export class TelegramPlatform extends PlatformInterface {
 
   setupEventListeners() {
     if (this.radio.events) {
-      this.radio.events.on('metadata', async title => {
+      this.radio.events.on("metadata", async title => {
         // Update playlist on metadata change if needed
       });
 
-      this.radio.events.on('text_message', async (chatOrigin, text) => {
-        if (chatOrigin?.type === 'telegram') {
+      this.radio.events.on("text_message", async (chatOrigin, text) => {
+        if (chatOrigin?.type === "telegram") {
           await this.sendMessage(chatOrigin, text);
         }
       });
 
-      this.radio.events.on('song_order_success', async chatOrigin => {
-        if (chatOrigin?.type === 'telegram') {
+      this.radio.events.on("song_order_success", async chatOrigin => {
+        if (chatOrigin?.type === "telegram") {
           await this.sendReply(
             chatOrigin,
-            'Your music is scheduled to play. Use /queue to see how many songs you need to wait.'
+            "Your music is scheduled to play. Use /queue to see how many songs you need to wait."
           );
         }
       });
 
-      this.radio.events.on('do_queue_song', async (chatOrigin, file, title) => {
+      this.radio.events.on("do_queue_song", async (chatOrigin, file, title) => {
         if (this.config.telegram.logForward && chatOrigin) {
           const original = chatOrigin.original || chatOrigin;
-          if (original.type === 'telegram') {
+          if (original.type === "telegram") {
             try {
               await this.bot.api.forwardMessage(this.config.telegram.logForward, original.chatId, original.messageId, {
                 disable_notification: true
@@ -397,15 +398,15 @@ export class TelegramPlatform extends PlatformInterface {
               this.logger.error(`[Telegram] Failed forwarding message: ${err.message}`);
             }
           } else {
-            const text = `${file.startsWith('http') ? file + '\n' : ''}${title}\nOrdered by ${chatOrigin.generalName}`;
+            const text = `${file.startsWith("http") ? file + "\n" : ""}${title}\nOrdered by ${chatOrigin.generalName}`;
             await this.bot.api.sendMessage(this.config.telegram.logForward, text);
           }
         }
       });
 
       if (this.config.telegram.playList) {
-        this.radio.events.on('queue_push', () => this.updatePlayList());
-        this.radio.events.on('queue_next', () => this.updatePlayList());
+        this.radio.events.on("queue_push", () => this.updatePlayList());
+        this.radio.events.on("queue_next", () => this.updatePlayList());
       }
     }
   }
@@ -422,7 +423,7 @@ export class TelegramPlatform extends PlatformInterface {
 
   async getFileUrl(fileId) {
     const file = await this.bot.api.getFile(fileId);
-    const basePath = this.config.telegram.apiServer || 'https://api.telegram.org';
+    const basePath = this.config.telegram.apiServer || "https://api.telegram.org";
     return `${basePath}/file/bot${this.config.telegram.token}/${file.file_path}`;
   }
 
@@ -484,9 +485,9 @@ export class TelegramPlatform extends PlatformInterface {
   }
 
   async getTelegramFileStream(fileId) {
-    const tmpdir = await import('os').then(m => m.tmpdir());
-    const { createWriteStream } = await import('fs');
-    const { pipeline } = await import('stream/promises');
+    const tmpdir = await import("os").then(m => m.tmpdir());
+    const { createWriteStream } = await import("fs");
+    const { pipeline } = await import("stream/promises");
 
     const cachePath = `${tmpdir()}/${fileId}.cached`;
 
@@ -496,7 +497,7 @@ export class TelegramPlatform extends PlatformInterface {
 
     const url = await this.getFileUrl(fileId);
 
-    const { request } = await import('undici');
+    const { request } = await import("undici");
     const response = await request(url);
 
     await pipeline(response.body, createWriteStream(cachePath));
@@ -510,7 +511,7 @@ export class TelegramPlatform extends PlatformInterface {
     this.cacheTimers.set(
       fileId,
       setTimeout(() => {
-        import('fs').then(fs => fs.unlink(cachePath, () => {}));
+        import("fs").then(fs => fs.unlink(cachePath, () => {}));
         this.fileCache.delete(fileId);
         this.cacheTimers.delete(fileId);
       }, 3600000)

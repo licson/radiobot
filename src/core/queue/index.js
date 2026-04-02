@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+import EventEmitter from "events";
 
 class TaskWrapper {
   constructor(taskFactory, info = {}, initTime = Date.now(), execCount = 0) {
@@ -17,7 +17,7 @@ function once(fn) {
   let called = false;
   return (...args) => {
     if (called) {
-      console.error(new Error('Callback called more than once'));
+      console.error(new Error("Callback called more than once"));
       return;
     }
     called = true;
@@ -63,7 +63,7 @@ class Queue extends EventEmitter {
   }
 
   push(task, info = {}) {
-    queueMicrotask(() => this.emit('push', task, info));
+    queueMicrotask(() => this.emit("push", task, info));
 
     const existing = this.findTask(info);
     for (const t of existing) {
@@ -100,7 +100,7 @@ class Queue extends EventEmitter {
     const item = new TaskWrapper(task, info);
     this.#prepend.unshift(item);
 
-    queueMicrotask(() => this.emit('unshift', task, info));
+    queueMicrotask(() => this.emit("unshift", task, info));
   }
 
   shift() {
@@ -119,7 +119,7 @@ class Queue extends EventEmitter {
     const item = this.#items.shift();
     this.#items.push(item);
     this.#updateQueue();
-    this.emit('repeat', item.taskFactory, item.info);
+    this.emit("repeat", item.taskFactory, item.info);
     return item;
   }
 
@@ -131,7 +131,7 @@ class Queue extends EventEmitter {
     for (let i = this.#overflow.length - 1; i >= 0; i--) {
       if (item === this.#overflow[i]) {
         this.#overflow.splice(i, 1);
-        this.emit('remove', item.taskFactory, item.info, error);
+        this.emit("remove", item.taskFactory, item.info, error);
         removed = true;
       }
     }
@@ -139,7 +139,7 @@ class Queue extends EventEmitter {
     for (let i = this.#prepend.length - 1; i >= 0; i--) {
       if (item === this.#prepend[i]) {
         this.#prepend.splice(i, 1);
-        this.emit('remove', item.taskFactory, item.info, error);
+        this.emit("remove", item.taskFactory, item.info, error);
         removed = true;
       }
     }
@@ -149,7 +149,7 @@ class Queue extends EventEmitter {
       if (item === this.#items[i]) {
         if (isOld) this.#oldCount--;
         this.#items.splice(i, 1);
-        this.emit('remove', item.taskFactory, item.info, error);
+        this.emit("remove", item.taskFactory, item.info, error);
         removed = true;
       }
     }
@@ -181,7 +181,7 @@ class Queue extends EventEmitter {
 
     task.execCount++;
     this.#currentTask = task;
-    this.emit('next', task.taskFactory, task.info);
+    this.emit("next", task.taskFactory, task.info);
 
     try {
       const callback = once((err, data) => {
@@ -190,9 +190,9 @@ class Queue extends EventEmitter {
 
         if (err) {
           this.remove(task, err);
-          this.emit('error', err, task.taskFactory, task.info);
+          this.emit("error", err, task.taskFactory, task.info);
         } else {
-          this.emit('success', data, task.taskFactory, task.info);
+          this.emit("success", data, task.taskFactory, task.info);
         }
 
         this.#next();
@@ -203,7 +203,7 @@ class Queue extends EventEmitter {
       this.#taskHandle = null;
       this.#currentTask = null;
       this.remove(task, err);
-      this.emit('error', err, task.taskFactory, task.info);
+      this.emit("error", err, task.taskFactory, task.info);
       this.#next();
     }
   }
@@ -222,7 +222,7 @@ class Queue extends EventEmitter {
   }
 
   signal(data) {
-    if (typeof this.#taskHandle === 'function') {
+    if (typeof this.#taskHandle === "function") {
       this.#taskHandle(data);
     }
   }
@@ -288,13 +288,13 @@ function mergeTasks(task1, task2) {
     }
 
     return function wrapHandle(data) {
-      if (data !== 'stop') {
-        throw new Error('Not implemented');
+      if (data !== "stop") {
+        throw new Error("Not implemented");
       }
 
       stopped = true;
 
-      if (typeof handle === 'function') {
+      if (typeof handle === "function") {
         handle(data);
       }
     };

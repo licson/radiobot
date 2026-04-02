@@ -1,5 +1,5 @@
-import { Readable } from 'stream';
-import EventEmitter from 'events';
+import { Readable } from "stream";
+import EventEmitter from "events";
 
 const TABLE_SIZE = 4000;
 
@@ -111,7 +111,7 @@ class MixerStream extends Readable {
     const sampleRate = options.sampleRate ?? 44100;
 
     if (bitDepth % 8 !== 0) {
-      throw new Error('Bit depth must be a multiple of 8');
+      throw new Error("Bit depth must be a multiple of 8");
     }
 
     this.bitDepth = bitDepth;
@@ -144,13 +144,13 @@ class MixerStream extends Readable {
 
   #loadNativeMixer() {
     try {
-      const binding = require('node-gyp-build')(__dirname);
-      if (typeof binding === 'function') {
+      const binding = require("node-gyp-build")(__dirname);
+      if (typeof binding === "function") {
         this.#nativeMix = binding;
-        console.log('[Mixer] Using optimized C++ implementation');
+        console.log("[Mixer] Using optimized C++ implementation");
       }
     } catch {
-      console.warn('[Mixer] Using JavaScript implementation');
+      console.warn("[Mixer] Using JavaScript implementation");
     }
   }
 
@@ -246,9 +246,9 @@ class MixerStream extends Readable {
     for (let i = this.sources.length - 1; i >= 0; i--) {
       const source = this.sources[i];
       if (source.ended && source.remainingSamples(this.sampleSize) === 0) {
-        source.emit('remove', source.error);
+        source.emit("remove", source.error);
         this.sources.splice(i, 1);
-        this.emit('remove_track', source);
+        this.emit("remove_track", source);
       }
     }
   }
@@ -289,7 +289,7 @@ class MixerStream extends Readable {
   }
 
   addSource(readable, labels = []) {
-    console.log('[Mixer] New track');
+    console.log("[Mixer] New track");
 
     const labelArray = Array.isArray(labels) ? labels : [labels];
 
@@ -300,15 +300,15 @@ class MixerStream extends Readable {
     });
 
     this.sources.push(source);
-    this.emit('new_track', source);
+    this.emit("new_track", source);
 
-    readable.on('end', () => {
+    readable.on("end", () => {
       source.ended = true;
     });
-    readable.on('close', () => {
+    readable.on("close", () => {
       source.ended = true;
     });
-    readable.on('error', err => {
+    readable.on("error", err => {
       source.error = err;
       source.ended = true;
     });
@@ -318,8 +318,8 @@ class MixerStream extends Readable {
       source.addBuffer(initial);
     }
 
-    source.on('remove', () => {
-      console.log('[Mixer] Removing track...');
+    source.on("remove", () => {
+      console.log("[Mixer] Removing track...");
     });
 
     return source;

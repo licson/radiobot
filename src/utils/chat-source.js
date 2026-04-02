@@ -1,10 +1,10 @@
 export class ChatSource {
   static create(options) {
     if (!options.type) {
-      throw new Error('ChatSource requires "type" property');
+      throw new Error("ChatSource requires \"type\" property");
     }
     if (!options.generalName) {
-      throw new Error('ChatSource requires "generalName" property');
+      throw new Error("ChatSource requires \"generalName\" property");
     }
     return new ChatSource(options);
   }
@@ -14,12 +14,12 @@ export class ChatSource {
     this.generalName = options.generalName;
     this.original = options.original || null;
 
-    if (options.type === 'telegram') {
+    if (options.type === "telegram") {
       this.chatId = options.chatId || options.chat_id;
       this.messageId = options.messageId || options.message_id;
     }
 
-    if (options.type === 'discord') {
+    if (options.type === "discord") {
       this.userId = options.userId || options.user_id;
       this.channelId = options.channelId || options.channel_id;
     }
@@ -35,12 +35,12 @@ export class ChatSource {
       obj.original = this.original;
     }
 
-    if (this.type === 'telegram') {
+    if (this.type === "telegram") {
       obj.chatId = this.chatId;
       obj.messageId = this.messageId;
     }
 
-    if (this.type === 'discord') {
+    if (this.type === "discord") {
       obj.userId = this.userId;
       obj.channelId = this.channelId;
     }

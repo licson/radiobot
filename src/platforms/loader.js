@@ -1,5 +1,5 @@
-import { TelegramPlatform } from './telegram/index.js';
-import { DiscordPlatform } from './discord/index.js';
+import { TelegramPlatform } from "./telegram/index.js";
+import { DiscordPlatform } from "./discord/index.js";
 
 const BUILTIN_PLATFORMS = {
   telegram: TelegramPlatform,
@@ -45,11 +45,11 @@ export class PlatformLoader {
     const enabled = [];
 
     if (this.config.telegram?.enabled) {
-      enabled.push('telegram');
+      enabled.push("telegram");
     }
 
     if (this.config.discord?.enabled) {
-      enabled.push('discord');
+      enabled.push("discord");
     }
 
     for (const name of enabled) {

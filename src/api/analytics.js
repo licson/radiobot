@@ -19,7 +19,7 @@ class Analytics {
       this.#onUpdate(this.getTotalListeners());
     }
 
-    console.log(`[Analytics] ${Math.abs(change)} listener(s) from ${origin} ${change < 0 ? 'left' : 'joined'}`);
+    console.log(`[Analytics] ${Math.abs(change)} listener(s) from ${origin} ${change < 0 ? "left" : "joined"}`);
     console.log(`[Analytics] Total listeners: ${this.getTotalListeners()}`);
   }
 

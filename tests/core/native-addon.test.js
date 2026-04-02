@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MixerStream } from '../../src/core/mixer/index.js';
-import { Readable } from 'stream';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { MixerStream } from "../../src/core/mixer/index.js";
+import { Readable } from "stream";
 
-describe('Native Addon', () => {
+describe("Native Addon", () => {
   let originalRequire;
   let consoleWarnSpy;
   let consoleLogSpy;
@@ -10,8 +10,8 @@ describe('Native Addon', () => {
   beforeEach(() => {
     // Store original require
     originalRequire = global.require;
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -19,11 +19,11 @@ describe('Native Addon', () => {
     vi.restoreAllMocks();
   });
 
-  describe('MixerStream native loading', () => {
-    it('should create mixer without native addon', () => {
+  describe("MixerStream native loading", () => {
+    it("should create mixer without native addon", () => {
       // Mock require to throw (simulating missing native addon)
       global.require = vi.fn().mockImplementation(() => {
-        throw new Error('Cannot find module');
+        throw new Error("Cannot find module");
       });
 
       const mixer = new MixerStream({
@@ -37,9 +37,9 @@ describe('Native Addon', () => {
       expect(mixer.sampleRate).toBe(44100);
     });
 
-    it('should log warning when native addon not found', () => {
+    it("should log warning when native addon not found", () => {
       global.require = vi.fn().mockImplementation(() => {
-        throw new Error('Cannot find module');
+        throw new Error("Cannot find module");
       });
 
       new MixerStream({
@@ -49,10 +49,10 @@ describe('Native Addon', () => {
         useNative: true
       });
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Using JavaScript implementation'));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Using JavaScript implementation"));
     });
 
-    it('should use native addon when available', () => {
+    it("should use native addon when available", () => {
       const mockNativeMix = vi.fn().mockReturnValue(Buffer.alloc(1024));
 
       global.require = vi.fn().mockImplementation(() => {
@@ -66,12 +66,12 @@ describe('Native Addon', () => {
         useNative: true
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Using optimized C++ implementation'));
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("Using optimized C++ implementation"));
     });
 
-    it('should not load native addon when useNative is false', () => {
+    it("should not load native addon when useNative is false", () => {
       const requireSpy = vi.fn().mockImplementation(() => {
-        throw new Error('Should not be called');
+        throw new Error("Should not be called");
       });
       global.require = requireSpy;
 
@@ -86,11 +86,11 @@ describe('Native Addon', () => {
     });
   });
 
-  describe('JavaScript mixing fallback', () => {
-    it('should produce output with JS implementation', () => {
+  describe("JavaScript mixing fallback", () => {
+    it("should produce output with JS implementation", () => {
       // Ensure no native addon
       global.require = vi.fn().mockImplementation(() => {
-        throw new Error('No native addon');
+        throw new Error("No native addon");
       });
 
       const mixer = new MixerStream({
@@ -108,13 +108,13 @@ describe('Native Addon', () => {
         }
       });
 
-      const source = mixer.addSource(sourceStream, ['test']);
+      const source = mixer.addSource(sourceStream, ["test"]);
       expect(source).toBeDefined();
     });
 
-    it('should handle multiple sources with JS implementation', () => {
+    it("should handle multiple sources with JS implementation", () => {
       global.require = vi.fn().mockImplementation(() => {
-        throw new Error('No native addon');
+        throw new Error("No native addon");
       });
 
       const mixer = new MixerStream({
@@ -130,7 +130,7 @@ describe('Native Addon', () => {
             this.push(null);
           }
         }),
-        ['music']
+        ["music"]
       );
 
       const source2 = mixer.addSource(
@@ -139,18 +139,18 @@ describe('Native Addon', () => {
             this.push(null);
           }
         }),
-        ['voice']
+        ["voice"]
       );
 
       expect(mixer.count()).toBe(2);
     });
   });
 
-  describe('Native vs JS parity', () => {
-    it('should produce deterministic output', () => {
+  describe("Native vs JS parity", () => {
+    it("should produce deterministic output", () => {
       // Test that JS implementation produces consistent output
       global.require = vi.fn().mockImplementation(() => {
-        throw new Error('No native addon');
+        throw new Error("No native addon");
       });
 
       const mixer1 = new MixerStream({
@@ -173,11 +173,11 @@ describe('Native Addon', () => {
     });
   });
 
-  describe('Error handling', () => {
-    it('should handle native addon that returns invalid data', () => {
+  describe("Error handling", () => {
+    it("should handle native addon that returns invalid data", () => {
       global.require = vi.fn().mockImplementation(() => {
         // Return something that's not a function
-        return 'invalid';
+        return "invalid";
       });
 
       // Should fall back to JS implementation
@@ -191,9 +191,9 @@ describe('Native Addon', () => {
       expect(mixer).toBeDefined();
     });
 
-    it('should handle require throwing unexpected error', () => {
+    it("should handle require throwing unexpected error", () => {
       global.require = vi.fn().mockImplementation(() => {
-        throw new TypeError('Unexpected error');
+        throw new TypeError("Unexpected error");
       });
 
       const mixer = new MixerStream({

@@ -6,13 +6,13 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.es2021,
+        ...globals.es2021
       },
       parserOptions: {
         ecmaVersion: "latest",
-        sourceType: "module",
-      },
-    },
+        sourceType: "module"
+      }
+    }
   },
   pluginJs.configs.recommended,
   {
@@ -29,7 +29,7 @@ export default [
       "no-loop-func": "error",
       "no-param-reassign": "warn",
       "no-console": "off",
-      quotes: ["error", "single"],
+      quotes: ["error", "double"],
       semi: ["error", "always"],
       "no-useless-constructor": "error",
       "no-dupe-class-members": "error",
@@ -48,8 +48,8 @@ export default [
       "comma-style": "error",
       camelcase: "warn",
       "new-cap": "warn",
-      "no-extra-boolean-cast": "off",
-    },
+      "no-extra-boolean-cast": "off"
+    }
   },
   {
     ignores: [
@@ -57,14 +57,9 @@ export default [
       "prebuilds/**",
       "build/**",
       "coverage/**",
-      "lib/**",
-      "streaming/**",
-      "url_handlers/**",
-      "utils/**",
-      "native_mixer/**",
-      "*.js",
+      "src/api/public/components/**",
       "!eslint.config.js",
-      "!vitest.config.js",
-    ],
-  },
+      "!vitest.config.js"
+    ]
+  }
 ];

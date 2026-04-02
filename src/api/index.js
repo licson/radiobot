@@ -1,12 +1,12 @@
-import http from 'http';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import express from 'express';
-import { Server as SocketIOServer } from 'socket.io';
-import { createCorsMiddleware } from './middleware/index.js';
-import { createInfoRoutes, createTitleRoutes, createQueueRoutes, createStreamRoutes } from './routes/index.js';
-import { createSocketHandler } from './socket/index.js';
-import { Analytics } from './analytics.js';
+import http from "http";
+import path from "path";
+import { fileURLToPath } from "url";
+import express from "express";
+import { Server as SocketIOServer } from "socket.io";
+import { createCorsMiddleware } from "./middleware/index.js";
+import { createInfoRoutes, createTitleRoutes, createQueueRoutes, createStreamRoutes } from "./routes/index.js";
+import { createSocketHandler } from "./socket/index.js";
+import { Analytics } from "./analytics.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -45,10 +45,10 @@ class APIServer {
   }
 
   #setupMiddleware() {
-    this.#app.set('x-powered-by', false);
+    this.#app.set("x-powered-by", false);
 
     this.#app.use((req, res, next) => {
-      res.header('Server', 'radiobot');
+      res.header("Server", "radiobot");
       next();
     });
 
@@ -71,14 +71,14 @@ class APIServer {
     };
 
     const infoRouter = createInfoRoutes(apiContext);
-    this.#app.use('/info', infoRouter);
-    this.#app.use('/status', infoRouter);
+    this.#app.use("/info", infoRouter);
+    this.#app.use("/status", infoRouter);
 
     this.#titleRoutes = createTitleRoutes(apiContext);
-    this.#app.use('/title', this.#titleRoutes.router);
+    this.#app.use("/title", this.#titleRoutes.router);
 
     const queueRouter = createQueueRoutes(apiContext);
-    this.#app.use('/queue', queueRouter);
+    this.#app.use("/queue", queueRouter);
 
     const streamContext = {
       config: this.#config,
@@ -88,18 +88,18 @@ class APIServer {
       analytics: this.#analytics
     };
     const streamRouter = createStreamRoutes(streamContext);
-    this.#app.use('/', streamRouter);
+    this.#app.use("/", streamRouter);
 
-    this.#app.get('/', (req, res) => {
+    this.#app.get("/", (req, res) => {
       if (this.#config.station?.url) {
         return res.redirect(this.#config.station.url);
       }
-      res.redirect('/player/');
+      res.redirect("/player/");
     });
 
-    this.#app.use('/player', express.static(path.join(__dirname, 'public', 'player')));
-    this.#app.use('/microphone', express.static(path.join(__dirname, 'public', 'microphone')));
-    this.#app.use('/components', express.static(path.join(__dirname, 'public', 'components')));
+    this.#app.use("/player", express.static(path.join(__dirname, "public", "player")));
+    this.#app.use("/microphone", express.static(path.join(__dirname, "public", "microphone")));
+    this.#app.use("/components", express.static(path.join(__dirname, "public", "components")));
   }
 
   #setupSocketIO() {
@@ -112,15 +112,15 @@ class APIServer {
       config: this.#config
     });
 
-    this.#io.on('connection', socketHandler);
+    this.#io.on("connection", socketHandler);
   }
 
   #getSocketIOOptions() {
     if (!this.#config.http?.allowCrossOrigin) {
       return {
         cors: {
-          origin: this.#config.http?.host || '*',
-          methods: ['GET', 'POST']
+          origin: this.#config.http?.host || "*",
+          methods: ["GET", "POST"]
         }
       };
     }
@@ -128,8 +128,8 @@ class APIServer {
     if (this.#config.http?.originWhitelist?.length === 0) {
       return {
         cors: {
-          origin: '*',
-          methods: ['GET', 'POST']
+          origin: "*",
+          methods: ["GET", "POST"]
         }
       };
     }
@@ -139,27 +139,27 @@ class APIServer {
     return {
       cors: {
         origin: allowedOrigins,
-        methods: ['GET', 'POST']
+        methods: ["GET", "POST"]
       }
     };
   }
 
   #setupErrorHandling() {
     this.#app.use((err, req, res, next) => {
-      console.error('[API Error]', err);
+      console.error("[API Error]", err);
       res.status(err.status || 500).json({
-        error: err.message || 'Internal Server Error'
+        error: err.message || "Internal Server Error"
       });
     });
 
     this.#app.use((req, res) => {
-      res.status(404).json({ error: 'Not Found' });
+      res.status(404).json({ error: "Not Found" });
     });
   }
 
   #setupMetadataWire() {
     if (this.#events) {
-      this.#events.on('metadata', title => {
+      this.#events.on("metadata", title => {
         this.setMetadata(title);
       });
     }
@@ -202,7 +202,7 @@ class APIServer {
         if (err) {
           reject(err);
         } else {
-          console.log('[API] Server stopped');
+          console.log("[API] Server stopped");
           resolve();
         }
       });

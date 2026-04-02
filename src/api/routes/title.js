@@ -1,12 +1,12 @@
-import { Router } from 'express';
-import { asyncHandler } from '../middleware/async.js';
+import { Router } from "express";
+import { asyncHandler } from "../middleware/async.js";
 
 export function createTitleRoutes({ config, queue }) {
   const router = Router();
 
   const pollingConnections = [];
   const sseConnections = [];
-  let currentTitle = '';
+  let currentTitle = "";
 
   function queueToObject(queue) {
     return {
@@ -16,24 +16,24 @@ export function createTitleRoutes({ config, queue }) {
   }
 
   function writeSSE(res, eventName, data) {
-    res.write(`event: ${eventName}\r\ndata: ${data.replace(/\r?\n/g, '\r\ndata: ')}\r\n\r\n`);
+    res.write(`event: ${eventName}\r\ndata: ${data.replace(/\r?\n/g, "\r\ndata: ")}\r\n\r\n`);
   }
 
   function keepSSEAlive(res) {
     res.sseKeepAliveTimer = setInterval(() => {
-      res.write(': ' + Date.now() + '\r\n\r\n');
+      res.write(": " + Date.now() + "\r\n\r\n");
     }, 30000);
   }
 
-  queue.on('push', () => {
+  queue.on("push", () => {
     sseConnections.forEach(res => {
-      writeSSE(res, 'songList', JSON.stringify(queueToObject(queue)));
+      writeSSE(res, "songList", JSON.stringify(queueToObject(queue)));
     });
   });
 
-  queue.on('next', () => {
+  queue.on("next", () => {
     sseConnections.forEach(res => {
-      writeSSE(res, 'songList', JSON.stringify(queueToObject(queue)));
+      writeSSE(res, "songList", JSON.stringify(queueToObject(queue)));
     });
   });
 
@@ -46,16 +46,16 @@ export function createTitleRoutes({ config, queue }) {
     pollingConnections.length = 0;
 
     sseConnections.forEach(res => {
-      writeSSE(res, 'title', title);
+      writeSSE(res, "title", title);
     });
   }
 
   router.get(
-    '/poll',
+    "/poll",
     asyncHandler(async (req, res) => {
-      res.header('Cache-Control', 'no-cache');
+      res.header("Cache-Control", "no-cache");
 
-      req.on('close', () => {
+      req.on("close", () => {
         const index = pollingConnections.indexOf(res);
         if (index >= 0) {
           pollingConnections.splice(index, 1);
@@ -75,15 +75,15 @@ export function createTitleRoutes({ config, queue }) {
   );
 
   router.get(
-    '/sse',
+    "/sse",
     asyncHandler(async (req, res) => {
       res.header({
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache'
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache"
       });
-      res.write('');
+      res.write("");
 
-      req.on('close', () => {
+      req.on("close", () => {
         const index = sseConnections.indexOf(res);
         clearInterval(res.sseKeepAliveTimer);
         if (index >= 0) {
@@ -92,33 +92,33 @@ export function createTitleRoutes({ config, queue }) {
       });
 
       sseConnections.push(res);
-      res.write('retry: 1000\r\n\r\n');
+      res.write("retry: 1000\r\n\r\n");
 
       writeSSE(
         res,
-        'info',
+        "info",
         JSON.stringify({
-          'station-name': config.station.name,
+          "station-name": config.station.name,
           url: config.station.url,
           description: config.station.description,
           bitrate: config.mp3?.bitrate || 192
         })
       );
 
-      writeSSE(res, 'title', currentTitle);
-      writeSSE(res, 'songList', JSON.stringify(queueToObject(queue)));
+      writeSSE(res, "title", currentTitle);
+      writeSSE(res, "songList", JSON.stringify(queueToObject(queue)));
       keepSSEAlive(res);
     })
   );
 
   router.get(
-    '/cover',
+    "/cover",
     asyncHandler(async (req, res) => {
       if (queue.currentTask != null) {
-        const info = queue.currentTask.info.title.split('-');
-        res.redirect('/components/default-artwork.png');
+        const info = queue.currentTask.info.title.split("-");
+        res.redirect("/components/default-artwork.png");
       } else {
-        res.redirect('/components/default-artwork.png');
+        res.redirect("/components/default-artwork.png");
       }
     })
   );

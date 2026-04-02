@@ -7,18 +7,18 @@ export function createCorsMiddleware(config = {}) {
     }
 
     if (originWhitelist.length === 0) {
-      res.header('Access-Control-Allow-Origin', '*');
+      res.header("Access-Control-Allow-Origin", "*");
     } else {
-      const origin = req.get('Origin');
+      const origin = req.get("Origin");
       if (origin && originWhitelist.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
+        res.header("Access-Control-Allow-Origin", origin);
       }
     }
 
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
 
-    if (req.method === 'OPTIONS') {
+    if (req.method === "OPTIONS") {
       return res.sendStatus(200);
     }
 

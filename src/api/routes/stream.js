@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import { createReadStream, existsSync } from 'fs';
-import { join } from 'path';
-import { ICYWriter } from '../../core/stream/icy.js';
-import { findOggPage } from '../../core/stream/ogg-helpers.js';
+import { Router } from "express";
+import { createReadStream, existsSync } from "fs";
+import { join } from "path";
+import { ICYWriter } from "../../core/stream/icy.js";
+import { findOggPage } from "../../core/stream/ogg-helpers.js";
 
 function createStreamRoutes(context) {
   const router = Router();
@@ -22,68 +22,68 @@ function createStreamRoutes(context) {
     }
   }
 
-  router.get('/live.mp3', (req, res) => {
+  router.get("/live.mp3", (req, res) => {
     if (!encoders?.mp3?.stream) {
-      return res.status(503).json({ error: 'MP3 encoder not available' });
+      return res.status(503).json({ error: "MP3 encoder not available" });
     }
 
-    updateListenerCount('mp3', mp3Listeners, 1);
+    updateListenerCount("mp3", mp3Listeners, 1);
 
     req.setTimeout(0);
     res.connection?.setTimeout?.(0);
     res.socket?.setTimeout?.(0);
 
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Transfer-Encoding", "chunked");
 
     if (config.station?.name) {
-      res.setHeader('icy-name', config.station.name);
+      res.setHeader("icy-name", config.station.name);
     }
     if (config.station?.description) {
-      res.setHeader('icy-description', config.station.description);
+      res.setHeader("icy-description", config.station.description);
     }
     if (config.station?.url) {
-      res.setHeader('icy-url', config.station.url);
+      res.setHeader("icy-url", config.station.url);
     }
-    res.setHeader('icy-pub', config.station?.public ? '1' : '0');
-    res.setHeader('icy-metaint', '0');
+    res.setHeader("icy-pub", config.station?.public ? "1" : "0");
+    res.setHeader("icy-metaint", "0");
 
     const stream = encoders.mp3.stream;
     stream.pipe(res);
 
-    req.on('close', () => {
-      updateListenerCount('mp3', mp3Listeners, -1);
+    req.on("close", () => {
+      updateListenerCount("mp3", mp3Listeners, -1);
       stream.unpipe(res);
     });
 
-    res.on('error', err => {
-      console.error('[Stream] MP3 response error:', err.message);
+    res.on("error", err => {
+      console.error("[Stream] MP3 response error:", err.message);
       stream.unpipe(res);
     });
   });
 
-  router.get('/live.ogg', (req, res) => {
+  router.get("/live.ogg", (req, res) => {
     if (!encoders?.opus?.stream) {
-      return res.status(503).json({ error: 'Opus encoder not available' });
+      return res.status(503).json({ error: "Opus encoder not available" });
     }
 
-    updateListenerCount('ogg', oggListeners, 1);
+    updateListenerCount("ogg", oggListeners, 1);
 
     req.setTimeout(0);
     res.connection?.setTimeout?.(0);
     res.socket?.setTimeout?.(0);
 
-    res.setHeader('Content-Type', 'audio/ogg');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Connection', 'keep-alive');
+    res.setHeader("Content-Type", "audio/ogg");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Connection", "keep-alive");
 
     if (config.station?.name) {
-      res.setHeader('icy-name', config.station.name);
+      res.setHeader("icy-name", config.station.name);
     }
     if (config.station?.description) {
-      res.setHeader('icy-description', config.station.description);
+      res.setHeader("icy-description", config.station.description);
     }
 
     const stream = encoders.opus.stream;
@@ -108,23 +108,23 @@ function createStreamRoutes(context) {
 
     stream.pipe(res);
 
-    req.on('close', () => {
-      updateListenerCount('ogg', oggListeners, -1);
+    req.on("close", () => {
+      updateListenerCount("ogg", oggListeners, -1);
       stream.unpipe(res);
     });
 
-    res.on('error', err => {
-      console.error('[Stream] Ogg response error:', err.message);
+    res.on("error", err => {
+      console.error("[Stream] Ogg response error:", err.message);
       stream.unpipe(res);
     });
   });
 
-  router.get('/stream', (req, res) => {
+  router.get("/stream", (req, res) => {
     if (!encoders?.mp3?.stream) {
-      return res.status(503).json({ error: 'MP3 encoder not available' });
+      return res.status(503).json({ error: "MP3 encoder not available" });
     }
 
-    updateListenerCount('shoutcast', streamListeners, 1);
+    updateListenerCount("shoutcast", streamListeners, 1);
 
     const metaInt = config.icy?.metaInt || 2048;
 
@@ -132,29 +132,29 @@ function createStreamRoutes(context) {
     res.connection?.setTimeout?.(0);
     res.socket?.setTimeout?.(0);
 
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('icy-metaint', String(metaInt));
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("icy-metaint", String(metaInt));
 
     if (config.station?.name) {
-      res.setHeader('icy-name', config.station.name);
+      res.setHeader("icy-name", config.station.name);
     }
     if (config.station?.description) {
-      res.setHeader('icy-description', config.station.description);
+      res.setHeader("icy-description", config.station.description);
     }
     if (config.station?.url) {
-      res.setHeader('icy-url', config.station.url);
+      res.setHeader("icy-url", config.station.url);
     }
-    res.setHeader('icy-pub', config.station?.public ? '1' : '0');
-    res.setHeader('icy-br', String(config.mp3?.bitrate || 192));
+    res.setHeader("icy-pub", config.station?.public ? "1" : "0");
+    res.setHeader("icy-br", String(config.mp3?.bitrate || 192));
 
     const icyWriter = new ICYWriter(metaInt);
     const mp3Stream = encoders.mp3.stream;
 
     mp3Stream.pipe(icyWriter).pipe(res);
 
-    let currentTitle = config.station?.name || 'RadioBot';
+    let currentTitle = config.station?.name || "RadioBot";
 
     const updateMetadata = title => {
       currentTitle = title;
@@ -162,34 +162,34 @@ function createStreamRoutes(context) {
     };
 
     if (events) {
-      events.on('metadata', updateMetadata);
+      events.on("metadata", updateMetadata);
     }
 
-    req.on('close', () => {
-      updateListenerCount('shoutcast', streamListeners, -1);
+    req.on("close", () => {
+      updateListenerCount("shoutcast", streamListeners, -1);
       if (events) {
-        events.off('metadata', updateMetadata);
+        events.off("metadata", updateMetadata);
       }
       mp3Stream.unpipe(icyWriter);
       icyWriter.unpipe(res);
     });
 
-    res.on('error', err => {
-      console.error('[Stream] ICY response error:', err.message);
+    res.on("error", err => {
+      console.error("[Stream] ICY response error:", err.message);
       if (events) {
-        events.off('metadata', updateMetadata);
+        events.off("metadata", updateMetadata);
       }
       mp3Stream.unpipe(icyWriter);
       icyWriter.unpipe(res);
     });
   });
 
-  router.get('/stream.ogg', (req, res) => {
+  router.get("/stream.ogg", (req, res) => {
     if (!encoders?.opus?.stream) {
-      return res.status(503).json({ error: 'Opus encoder not available' });
+      return res.status(503).json({ error: "Opus encoder not available" });
     }
 
-    updateListenerCount('ogg-icy', streamOggListeners, 1);
+    updateListenerCount("ogg-icy", streamOggListeners, 1);
 
     const metaInt = config.icy?.metaInt || 2048;
 
@@ -197,29 +197,29 @@ function createStreamRoutes(context) {
     res.connection?.setTimeout?.(0);
     res.socket?.setTimeout?.(0);
 
-    res.setHeader('Content-Type', 'audio/ogg');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Connection', 'keep-alive');
+    res.setHeader("Content-Type", "audio/ogg");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Connection", "keep-alive");
 
     if (config.station?.name) {
-      res.setHeader('icy-name', config.station.name);
+      res.setHeader("icy-name", config.station.name);
     }
     if (config.station?.description) {
-      res.setHeader('icy-description', config.station.description);
+      res.setHeader("icy-description", config.station.description);
     }
     if (config.station?.url) {
-      res.setHeader('icy-url', config.station.url);
+      res.setHeader("icy-url", config.station.url);
     }
-    res.setHeader('icy-pub', config.station?.public ? '1' : '0');
-    res.setHeader('icy-br', String(config.opus?.bitrate || 256));
+    res.setHeader("icy-pub", config.station?.public ? "1" : "0");
+    res.setHeader("icy-br", String(config.opus?.bitrate || 256));
 
     // Handle ICY metadata for OGG stream
     let icyWriter = null;
     let lastTitle = null;
 
     const setupIcy = () => {
-      if (req.headers['icy-metadata'] === '1') {
-        res.setHeader('icy-metaint', String(metaInt));
+      if (req.headers["icy-metadata"] === "1") {
+        res.setHeader("icy-metaint", String(metaInt));
         icyWriter = new ICYWriter(metaInt);
       }
     };
@@ -248,17 +248,17 @@ function createStreamRoutes(context) {
           const pos = findOggPage(data);
           if (pos >= 0) {
             stream.pause();
-            stream.off('data', onData);
+            stream.off("data", onData);
             cb(data.subarray(pos));
           }
         };
-        stream.on('data', onData);
+        stream.on("data", onData);
         stream.resume();
       };
       checkFrame();
     };
 
-    let currentTitle = config.station?.name || 'RadioBot';
+    let currentTitle = config.station?.name || "RadioBot";
 
     const updateMetadata = title => {
       currentTitle = title;
@@ -271,7 +271,7 @@ function createStreamRoutes(context) {
     setupIcy();
 
     if (events) {
-      events.on('metadata', updateMetadata);
+      events.on("metadata", updateMetadata);
     }
 
     const stream = encoders.opus.stream;
@@ -302,10 +302,10 @@ function createStreamRoutes(context) {
       });
     }
 
-    req.on('close', () => {
-      updateListenerCount('ogg-icy', streamOggListeners, -1);
+    req.on("close", () => {
+      updateListenerCount("ogg-icy", streamOggListeners, -1);
       if (events) {
-        events.off('metadata', updateMetadata);
+        events.off("metadata", updateMetadata);
       }
       stream.unpipe(icyWriter || res);
       if (icyWriter) {
@@ -313,10 +313,10 @@ function createStreamRoutes(context) {
       }
     });
 
-    res.on('error', err => {
-      console.error('[Stream] Ogg ICY response error:', err.message);
+    res.on("error", err => {
+      console.error("[Stream] Ogg ICY response error:", err.message);
       if (events) {
-        events.off('metadata', updateMetadata);
+        events.off("metadata", updateMetadata);
       }
       stream.unpipe(icyWriter || res);
       if (icyWriter) {
@@ -325,93 +325,93 @@ function createStreamRoutes(context) {
     });
   });
 
-  router.get('/live.m3u8', (req, res) => {
+  router.get("/live.m3u8", (req, res) => {
     const segmentDir = encoders?.hls?.segmentDir;
 
     if (!segmentDir) {
-      return res.status(503).json({ error: 'HLS encoder not available' });
+      return res.status(503).json({ error: "HLS encoder not available" });
     }
 
-    const playlistPath = join(segmentDir, 'live.m3u8');
+    const playlistPath = join(segmentDir, "live.m3u8");
 
     if (!existsSync(playlistPath)) {
-      return res.status(404).json({ error: 'HLS playlist not ready' });
+      return res.status(404).json({ error: "HLS playlist not ready" });
     }
 
-    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+    res.setHeader("Cache-Control", "no-cache");
 
     const fileStream = createReadStream(playlistPath);
     fileStream.pipe(res);
 
-    fileStream.on('error', err => {
-      console.error('[Stream] HLS playlist error:', err.message);
+    fileStream.on("error", err => {
+      console.error("[Stream] HLS playlist error:", err.message);
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to read playlist' });
+        res.status(500).json({ error: "Failed to read playlist" });
       }
     });
   });
 
-  router.get('/seg_:num.mp3', (req, res) => {
+  router.get("/seg_:num.mp3", (req, res) => {
     const segmentDir = encoders?.hls?.segmentDir;
 
     if (!segmentDir) {
-      return res.status(503).json({ error: 'HLS encoder not available' });
+      return res.status(503).json({ error: "HLS encoder not available" });
     }
 
     const segmentNum = req.params.num || req.path.match(/seg_(\d+)\.mp3/)?.[1];
 
     if (!segmentNum) {
-      return res.status(400).json({ error: 'Invalid segment number' });
+      return res.status(400).json({ error: "Invalid segment number" });
     }
 
-    const segmentPath = join(segmentDir, `seg_${String(segmentNum).padStart(3, '0')}.mp3`);
+    const segmentPath = join(segmentDir, `seg_${String(segmentNum).padStart(3, "0")}.mp3`);
 
     if (!existsSync(segmentPath)) {
-      return res.status(404).json({ error: 'Segment not found' });
+      return res.status(404).json({ error: "Segment not found" });
     }
 
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Cache-Control", "public, max-age=3600");
 
     const fileStream = createReadStream(segmentPath);
     fileStream.pipe(res);
 
-    fileStream.on('error', err => {
-      console.error('[Stream] HLS segment error:', err.message);
+    fileStream.on("error", err => {
+      console.error("[Stream] HLS segment error:", err.message);
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to read segment' });
+        res.status(500).json({ error: "Failed to read segment" });
       }
     });
   });
 
-  router.get('/live.raw', (req, res) => {
+  router.get("/live.raw", (req, res) => {
     if (!mixer) {
-      return res.status(503).json({ error: 'Mixer not available' });
+      return res.status(503).json({ error: "Mixer not available" });
     }
 
-    updateListenerCount('raw-pcm', rawListeners, 1);
+    updateListenerCount("raw-pcm", rawListeners, 1);
 
     req.setTimeout(0);
     res.connection?.setTimeout?.(0);
     res.socket?.setTimeout?.(0);
 
-    res.setHeader('Content-Type', 'application/octet-stream');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Radio-SampleSize', '16');
-    res.setHeader('X-Radio-SampleRate', String(config.mixer?.sampleRate || 44100));
-    res.setHeader('X-Radio-Channels', String(config.mixer?.channels || 2));
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Radio-SampleSize", "16");
+    res.setHeader("X-Radio-SampleRate", String(config.mixer?.sampleRate || 44100));
+    res.setHeader("X-Radio-Channels", String(config.mixer?.channels || 2));
 
     mixer.pipe(res, { end: false });
 
-    req.on('close', () => {
-      updateListenerCount('raw-pcm', rawListeners, -1);
+    req.on("close", () => {
+      updateListenerCount("raw-pcm", rawListeners, -1);
       mixer.unpipe(res);
     });
 
-    res.on('error', err => {
-      console.error('[Stream] Raw PCM response error:', err.message);
+    res.on("error", err => {
+      console.error("[Stream] Raw PCM response error:", err.message);
       mixer.unpipe(res);
     });
   });

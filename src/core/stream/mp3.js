@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn } from "child_process";
 
 class FFmpegEncoder {
   #process = null;
@@ -13,30 +13,30 @@ class FFmpegEncoder {
   start(mixerStream) {
     const { sampleRate, channels, bitrate, normalize } = this.#config;
 
-    this.#process = spawn('ffmpeg', [
-      '-f',
-      's16le',
-      '-ac',
+    this.#process = spawn("ffmpeg", [
+      "-f",
+      "s16le",
+      "-ac",
       String(channels),
-      '-ar',
+      "-ar",
       String(sampleRate),
-      '-i',
-      '-',
-      '-c:a',
-      'libmp3lame',
-      '-ac',
+      "-i",
+      "-",
+      "-c:a",
+      "libmp3lame",
+      "-ac",
       String(channels),
-      '-ar',
+      "-ar",
       String(sampleRate),
-      '-ab',
+      "-ab",
       `${bitrate}k`,
-      '-af',
-      normalize ? 'dynaudnorm=f=250:g=15' : 'anull',
-      '-bufsize',
+      "-af",
+      normalize ? "dynaudnorm=f=250:g=15" : "anull",
+      "-bufsize",
       `${bitrate * 2}k`,
-      '-f',
-      'mp3',
-      '-'
+      "-f",
+      "mp3",
+      "-"
     ]);
 
     this.#stdin = this.#process.stdin;
@@ -47,11 +47,11 @@ class FFmpegEncoder {
 
     mixerStream.pipe(this.#stdin);
 
-    this.#process.on('error', err => {
-      console.error('[MP3 Encoder] Process error:', err);
+    this.#process.on("error", err => {
+      console.error("[MP3 Encoder] Process error:", err);
     });
 
-    this.#process.on('exit', (code, signal) => {
+    this.#process.on("exit", (code, signal) => {
       if (code !== 0 && code !== null) {
         console.error(`[MP3 Encoder] Process exited with code ${code}, signal ${signal}`);
       }
@@ -66,7 +66,7 @@ class FFmpegEncoder {
 
   stop() {
     if (this.#process) {
-      this.#process.kill('SIGTERM');
+      this.#process.kill("SIGTERM");
       this.#process = null;
     }
   }

@@ -1,12 +1,12 @@
-import { Innertube } from 'youtubei.js';
-import { SourceInterface } from '../interface.js';
+import { Innertube } from "youtubei.js";
+import { SourceInterface } from "../interface.js";
 
 const YOUTUBE_REGEX =
   /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 const YOUTUBE_SHORTS_REGEX = /^(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/;
 
 export class YouTubeSource extends SourceInterface {
-  static name = 'youtube';
+  static name = "youtube";
 
   constructor(config, logger) {
     super(config, logger);
@@ -19,19 +19,19 @@ export class YouTubeSource extends SourceInterface {
 
     try {
       this.yt = await Innertube.create({
-        lang: 'en',
-        location: 'US',
+        lang: "en",
+        location: "US",
         retrieve_player: false
       });
       this.initialized = true;
     } catch (err) {
-      this.logger.error('[YouTube] Failed to initialize Innertube:', err.message);
+      this.logger.error("[YouTube] Failed to initialize Innertube:", err.message);
       throw err;
     }
   }
 
   canHandle(url) {
-    if (!url || typeof url !== 'string') return false;
+    if (!url || typeof url !== "string") return false;
     return YOUTUBE_REGEX.test(url) || YOUTUBE_SHORTS_REGEX.test(url);
   }
 
@@ -50,18 +50,18 @@ export class YouTubeSource extends SourceInterface {
 
     const videoId = this.extractVideoId(url);
     if (!videoId) {
-      throw new Error('Invalid YouTube URL');
+      throw new Error("Invalid YouTube URL");
     }
 
     try {
       const info = await this.yt.getInfo(videoId);
 
       if (info.basic_info?.is_live) {
-        throw new Error('Live streams are not supported');
+        throw new Error("Live streams are not supported");
       }
 
-      const title = info.basic_info?.title || 'Unknown Title';
-      const artist = info.basic_info?.author || 'Unknown Artist';
+      const title = info.basic_info?.title || "Unknown Title";
+      const artist = info.basic_info?.author || "Unknown Artist";
 
       return {
         title,
@@ -80,14 +80,14 @@ export class YouTubeSource extends SourceInterface {
 
     const videoId = this.extractVideoId(url);
     if (!videoId) {
-      throw new Error('Invalid YouTube URL');
+      throw new Error("Invalid YouTube URL");
     }
 
     try {
       const stream = await this.yt.download(videoId, {
-        type: 'audio',
-        quality: 'best',
-        format: 'mp4'
+        type: "audio",
+        quality: "best",
+        format: "mp4"
       });
 
       return stream;
@@ -102,7 +102,7 @@ export class YouTubeSource extends SourceInterface {
 
     const videoId = this.extractVideoId(url);
     if (!videoId) {
-      throw new Error('Invalid YouTube URL');
+      throw new Error("Invalid YouTube URL");
     }
 
     try {
@@ -114,7 +114,7 @@ export class YouTubeSource extends SourceInterface {
         }) || [];
 
       if (audioFormats.length === 0) {
-        throw new Error('No audio-only formats available');
+        throw new Error("No audio-only formats available");
       }
 
       audioFormats.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));

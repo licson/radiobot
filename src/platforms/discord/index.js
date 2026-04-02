@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, ActivityType, Partials, ChannelType } from 'discord.js';
+import { Client, GatewayIntentBits, Events, ActivityType, Partials, ChannelType } from "discord.js";
 import {
   joinVoiceChannel,
   createAudioPlayer,
@@ -6,14 +6,14 @@ import {
   AudioPlayerStatus,
   VoiceConnectionStatus,
   StreamType
-} from '@discordjs/voice';
-import { PlatformInterface } from '../interface.js';
-import { ChatSource } from '../../utils/chat-source.js';
+} from "@discordjs/voice";
+import { PlatformInterface } from "../interface.js";
+import { ChatSource } from "../../utils/chat-source.js";
 
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
 
 export class DiscordPlatform extends PlatformInterface {
-  static name = 'discord';
+  static name = "discord";
 
   constructor(radio, config, logger) {
     super(radio, config, logger);
@@ -27,7 +27,7 @@ export class DiscordPlatform extends PlatformInterface {
 
   async start() {
     if (!this.config.discord?.token || !this.config.discord?.enabled) {
-      this.logger.warn('[Discord] Missing bot token or module not enabled. Module will not load.');
+      this.logger.warn("[Discord] Missing bot token or module not enabled. Module will not load.");
       return;
     }
 
@@ -57,7 +57,7 @@ export class DiscordPlatform extends PlatformInterface {
 
     this.audioPlayer = createAudioPlayer({
       behaviors: {
-        noSubscriber: 'play'
+        noSubscriber: "play"
       }
     });
 
@@ -94,8 +94,8 @@ export class DiscordPlatform extends PlatformInterface {
       if (message.channel.type !== ChannelType.DM) return;
       if (message.author.bot) return;
 
-      if (message.content === 'ping') {
-        return message.reply('pong');
+      if (message.content === "ping") {
+        return message.reply("pong");
       }
 
       await this.handleDMCommand(message);
@@ -107,64 +107,65 @@ export class DiscordPlatform extends PlatformInterface {
     const name = message.author.username;
     const userId = message.author.id;
 
-    if (content === 'queue' || content.startsWith('queue ')) {
+    if (content === "queue" || content.startsWith("queue ")) {
       const queueLength = this.radio.queue?.length || 0;
       const busy = queueLength >= (this.config.queueSize || 10);
-      const text = `There are ${queueLength} songs in the queue. ${busy ? "I'm quite busy right now, please find me again after, like, 30 minutes." : ''}`;
+      const text = `There are ${queueLength} songs in the queue. ${busy ? "I'm quite busy right now, please find me again after, like, 30 minutes." : ""}`;
       return this.sendDM(userId, text);
     }
 
-    if (content === 'list' || content.startsWith('list ')) {
+    if (content === "list" || content.startsWith("list ")) {
       const songList = this.radio.songList || [];
       return this.sendDM(userId, this.getSongListText(songList));
     }
 
-    if (content === 'play_list' || content.startsWith('play_list ')) {
+    if (content === "play_list" || content.startsWith("play_list ")) {
       return this.sendDM(userId, this.getPlayListText());
     }
 
-    if (content === 'skip' || content.startsWith('skip ')) {
+    if (content === "skip" || content.startsWith("skip ")) {
       if (!this.isAdminDiscord(userId)) return;
 
       const queue = this.radio.queue;
       if (queue?.currentTask) {
         queue.remove(queue.currentTask);
       }
-      queue?.signal('stop');
-      return this.sendDM(userId, 'The current song will stop and be removed shortly.');
+      queue?.signal("stop");
+      return this.sendDM(userId, "The current song will stop and be removed shortly.");
     }
 
-    if (content === 'next' || content.startsWith('next ')) {
+    if (content === "next" || content.startsWith("next ")) {
       if (!this.isAdminDiscord(userId)) return;
 
-      this.radio.queue?.signal('stop');
-      return this.sendDM(userId, 'The next song will start shortly.');
+      this.radio.queue?.signal("stop");
+      return this.sendDM(userId, "The next song will start shortly.");
     }
 
-    if (content === 'tts' || content.startsWith('tts ')) {
+    if (content === "tts" || content.startsWith("tts ")) {
       if (!this.isAdminDiscord(userId)) return;
 
-      const speech = content.split(/\s/).slice(1).join(' ');
+      const speech = content.split(/\s/).slice(1)
+.join(" ");
       if (speech) {
         this.radio.doTTS?.(speech);
-        return this.sendDM(userId, 'The text will be played shortly.');
+        return this.sendDM(userId, "The text will be played shortly.");
       }
       return;
     }
 
-    if (content.startsWith('volume ')) {
+    if (content.startsWith("volume ")) {
       if (!this.isAdminDiscord(userId)) return;
 
       const args = content.split(/\s/);
       const volume = this.radio.volume || {};
 
       if (args.length !== 3 || volume[args[1]] === undefined) {
-        return this.sendDM(userId, `usage: volume ${Object.keys(volume).join('|')} {newVolume}`);
+        return this.sendDM(userId, `usage: volume ${Object.keys(volume).join("|")} {newVolume}`);
       }
 
       const newVolume = parseFloat(args[2]);
       if (isNaN(newVolume) || newVolume > 1 || newVolume < 0) {
-        return this.sendDM(userId, 'Volume must be a number between 0 and 1');
+        return this.sendDM(userId, "Volume must be a number between 0 and 1");
       }
 
       this.logger.log(`[Discord] Volume of ${args[1]}: ${newVolume * 100}%.`);
@@ -206,7 +207,7 @@ export class DiscordPlatform extends PlatformInterface {
       }
 
       const chatOrigin = ChatSource.create({
-        type: 'discord',
+        type: "discord",
         generalName: `${name} (${userId}) on Discord`,
         userId
       });
@@ -234,7 +235,7 @@ export class DiscordPlatform extends PlatformInterface {
     const messages = await message.channel.messages.fetch({ before: message.id, limit: 1 });
     if (messages.size === 0) {
       const startMessage =
-        this.config.discord.startMessage || 'Welcome to RadioBot! Send me a URL or audio file to queue a song.';
+        this.config.discord.startMessage || "Welcome to RadioBot! Send me a URL or audio file to queue a song.";
       await this.sendDM(userId, startMessage);
     }
   }
@@ -270,7 +271,7 @@ export class DiscordPlatform extends PlatformInterface {
       }
 
       const chatOrigin = ChatSource.create({
-        type: 'discord',
+        type: "discord",
         generalName: `${name} (${userId}) on Discord`,
         userId
       });
@@ -279,7 +280,7 @@ export class DiscordPlatform extends PlatformInterface {
       this.radio.addToSongList?.(url, name, info.title || null, info.artist || null, chatOrigin);
     } catch (err) {
       this.logger.error(`[Discord] Error fetching URL: ${err.message}`);
-      await this.sendDM(userId, 'Problems encountered when trying to fetch your song. Please try again later.');
+      await this.sendDM(userId, "Problems encountered when trying to fetch your song. Please try again later.");
     }
   }
 
@@ -315,7 +316,7 @@ export class DiscordPlatform extends PlatformInterface {
         }
 
         const chatOrigin = ChatSource.create({
-          type: 'discord',
+          type: "discord",
           generalName: `${name} (${userId}) on Discord`,
           userId
         });
@@ -358,8 +359,8 @@ export class DiscordPlatform extends PlatformInterface {
     await this.initPlayLists();
 
     if (this.radio.events) {
-      this.radio.events.on('queue_push', () => this.updatePlayLists());
-      this.radio.events.on('queue_next', () => this.updatePlayLists());
+      this.radio.events.on("queue_push", () => this.updatePlayLists());
+      this.radio.events.on("queue_next", () => this.updatePlayLists());
     }
   }
 
@@ -452,29 +453,29 @@ export class DiscordPlatform extends PlatformInterface {
   setupEventListeners() {
     if (!this.radio.events) return;
 
-    this.radio.events.on('metadata', async title => {
+    this.radio.events.on("metadata", async title => {
       await this.setNowPlaying(title);
     });
 
-    this.radio.events.on('text_message', async (chatOrigin, text) => {
-      if (chatOrigin?.type === 'discord') {
+    this.radio.events.on("text_message", async (chatOrigin, text) => {
+      if (chatOrigin?.type === "discord") {
         await this.sendDM(chatOrigin.userId, text);
       }
     });
 
-    this.radio.events.on('song_order_success', async chatOrigin => {
-      if (chatOrigin?.type === 'discord') {
+    this.radio.events.on("song_order_success", async chatOrigin => {
+      if (chatOrigin?.type === "discord") {
         await this.sendDM(
           chatOrigin.userId,
-          'Your music is scheduled to play. Send `queue` to see how many songs you need to wait.'
+          "Your music is scheduled to play. Send `queue` to see how many songs you need to wait."
         );
       }
     });
 
-    this.radio.events.on('do_queue_song', async (chatOrigin, file, title) => {
+    this.radio.events.on("do_queue_song", async (chatOrigin, file, title) => {
       for (const channel of this.logChannels) {
         try {
-          const text = `${file.startsWith('http') ? file + '\n' : ''}Title: ${title}\nOrdered by ${chatOrigin?.generalName || 'Unknown'}`;
+          const text = `${file.startsWith("http") ? file + "\n" : ""}Title: ${title}\nOrdered by ${chatOrigin?.generalName || "Unknown"}`;
           await channel.send(text);
         } catch (err) {
           this.logger.error(`[Discord] Failed to send log message: ${err.message}`);
@@ -489,7 +490,7 @@ export class DiscordPlatform extends PlatformInterface {
   }
 
   isAdmin(chatOrigin) {
-    if (chatOrigin?.type !== 'discord') return false;
+    if (chatOrigin?.type !== "discord") return false;
     return this.isAdminDiscord(chatOrigin.userId);
   }
 
@@ -517,12 +518,12 @@ async function entersState(connection, status, timeout) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       cleanup();
-      reject(new Error('Timeout waiting for state'));
+      reject(new Error("Timeout waiting for state"));
     }, timeout);
 
     const cleanup = () => {
       clearTimeout(timer);
-      connection.off('stateChange', onStateChange);
+      connection.off("stateChange", onStateChange);
     };
 
     const onStateChange = (_, newState) => {
@@ -532,7 +533,7 @@ async function entersState(connection, status, timeout) {
       }
     };
 
-    connection.on('stateChange', onStateChange);
+    connection.on("stateChange", onStateChange);
   });
 }
 

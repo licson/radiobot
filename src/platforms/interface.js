@@ -1,9 +1,9 @@
 export class PlatformInterface {
-  static name = 'base';
+  static name = "base";
 
   constructor(radio, config, logger) {
     if (this.constructor === PlatformInterface) {
-      throw new Error('PlatformInterface is abstract and cannot be instantiated directly');
+      throw new Error("PlatformInterface is abstract and cannot be instantiated directly");
     }
     this.radio = radio;
     this.config = config;
@@ -12,19 +12,19 @@ export class PlatformInterface {
   }
 
   async start() {
-    throw new Error('start() must be implemented by subclass');
+    throw new Error("start() must be implemented by subclass");
   }
 
   async stop() {
-    throw new Error('stop() must be implemented by subclass');
+    throw new Error("stop() must be implemented by subclass");
   }
 
   async sendMessage(chatOrigin, text) {
-    throw new Error('sendMessage() must be implemented by subclass');
+    throw new Error("sendMessage() must be implemented by subclass");
   }
 
   async sendReply(chatOrigin, text) {
-    throw new Error('sendReply() must be implemented by subclass');
+    throw new Error("sendReply() must be implemented by subclass");
   }
 
   isAdmin(chatOrigin) {
@@ -37,34 +37,34 @@ export class PlatformInterface {
 
   getPlayListText() {
     const queue = this.radio.queue;
-    let output = '';
+    let output = "";
 
     if (queue?.currentTask) {
-      output += 'Playing:\n';
+      output += "Playing:\n";
       output += `-> ${queue.currentTask.info.title}\n`;
     }
 
-    output += 'Music To Play:\n';
+    output += "Music To Play:\n";
 
     if (queue) {
       output += queue
         .getAllTasks()
         .map(task => {
-          const played = task.execCount > 0 ? ` (played ${task.execCount} time${task.execCount > 1 ? 's' : ''})` : '';
+          const played = task.execCount > 0 ? ` (played ${task.execCount} time${task.execCount > 1 ? "s" : ""})` : "";
           return `-- ${task.info.title}${played}`;
         })
-        .join('\n');
+        .join("\n");
     }
 
-    return output || 'Queue is empty';
+    return output || "Queue is empty";
   }
 
   getSongListText(songList) {
     if (!songList || songList.length === 0) {
-      return 'There are no songs in the list.';
+      return "There are no songs in the list.";
     }
 
-    let output = 'Recent songs:\n';
+    let output = "Recent songs:\n";
     songList.forEach((item, i) => {
       output += `song_${i + 1} uploaded by ${item.name}`;
       if (item.title) {
@@ -72,9 +72,9 @@ export class PlatformInterface {
         if (item.artist) {
           output += ` performed by ${item.artist}`;
         }
-        output += ')';
+        output += ")";
       }
-      output += '\n';
+      output += "\n";
     });
 
     return output;

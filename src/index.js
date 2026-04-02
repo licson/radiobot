@@ -1,14 +1,14 @@
-import { loadConfig } from './config.js';
-import { APIServer } from './api/index.js';
-import { PlatformLoader } from './platforms/loader.js';
-import { RadioBot } from './core/radio.js';
-import { FFmpegEncoder } from './core/stream/mp3.js';
-import { OpusEncoder } from './core/stream/opus.js';
-import { HLSSegmenter } from './core/stream/hls.js';
-import { TimedBroadcast } from './core/timed-broadcast.js';
-import { TCPServer } from './core/tcp-server.js';
-import { MemoryLogger } from './utils/memory-logger.js';
-import { createLogger } from './utils/logger.js';
+import { loadConfig } from "./config.js";
+import { APIServer } from "./api/index.js";
+import { PlatformLoader } from "./platforms/loader.js";
+import { RadioBot } from "./core/radio.js";
+import { FFmpegEncoder } from "./core/stream/mp3.js";
+import { OpusEncoder } from "./core/stream/opus.js";
+import { HLSSegmenter } from "./core/stream/hls.js";
+import { TimedBroadcast } from "./core/timed-broadcast.js";
+import { TCPServer } from "./core/tcp-server.js";
+import { MemoryLogger } from "./utils/memory-logger.js";
+import { createLogger } from "./utils/logger.js";
 
 let config;
 let logger;
@@ -89,7 +89,7 @@ function setupGracefulShutdown() {
       }
 
       if (radio?.events) {
-        radio.events.emit('shutdown');
+        radio.events.emit("shutdown");
       }
 
       if (platformLoader) {
@@ -100,23 +100,23 @@ function setupGracefulShutdown() {
         await apiServer.stop();
       }
 
-      logger.log('[RadioBot] All components stopped');
+      logger.log("[RadioBot] All components stopped");
       process.exit(0);
     } catch (err) {
-      logger.error('[RadioBot] Error during shutdown:', err.message);
+      logger.error("[RadioBot] Error during shutdown:", err.message);
       process.exit(1);
     }
   };
 
-  process.on('SIGINT', () => shutdown('SIGINT'));
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
 async function main() {
   config = await loadConfig();
-  logger = createLogger('RadioBot');
+  logger = createLogger("RadioBot");
 
-  logger.log('[RadioBot] Initializing...');
+  logger.log("[RadioBot] Initializing...");
 
   radio = new RadioBot(config, logger);
 
@@ -157,11 +157,11 @@ async function main() {
 
   await apiServer.start(config.http.port);
 
-  logger.log('[RadioBot] Server started successfully');
+  logger.log("[RadioBot] Server started successfully");
 }
 
 main().catch(err => {
   const log = logger || console;
-  log.error('[RadioBot] Failed to start:', err);
+  log.error("[RadioBot] Failed to start:", err);
   process.exit(1);
 });

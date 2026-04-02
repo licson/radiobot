@@ -1,18 +1,18 @@
-import { spawn } from 'child_process';
-import { SourceInterface } from '../interface.js';
+import { spawn } from "child_process";
+import { SourceInterface } from "../interface.js";
 
 const SOUNDCLOUD_REGEX = /^https?:\/\/(?:www\.)?soundcloud\.com\/[\w-]+\/[\w-]+/;
 
 export class SoundCloudSource extends SourceInterface {
-  static name = 'soundcloud';
+  static name = "soundcloud";
 
   constructor(config, logger) {
     super(config, logger);
-    this.ytdlpPath = config?.ytdlpPath || 'yt-dlp';
+    this.ytdlpPath = config?.ytdlpPath || "yt-dlp";
   }
 
   canHandle(url) {
-    if (!url || typeof url !== 'string') return false;
+    if (!url || typeof url !== "string") return false;
     return SOUNDCLOUD_REGEX.test(url);
   }
 
@@ -23,22 +23,22 @@ export class SoundCloudSource extends SourceInterface {
         windowsHide: true
       });
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = "";
+      let stderr = "";
 
-      proc.stdout.on('data', data => {
+      proc.stdout.on("data", data => {
         stdout += data.toString();
       });
 
-      proc.stderr.on('data', data => {
+      proc.stderr.on("data", data => {
         stderr += data.toString();
       });
 
-      proc.on('error', err => {
+      proc.on("error", err => {
         reject(new Error(`yt-dlp failed: ${err.message}`));
       });
 
-      proc.on('close', code => {
+      proc.on("close", code => {
         if (code === 0) {
           resolve(stdout);
         } else {
@@ -50,13 +50,13 @@ export class SoundCloudSource extends SourceInterface {
 
   async getInfo(url) {
     try {
-      const output = await this.execYtdlp(['--dump-json', '--no-download', '--no-playlist', url]);
+      const output = await this.execYtdlp(["--dump-json", "--no-download", "--no-playlist", url]);
 
       const info = JSON.parse(output);
 
       return {
-        title: info.title || 'Unknown Title',
-        artist: info.uploader || info.artist || 'Unknown Artist',
+        title: info.title || "Unknown Title",
+        artist: info.uploader || info.artist || "Unknown Artist",
         duration: info.duration,
         thumbnail: info.thumbnail
       };
@@ -70,7 +70,7 @@ export class SoundCloudSource extends SourceInterface {
     try {
       const streamUrl = await this.getStreamURL(url);
 
-      const { request } = await import('undici');
+      const { request } = await import("undici");
       const response = await request(streamUrl.url);
 
       return response.body;
@@ -82,17 +82,17 @@ export class SoundCloudSource extends SourceInterface {
 
   async getStreamURL(url) {
     try {
-      const output = await this.execYtdlp(['--get-url', '--no-playlist', '-f', 'bestaudio/best', url]);
+      const output = await this.execYtdlp(["--get-url", "--no-playlist", "-f", "bestaudio/best", url]);
 
       const streamUrl = output.trim();
 
       if (!streamUrl) {
-        throw new Error('No stream URL returned');
+        throw new Error("No stream URL returned");
       }
 
       return {
         url: streamUrl,
-        format: 'audio/mpeg'
+        format: "audio/mpeg"
       };
     } catch (err) {
       this.logger.error(`[SoundCloud] Failed to get stream URL: ${err.message}`);
