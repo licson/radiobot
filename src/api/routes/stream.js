@@ -1,12 +1,39 @@
 import { Router } from "express";
 import { createReadStream, existsSync } from "fs";
 import { join } from "path";
+import { StreamBroadcaster } from "../../core/stream/broadcaster.js";
 import { ICYWriter } from "../../core/stream/icy.js";
 import { findOggPage } from "../../core/stream/ogg-helpers.js";
 
 function createStreamRoutes(context) {
   const router = Router();
   const { config, encoders, mixer, events, analytics } = context;
+
+  // Create broadcasters for each stream type
+  const broadcasters = {
+    mp3: null,
+    opus: null,
+    raw: null
+  };
+
+  // Initialize broadcasters when encoders are available
+  if (encoders?.mp3?.stream) {
+    broadcasters.mp3 = new StreamBroadcaster(encoders.mp3.stream);
+    console.log("[Stream] MP3 broadcaster initialized");
+  }
+
+  if (encoders?.opus?.stream) {
+    broadcasters.opus = new StreamBroadcaster(encoders.opus.stream);
+    console.log("[Stream] Opus broadcaster initialized");
+  }
+
+  if (mixer) {
+    broadcasters.raw = new StreamBroadcaster(mixer);
+    console.log("[Stream] Raw PCM broadcaster initialized");
+  }
+
+  // Expose broadcasters for cleanup
+  router.broadcasters = broadcasters;
 
   // Listener counters for analytics
   const mp3Listeners = { count: 0 };
@@ -23,7 +50,7 @@ function createStreamRoutes(context) {
   }
 
   router.get("/live.mp3", (req, res) => {
-    if (!encoders?.mp3?.stream) {
+    if (!broadcasters.mp3) {
       return res.status(503).json({ error: "MP3 encoder not available" });
     }
 
@@ -50,22 +77,24 @@ function createStreamRoutes(context) {
     res.setHeader("icy-pub", config.station?.public ? "1" : "0");
     res.setHeader("icy-metaint", "0");
 
-    const stream = encoders.mp3.stream;
-    stream.pipe(res);
+    // Add this response to the broadcaster
+    const cleanup = broadcasters.mp3.add(res);
+    console.log(`[Stream] MP3 client connected. Total clients: ${broadcasters.mp3.clientCount}`);
 
     req.on("close", () => {
       updateListenerCount("mp3", mp3Listeners, -1);
-      stream.unpipe(res);
+      cleanup();
+      console.log(`[Stream] MP3 client disconnected. Total clients: ${broadcasters.mp3.clientCount}`);
     });
 
     res.on("error", err => {
       console.error("[Stream] MP3 response error:", err.message);
-      stream.unpipe(res);
+      cleanup();
     });
   });
 
   router.get("/live.ogg", (req, res) => {
-    if (!encoders?.opus?.stream) {
+    if (!broadcasters.opus) {
       return res.status(503).json({ error: "Opus encoder not available" });
     }
 
@@ -86,8 +115,7 @@ function createStreamRoutes(context) {
       res.setHeader("icy-description", config.station.description);
     }
 
-    const stream = encoders.opus.stream;
-
+    // Send headers immediately if available
     if (encoders.opus.headersReady) {
       if (encoders.opus.idHeader) {
         res.write(encoders.opus.idHeader);
@@ -95,32 +123,26 @@ function createStreamRoutes(context) {
       if (encoders.opus.commentHeader) {
         res.write(encoders.opus.commentHeader);
       }
-    } else {
-      encoders.opus.onHeadersReady(() => {
-        if (encoders.opus.idHeader) {
-          res.write(encoders.opus.idHeader);
-        }
-        if (encoders.opus.commentHeader) {
-          res.write(encoders.opus.commentHeader);
-        }
-      });
     }
 
-    stream.pipe(res);
+    // Add this response to the broadcaster
+    const cleanup = broadcasters.opus.add(res);
+    console.log(`[Stream] Ogg client connected. Total clients: ${broadcasters.opus.clientCount}`);
 
     req.on("close", () => {
       updateListenerCount("ogg", oggListeners, -1);
-      stream.unpipe(res);
+      cleanup();
+      console.log(`[Stream] Ogg client disconnected. Total clients: ${broadcasters.opus.clientCount}`);
     });
 
     res.on("error", err => {
       console.error("[Stream] Ogg response error:", err.message);
-      stream.unpipe(res);
+      cleanup();
     });
   });
 
   router.get("/stream", (req, res) => {
-    if (!encoders?.mp3?.stream) {
+    if (!broadcasters.mp3) {
       return res.status(503).json({ error: "MP3 encoder not available" });
     }
 
@@ -149,10 +171,34 @@ function createStreamRoutes(context) {
     res.setHeader("icy-pub", config.station?.public ? "1" : "0");
     res.setHeader("icy-br", String(config.mp3?.bitrate || 192));
 
+    // Each ICY client needs their own ICYWriter since metadata is per-client
     const icyWriter = new ICYWriter(metaInt);
-    const mp3Stream = encoders.mp3.stream;
 
-    mp3Stream.pipe(icyWriter).pipe(res);
+    // Create a wrapper that pipes through ICYWriter
+    const wrapper = {
+      write: chunk => {
+        return icyWriter.write(chunk);
+      },
+      end: () => {
+        icyWriter.end();
+        res.end();
+      },
+      destroy: err => {
+        res.destroy(err);
+      },
+      get destroyed() {
+        return res.destroyed;
+      },
+      get writableEnded() {
+        return res.writableEnded;
+      },
+      on: (event, handler) => res.on(event, handler),
+      off: (event, handler) => res.off(event, handler),
+      removeAllListeners: event => res.removeAllListeners(event)
+    };
+
+    // Pipe ICYWriter to response
+    icyWriter.pipe(res);
 
     let currentTitle = config.station?.name || "RadioBot";
 
@@ -165,13 +211,18 @@ function createStreamRoutes(context) {
       events.on("metadata", updateMetadata);
     }
 
+    // Add wrapper to broadcaster
+    const cleanup = broadcasters.mp3.add(wrapper);
+    console.log(`[Stream] ICY MP3 client connected. Total clients: ${broadcasters.mp3.clientCount}`);
+
     req.on("close", () => {
       updateListenerCount("shoutcast", streamListeners, -1);
       if (events) {
         events.off("metadata", updateMetadata);
       }
-      mp3Stream.unpipe(icyWriter);
+      cleanup();
       icyWriter.unpipe(res);
+      console.log(`[Stream] ICY MP3 client disconnected. Total clients: ${broadcasters.mp3.clientCount}`);
     });
 
     res.on("error", err => {
@@ -179,13 +230,13 @@ function createStreamRoutes(context) {
       if (events) {
         events.off("metadata", updateMetadata);
       }
-      mp3Stream.unpipe(icyWriter);
+      cleanup();
       icyWriter.unpipe(res);
     });
   });
 
   router.get("/stream.ogg", (req, res) => {
-    if (!encoders?.opus?.stream) {
+    if (!broadcasters.opus) {
       return res.status(503).json({ error: "Opus encoder not available" });
     }
 
@@ -241,22 +292,11 @@ function createStreamRoutes(context) {
       }
     };
 
-    const waitForFrame = cb => {
-      const checkFrame = () => {
-        const stream = encoders.opus.stream;
-        const onData = data => {
-          const pos = findOggPage(data);
-          if (pos >= 0) {
-            stream.pause();
-            stream.off("data", onData);
-            cb(data.subarray(pos));
-          }
-        };
-        stream.on("data", onData);
-        stream.resume();
-      };
-      checkFrame();
-    };
+    // Send headers immediately if available
+    setupIcy();
+    if (encoders.opus.headersReady) {
+      sendHeaders();
+    }
 
     let currentTitle = config.station?.name || "RadioBot";
 
@@ -268,49 +308,56 @@ function createStreamRoutes(context) {
       }
     };
 
-    setupIcy();
-
     if (events) {
       events.on("metadata", updateMetadata);
     }
 
-    const stream = encoders.opus.stream;
+    // Create wrapper for ICY or direct response
+    const wrapper = icyWriter
+      ? {
+          write: chunk => {
+            return icyWriter.write(chunk);
+          },
+          end: () => {
+            if (icyWriter) {
+              icyWriter.end();
+            }
+            res.end();
+          },
+          destroy: err => {
+            res.destroy(err);
+          },
+          get destroyed() {
+            return res.destroyed;
+          },
+          get writableEnded() {
+            return res.writableEnded;
+          },
+          on: (event, handler) => res.on(event, handler),
+          off: (event, handler) => res.off(event, handler),
+          removeAllListeners: event => res.removeAllListeners(event)
+        }
+      : res;
 
-    if (encoders.opus.headersReady) {
-      sendHeaders();
-      if (icyWriter) {
-        icyWriter.pipe(res);
-        stream.pipe(icyWriter);
-        icyWriter.queue(currentTitle);
-      } else {
-        stream.pipe(res);
-      }
-    } else {
-      encoders.opus.onHeadersReady(() => {
-        waitForFrame(frameData => {
-          sendHeaders();
-          if (icyWriter) {
-            icyWriter.write(frameData);
-            icyWriter.pipe(res);
-            stream.pipe(icyWriter);
-            icyWriter.queue(currentTitle);
-          } else {
-            res.write(frameData);
-            stream.pipe(res);
-          }
-        });
-      });
+    // Pipe ICYWriter to response if using ICY
+    if (icyWriter) {
+      icyWriter.pipe(res);
     }
+
+    // Add to broadcaster
+    const cleanup = broadcasters.opus.add(wrapper);
+    console.log(`[Stream] ICY Ogg client connected. Total clients: ${broadcasters.opus.clientCount}`);
 
     req.on("close", () => {
       updateListenerCount("ogg-icy", streamOggListeners, -1);
       if (events) {
         events.off("metadata", updateMetadata);
       }
-      stream.unpipe(icyWriter || res);
+      cleanup();
       if (icyWriter) {
         icyWriter.unpipe(res);
       }
+      console.log(`[Stream] ICY Ogg client disconnected. Total clients: ${broadcasters.opus.clientCount}`);
     });
 
     res.on("error", err => {
@@ -318,7 +365,7 @@ function createStreamRoutes(context) {
       if (events) {
         events.off("metadata", updateMetadata);
       }
-      stream.unpipe(icyWriter || res);
+      cleanup();
       if (icyWriter) {
         icyWriter.unpipe(res);
       }
@@ -386,7 +433,7 @@ function createStreamRoutes(context) {
   });
 
   router.get("/live.raw", (req, res) => {
-    if (!mixer) {
+    if (!broadcasters.raw) {
       return res.status(503).json({ error: "Mixer not available" });
     }
 
@@ -403,16 +450,19 @@ function createStreamRoutes(context) {
     res.setHeader("X-Radio-SampleRate", String(config.mixer?.sampleRate || 44100));
     res.setHeader("X-Radio-Channels", String(config.mixer?.channels || 2));
 
-    mixer.pipe(res, { end: false });
+    // Add this response to the broadcaster
+    const cleanup = broadcasters.raw.add(res);
+    console.log(`[Stream] Raw PCM client connected. Total clients: ${broadcasters.raw.clientCount}`);
 
     req.on("close", () => {
       updateListenerCount("raw-pcm", rawListeners, -1);
-      mixer.unpipe(res);
+      cleanup();
+      console.log(`[Stream] Raw PCM client disconnected. Total clients: ${broadcasters.raw.clientCount}`);
     });
 
     res.on("error", err => {
       console.error("[Stream] Raw PCM response error:", err.message);
-      mixer.unpipe(res);
+      cleanup();
     });
   });
 

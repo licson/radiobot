@@ -21,6 +21,7 @@ class APIServer {
   #events = null;
   #analytics = null;
   #titleRoutes = null;
+  #streamRouter = null;
 
   constructor() {
     this.#app = express();
@@ -87,8 +88,8 @@ class APIServer {
       events: this.#events,
       analytics: this.#analytics
     };
-    const streamRouter = createStreamRoutes(streamContext);
-    this.#app.use("/", streamRouter);
+    this.#streamRouter = createStreamRoutes(streamContext);
+    this.#app.use("/", this.#streamRouter);
 
     this.#app.get("/", (req, res) => {
       if (this.#config.station?.url) {
@@ -195,6 +196,15 @@ class APIServer {
 
   stop() {
     return new Promise((resolve, reject) => {
+      // Clean up stream broadcasters
+      if (this.#streamRouter?.broadcasters) {
+        const { mp3, opus, raw } = this.#streamRouter.broadcasters;
+        if (mp3) mp3.destroy();
+        if (opus) opus.destroy();
+        if (raw) raw.destroy();
+        console.log("[API] Stream broadcasters destroyed");
+      }
+
       if (this.#io) {
         this.#io.close();
       }
