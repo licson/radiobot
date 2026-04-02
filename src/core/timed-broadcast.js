@@ -96,8 +96,12 @@ class TimedBroadcast {
           // Try to play the advertisement track first
           const handler = this.#radio.urlHandlers?.find(adConfig.advertisementTrack);
           if (handler) {
-            const url = await handler.getStreamURL();
-            return this.#radio.doBroadcast?.(url)(cb);
+            const urlObj = await handler.getStreamURL();
+            // urlObj can be either a string (backward compatibility) or { url: string, format: string }
+            const url = typeof urlObj === "string" ? urlObj : urlObj?.url;
+            if (url) {
+              return this.#radio.doBroadcast?.(url)(cb);
+            }
           }
         }
         // Fallback to TTS

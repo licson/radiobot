@@ -165,16 +165,22 @@ class RadioBot {
       };
 
       this.#getFileWithRetry(file)
-        .then(url => {
+        .then(urlObj => {
           if (cancelled) {
             cleanup();
             cb(null);
             return;
           }
 
+          // urlObj can be either a string (backward compatibility) or { url: string, format: string }
+          const url = typeof urlObj === "string" ? urlObj : urlObj?.url;
+          if (!url) {
+            throw new Error("Invalid stream URL returned from source handler");
+          }
+
           ffmpeg = spawn("ffmpeg", [
             "-v",
-            "-8",
+            "error",
             "-re",
             "-i",
             url,
