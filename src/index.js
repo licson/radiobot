@@ -138,6 +138,10 @@ async function main() {
   const radioContext = radio.getRadioContext();
   platformLoader = new PlatformLoader(radioContext, config, logger);
 
+  // Start the API server first - some platforms (like Telegram) use long-polling
+  // and block indefinitely, so we must have the web server up before starting them
+  await apiServer.start(config.http.port);
+
   await platformLoader.loadEnabledPlatforms();
 
   await radio.loadPersistedQueue();
@@ -154,8 +158,6 @@ async function main() {
   memoryLogger.start();
 
   setupGracefulShutdown();
-
-  await apiServer.start(config.http.port);
 
   logger.log("[RadioBot] Server started successfully");
 }
