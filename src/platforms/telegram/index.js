@@ -28,14 +28,12 @@ export class TelegramPlatform extends PlatformInterface {
       return;
     }
 
-    this.bot = new Bot(token);
-
+    const botOptions = {};
     if (this.config.telegram.apiServer) {
-      this.bot.api.config.use((prev, method, payload, signal) => {
-        const url = new URL(this.config.telegram.apiServer);
-        return prev(url.origin + url.pathname, method, payload, signal);
-      });
+      botOptions.client = { apiRoot: this.config.telegram.apiServer };
     }
+
+    this.bot = new Bot(token, botOptions);
 
     this.setupHandlers();
     this.setupEventListeners();
