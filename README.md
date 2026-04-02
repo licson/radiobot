@@ -1,6 +1,6 @@
 # Licson's Radio Bot v2.0
 
-[![CI](https://github.com/licson0729/radiobot/actions/workflows/ci.yml/badge.svg)](https://github.com/licson0729/radiobot/actions/workflows/ci.yml)
+[![CI](https://github.com/licson/radiobot/actions/workflows/ci.yml/badge.svg)](https://github.com/licson/radiobot/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.12.0-brightgreen.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -22,7 +22,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/licson0729/radiobot.git
+git clone https://github.com/licson/radiobot.git
 cd radiobot
 
 # Install dependencies
@@ -232,7 +232,7 @@ Connect to `/` for real-time updates:
 
 ```bash
 # Clone repository
-git clone https://github.com/licson0729/radiobot.git
+git clone https://github.com/licson/radiobot.git
 cd radiobot
 
 # Install dependencies
@@ -408,7 +408,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- GitHub Issues: [github.com/licson0729/radiobot/issues](https://github.com/licson0729/radiobot/issues)
+- GitHub Issues: [github.com/licson/radiobot/issues](https://github.com/licson/radiobot/issues)
 - Email: admin@licson.net
 
 ---
