@@ -17,6 +17,10 @@ export class TelegramSource extends SourceInterface {
     this.cacheTimeout = 3600000;
   }
 
+  setBot(bot) {
+    this.bot = bot;
+  }
+
   canHandle(url) {
     if (!url || typeof url !== "string") return false;
     return TELEGRAM_REGEX.test(url);

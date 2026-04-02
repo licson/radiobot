@@ -35,6 +35,11 @@ export class TelegramPlatform extends PlatformInterface {
 
     this.bot = new Bot(token, botOptions);
 
+    // Pass the bot to the source manager so Telegram audio sources can access it
+    if (this.radio.urlHandlers?.setBot) {
+      this.radio.urlHandlers.setBot(this.bot);
+    }
+
     this.setupHandlers();
     this.setupEventListeners();
 

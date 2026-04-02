@@ -101,6 +101,16 @@ export class SourceManager {
     return found?.instance || null;
   }
 
+  setBot(bot) {
+    this.bot = bot;
+    // Update bot reference for already initialized sources that need it
+    for (const { name, instance } of this.sources) {
+      if (instance.setBot) {
+        instance.setBot(bot);
+      }
+    }
+  }
+
   getLoadedSources() {
     return this.sources.map(s => s.name);
   }
